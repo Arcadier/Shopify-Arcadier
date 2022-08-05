@@ -19,7 +19,7 @@ if(!empty($UserInfo)){
     header('location:'.$_COOKIE['protocol'].'://'.$_COOKIE['marketplace']);
 }
 
-error_log('IsMerchant: '.$isMerchant);
+//error_log('IsMerchant: '.$isMerchant);
 if($isMerchant){
     if(isset($_COOKIE['marketplace']) && isset($_COOKIE['webapitoken']) && isset($_GET['user'])){
         
@@ -37,13 +37,13 @@ if($isMerchant){
         ];
         
         $authListById = $arcadier->searchTable($plugin_id, 'auth', $data_auth);
-        error_log(json_encode($authListById));
+        //error_log(json_encode($authListById));
         if(!empty($authListById['Records'])){
             
             $credentials = $authListById['Records'][0];
             $shopify_categories = shopify_categories_api($credentials['access_token'], $credentials['shop'], null);
 
-            error_log(json_encode($shopify_categories));
+           // error_log(json_encode($shopify_categories));
 
             $count = count($shopify_categories);
             // $mag_cat_arr1 = json_decode(json_encode($mag_cat_arrr), true);
@@ -390,7 +390,7 @@ if($isMerchant){
                                             ]
                                         ];
                                         $response = $arcadier->searchTable($plugin_id, 'map', $data1);
-                                        error_log('Category Map: '.json_encode($response));
+                                        //error_log('Category Map: '.json_encode($response));
                                         if ($response['Records'][0]['merchant_guid'] == $_GET['user']) {
                                             $map_arr_unserialize = unserialize($response['Records'][0]['map']);
                                             $list = $map_arr_unserialize['list'];
