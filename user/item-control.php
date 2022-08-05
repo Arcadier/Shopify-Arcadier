@@ -18,7 +18,7 @@ $products = shopify_products($token, $shop);
 
 
 
-$licence = new License();
+
 // if (!$licence->isValid()) {
 //     echo "<script>alert('Please subscribe first from admin to use this plugin');</script>";
 //     exit();
