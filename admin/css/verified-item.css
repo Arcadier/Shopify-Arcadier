@@ -1,0 +1,12 @@
+/* verified-item page*/
+.radio-inline label {font-weight: 400 !important;}
+.page-content-flex {display: flex;align-items: center;justify-content: space-between;}
+.page-content-flex.page-content-top h5 {margin-bottom: 10px;}
+.page-content-flex .private-setting-switch{margin-top: 0px;margin-left: 10px;}
+.icon.icon-verified-item {background-image: url(../images/verified_item.svg);}
+/* pretty radio */
+.cmn-form-radio label > input[type="radio"] + *::before {content: "";display: inline-block;vertical-align: bottom;width: 1rem;height: 1rem;margin-right: 0.3rem;border-radius: 50%;border-style: solid;border-width: 1px;border-color: gray;}
+.cmn-form-radio label > input[type="radio"]:checked + *::before {background: radial-gradient(#70C4FA 0%, #70C4FA 40%, transparent 50%, transparent);border-color: #70C4FA;}
+.cmn-form-radio label > input[type="radio"] + * {    padding: 0.5rem 1rem;align-items: center;display: flex;}
+.cmn-form-radio .radio-inline {    padding-left: 0px;}
+/* verified-item page*/

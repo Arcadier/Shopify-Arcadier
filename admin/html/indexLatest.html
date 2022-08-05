@@ -1,0 +1,58 @@
+<head>
+    <script type="text/javascript" src="https://bootstrap.arcadier.com/adminportal_pre/js/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="https://bootstrap.arcadier.com/adminportal_pre/js/jquery.js"></script>
+
+    <link href="css/adminstyle.css" rel="stylesheet" type="text/css">
+    <link href="css/verified-item.css" rel="stylesheet" type="text/css">
+    <link href="css/subscription-plugin-in.css" rel="stylesheet" type="text/css">
+</head>
+    <div class="page-content">
+      <div class="gutter-wrapper">
+        <div class="panel-box">
+            <div class="page-content-top page-content-flex">
+                <div class="subscription-title">
+                    <h4>Magento</h4> 
+                    <h5>This plugin enables merchants to synchronise items from their magento shop to the seller account.</h5>
+                </div>
+                <div class="private-setting-switch">
+                    <div class="onoffswitch">
+                      <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox switch-item-verification-checkbox" id="myonoffswitch">
+                      <label class="onoffswitch-label" for="myonoffswitch"> <span class="onoffswitch-inner"></span> <span class="onoffswitch-switch"></span> </label>
+                    </div>
+            </div>
+            </div>
+        </div>
+    </div>
+    <div class="clearfix"></div>
+</div>
+
+<script type="text/javascript">
+
+    function checkHide(){
+        if(jQuery('.private-setting-switch #myonoffswitch').is(':checked'))
+            {
+                $('.verified-item-form .disabled-overlay').remove();
+            }
+        else
+            {
+                $('.verified-item-form .disabled-overlay').remove();
+                $('.verified-item-form').append('<div class="disabled-overlay"></div>');
+            }
+        }
+        jQuery(document).ready(function() {
+            checkHide();
+            jQuery('.private-setting-switch #myonoffswitch').change(function(){ 
+                if(jQuery(this).is(':checked')){
+                    $('.verified-item-form .disabled-overlay').remove();
+                } else {
+                    $('.verified-item-form .disabled-overlay').remove();                 
+                    $('.verified-item-form').append('<div class="disabled-overlay"></div>');
+                }
+            });
+
+
+        });
+</script> 
+
+<script type="text/javascript" src="https://bootstrap.arcadier.com/adminportal_pre/js/custom-nicescroll.js"></script>
+<script type="text/javascript" src="scripts/magento.js"></script>
