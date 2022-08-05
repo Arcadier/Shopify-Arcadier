@@ -1,12 +1,7 @@
 <?php
 include 'magento_functions.php';
 include 'api.php';
-require '../license/license.php';
-$licence = new License();
-// if (!$licence->isValid()) {
-//     echo "<script>alert('Please subscribe first from admin to use this plugin');</script>";
-//     exit();
-// }
+
 $arc = new ApiSdk();
 $mag = new MagSdk();
 $pack_id = getPackageID();

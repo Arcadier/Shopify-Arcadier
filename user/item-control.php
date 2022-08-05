@@ -1,7 +1,7 @@
 <?php
 include 'magento_functions.php';
 include 'api.php';
-require '../license/license.php';
+
 include 'shopify_functions.php';
 
 //shopify authentication
