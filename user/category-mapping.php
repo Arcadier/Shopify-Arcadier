@@ -396,11 +396,9 @@ if($isMerchant){
                                             $list = $map_arr_unserialize['list'];
                                             foreach($list as $li){ 
                                                 if($li['shopify_category'] == $shopify_category_id){
-                                                    if(in_array($arcadier_category['ID'], $li['arcadier_guid'])){
-                                                        foreach($li['arcadier_guid'] as $arc_guid){
-                                                            if($arc_guid == $arcadier_category['ID']){
-                                                                echo checked;
-                                                            }
+                                                    foreach($li['arcadier_guid'] as $arcadier_id){
+                                                        if($arcadier_category['ID'] == $arcadier_id['Arcadier_Category_ID']){
+                                                            echo checked;
                                                         }
                                                     }
                                                 }

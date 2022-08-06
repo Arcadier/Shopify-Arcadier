@@ -467,13 +467,34 @@ if(isset($content['cat_map'])){
         
         //if map doesnt' already exist
         } else {
-            error_log('Map doesnt exist');
+            //error_log('Map doesnt exist');
             $list_arr = [
                 [
                     "shopify_category" => $shopify_category_id,
-                    "arcadier_guid" => $arcadier_guid,
+                    "arcadier_guid" => array(),
                 ],
             ];
+
+            $arcadier_categories = $arc->getCategories(100, 1);
+            $arcadier_categories = $arcadier_categories['Records'];
+            foreach($arcadier_guid as $id){
+                $arcadier_object = [
+                    'Arcadier_Category_ID' => '',
+                    'Arcadier_Category_Name' => ''
+                ];
+                foreach($arcadier_categories as $category){
+                    $i=0;
+                    if($category['ID'] == $id){
+                        $arcadier_object['Arcadier_Category_ID'] = $id;
+                        $arcadier_object['Arcadier_Category_Name'] = $category['Name'];
+
+                        array_push($list_arr[$i]['arcadier_guid'], $arcadier_object);
+			            $i++;
+                    }
+                }
+            }
+
+            
             $map_arr = [
                 "merchant" => $content['arc_user'],
                 "list" => $list_arr,
