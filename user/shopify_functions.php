@@ -92,6 +92,61 @@ function shopify_categories_api($token, $shop, $page) {
 	return array_unique($category_array);
 }
 
+function shopify_get_all_products($token, $shop){
+	if(!isset($token)){
+		$error_m = [
+			"Error" => [
+				"No access token"
+			]
+		];
+
+		return json_encode($error_m);
+	}
+
+	if(!isset($shop)){
+		$error_m = [
+			"Error" => [
+				"No specified Shopify store"
+			]
+		];
+
+		return json_encode($error_m);
+	}
+
+	$query = array("query" => '{
+		products(first:10) {
+			edges {
+				cursor
+				node {
+					id
+					title
+					description
+					vendor
+					customProductType
+					productType
+					hasOnlyDefaultVariant
+					totalInventory
+					totalVariants
+					status
+					tags
+					createdAt
+					updatedAt
+				}
+			}
+			pageInfo{
+				hasNextPage
+			}
+		}
+	}');
+
+	$api_call  = graphql($token, $shop, $query);   
+	//error_log(json_encode($api_call['body']));
+	$products = json_decode($api_call['body'], true);
+	$productlist = $products['data']['products']['edges'];
+
+	return $productlist;
+}
+
 function shopify_call($token, $shop, $api_endpoint, $query = array(), $method = 'GET', $request_headers = array()) {
     
 	// Build URL
@@ -274,7 +329,7 @@ function shopify_create_metafields($token, $shop, $product_id, $namespace, $key,
 }
 
 function graphql($token, $shop, $query = array()) {
-	$url = "https://" . $shop .  '.myshopify.com/admin/api/2021-07/graphql.json';
+	$url = "https://" . $shop .  '.myshopify.com/admin/api/2022-07/graphql.json';
 
 	$curl = curl_init($url);
 	curl_setopt($curl, CURLOPT_HEADER, TRUE);

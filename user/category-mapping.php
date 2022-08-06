@@ -35,9 +35,10 @@ if($isMerchant){
                 'Value'=> '1'
             ]
         ];
-        
+        error_Log(json_encode($data_auth));
+        error_Log(json_encode('Plugin ID: '.$plugin_id));
         $authListById = $arcadier->searchTable($plugin_id, 'auth', $data_auth);
-        //error_log(json_encode($authListById));
+        error_log(json_encode($authListById));
         if(!empty($authListById['Records'])){
             
             $credentials = $authListById['Records'][0];
@@ -394,6 +395,7 @@ if($isMerchant){
                                         if ($response['Records'][0]['merchant_guid'] == $_GET['user']) {
                                             $map_arr_unserialize = unserialize($response['Records'][0]['map']);
                                             $list = $map_arr_unserialize['list'];
+                                            error_log(json_encode($list));
                                             foreach($list as $li){ 
                                                 if($li['shopify_category'] == $shopify_category_id){
                                                     foreach($li['arcadier_guid'] as $arcadier_id){

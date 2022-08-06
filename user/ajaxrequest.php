@@ -416,6 +416,7 @@ if(isset($content['cat_map'])){
         //if map already exists
         if ($response['Records'][0]['merchant_guid'] == $content['arc_user']) {
             error_log('Map exists');
+            
             $map_arr_unserialize = unserialize($response['Records'][0]['map']);
             $list = $map_arr_unserialize['list'];
             $found = false;
