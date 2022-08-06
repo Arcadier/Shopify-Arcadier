@@ -1,12 +1,41 @@
 <?php
+include 'callAPI.php';
 include 'magento_functions.php';
 include 'api.php';
+
+
 
 $arc = new ApiSdk();
 $mag = new MagSdk();
 $pack_id = getPackageID();
 $UserInfo = $arc->getUserInfo($_GET['user']);
 $isMerchant = false;
+
+
+//retrieve auth details
+
+$baseUrl = getMarketplaceBaseUrl();
+$admin_token = $arc->AdminToken();
+$customFieldPrefix = getCustomFieldPrefix();
+
+$userToken = $_COOKIE["webapitoken"];
+$url = $baseUrl . '/api/v2/users/'; 
+$result = callAPI("GET", $userToken, $url, false);
+$userId = $result['ID'];
+$packageId = getPackageID();
+
+$auth = array(array('Name' => 'merchant_guid', "Operator" => "in",'Value' => $userId), array(array('Name' => 'access_token', "Operator" => "like",'Value' => 'shpua_')));
+$url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
+$authDetails =  callAPI("POST", $admin_token, $url, $auth);
+
+$shop_secret_key = $authDetails['Records'][0]['secret_key'];
+$shop_api_key = $authDetails['Records'][0]['api_key'];
+$shop = $authDetails['Records'][0]['shop'];
+$auth_id = $authDetails['Records'][0]['Id'];
+
+
+
+
 if(!empty($UserInfo)){
 foreach($UserInfo['Roles'] as $UserInfoRoles){
     if($UserInfoRoles == 'Merchant'){
@@ -559,20 +588,20 @@ if($isMerchant){
                                 <div class="mb-2">
                                     <span class="font-weight-bolder ">Shopify Credentials</span>
                                 </div>
-                                <div class="row mt-3">
+                                <div class="row mt-3" auth-id=<?php echo $auth_id; ?>>
                                     <div class="col-3">
                                         <label for="usr">API Key: </label>
                                     </div>
                                     <div class="col-9 pr-5">
                                         <input type="text" class="form-control" id="api-key"
-                                            value="<?php if(!empty($row)) { echo $row["username"]; } ?>">
+                                            value="<?php if(!empty($shop_api_key)) { echo $shop_api_key; } ?>">
                                     </div>
                                     <div class="col-3">
                                         <label for="usr">Secret Key: </label>
                                     </div>
                                     <div class="col-9 pr-5">
                                         <input type="text" class="form-control" id="secret-key"
-                                            value="<?php if(!empty($row)) { echo $row["username"]; } ?>">
+                                            value="<?php if(!empty($shop_secret_key)) { echo $shop_secret_key; } ?>">
                                     </div>
 
                                     <div class="col-3 mt-2">
@@ -580,8 +609,7 @@ if($isMerchant){
                                     </div>
                                     <div class="col-8 pr-5 mt-2">
                                         <input type="text" class="form-control" id="store-name"
-                                            value="<?php if(!empty($row)) { echo $row["password"]; } ?>"
-                                            style="width: 113.5%;">
+                                            value="<?php if(!empty($shop)) { echo $shop; } ?>" style="width: 113.5%;">
                                     </div>
 
                                     <!-- <div class="col-1 pr-5 mt-3">

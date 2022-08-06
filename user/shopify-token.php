@@ -28,7 +28,7 @@ $packageId = getPackageID();
 //store per merchant should only be 1 at a time, 
 //else if adding another store, delete the former one
 
-$auth = array(array('Name' => 'merchant_guid', "Operator" => "in",'Value' => $userId));
+$auth = array(array('Name' => 'merchant_guid', "Operator" => "in",'Value' => $userId), array(array('Name' => 'access_token', "Operator" => "like",'Value' => 'shpua_')));
 $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
 $authDetails =  callAPI("POST", $admin_token, $url, $auth);
 
