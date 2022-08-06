@@ -476,7 +476,7 @@ if($isMerchant){
                                                                 }
                                                             }
                                                         }
-                                                        $category_names = [];
+                                                        $category_names = '';
                                                         $category_div_ids = implode(', ',$destination_arcadier_categories);
                                                         
                                                         foreach($arcadier_categories as $cat){
