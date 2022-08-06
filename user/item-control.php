@@ -461,19 +461,20 @@ if($isMerchant){
 
                                                         //unserialize the map from table
                                                         error_log(json_encode($category_map));
-                                                        $category_map = unserialize($category_map);
-                                                        $shopify_category_list = $category_map['list'];
+                                                        $category_map_unserialized = unserialize($category_map);
+                                                        error_log(json_encode($category_map));
+                                                        $shopify_category_list = $category_map_unserialized['list'];
 
                                                         //find the corresponding Arcadier category according to map
                                                         $destination_arcadier_categories = [];
                                                         foreach($shopify_category_list as $li){
-                                                            if($li['shopify_category'] == $shopify_product_category){
+                                                            if($li['shopify_category'] == $shopify_product_category.'_category'){
                                                                 foreach($li['arcadier_guid'] as $arcadier_category){
-                                                                    array_push($destination_arcadier_categories, $arcadier_category['Arcadier_Category_Name']);
-                                                                } 
+                                                                    array_push($destination_arcadier_categories, $arcadier_category);
+                                                                }
                                                             }
                                                         }
-                                                        echo implode(',',$destination_arcadier_categories);
+                                                        echo implode(', ',$destination_arcadier_categories);
                                                     }
                                                     else{
                                                         echo $category_map;
