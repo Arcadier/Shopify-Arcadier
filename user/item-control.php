@@ -115,6 +115,10 @@ if($isMerchant){
             }else{
                 header('location:'.$_COOKIE['protocol'].'://'.$_COOKIE['marketplace']);
             }
+            //Load arcadier categories
+            $arcadier_categories = $arc->getCategories(1000, 1);
+            error_log('Arcadier Categories: '.json_encode($arcadier_categories));
+            $arcadier_categories = $arcadier_categories['Records'];
 
             //Load Category Map
             //search custom table for category map
@@ -126,9 +130,7 @@ if($isMerchant){
 
             $category_map = $arc->searchTable($pack_id, 'map', $data);
             if($category_map['TotalRecords'] == 1){
-                //error_log(json_encode($category_map));
                 $category_map = $category_map['Records'][0]['map'];
-                
             }
             else{
                 $category_map = '<b>Not Mapped</b>';
@@ -474,7 +476,17 @@ if($isMerchant){
                                                                 }
                                                             }
                                                         }
-                                                        echo implode(', ',$destination_arcadier_categories);
+                                                        $category_names = [];
+                                                        $category_div_ids = implode(', ',$destination_arcadier_categories);
+                                                        
+                                                        foreach($arcadier_categories as $cat){
+
+                                                            if(in_array($cat['ID'], $destination_arcadier_categories)){
+                                                                $category_names = $category_names.$cat['Name'].' ';
+                                                            }
+                                                        }
+                                                        
+                                                        echo '<div id='.$category_div_ids.'>'.$category_names.'</div>';
                                                     }
                                                     else{
                                                         echo $category_map;
