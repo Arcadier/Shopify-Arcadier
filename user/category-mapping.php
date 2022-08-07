@@ -33,7 +33,15 @@ if($isMerchant){
                 'Name'=> 'auth_status',
                 'Operator'=> 'equal',
                 'Value'=> '1'
-            ]
+            ],
+            
+            [
+                'Name'=> 'access_token',
+                'Operator'=> 'like',
+                'Value'=> "shpua_"
+            ],
+
+            
         ];
         error_Log(json_encode($data_auth));
         error_Log(json_encode('Plugin ID: '.$plugin_id));
@@ -388,7 +396,9 @@ if($isMerchant){
                                                 'Name' => 'shop',
                                                 'Operator' => 'equal',
                                                 'Value' => $credentials['shop'],
-                                            ]
+                                            ],
+
+                                            
                                         ];
                                         $response = $arcadier->searchTable($plugin_id, 'map', $data1);
                                         //error_log('Category Map: '.json_encode($response));
