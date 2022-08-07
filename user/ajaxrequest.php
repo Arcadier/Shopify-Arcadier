@@ -375,9 +375,9 @@ if (isset($content['deauth'])) {
 
 /*Category-Mapping Request*/
 if(isset($content['cat_map'])){
-    error_log('Reached correct ajax request function: '.json_encode($content));
+    //error_log('Reached correct ajax request function: '.json_encode($content));
 	$arc_cat_arr = $arc->getCategories();
-    error_log('Arcadier categories: '.json_encode($arc_cat_arr));
+    //error_log('Arcadier categories: '.json_encode($arc_cat_arr));
     if (!empty($content['arcadier_guid'])) {
         $arcadier_guid = explode(',', $content['arcadier_guid']);
         $shopify_category_id = $content['shopify_category_id'];
@@ -392,7 +392,12 @@ if(isset($content['cat_map'])){
                 'Name'=> 'auth_status',
                 'Operator'=> 'equal',
                 'Value'=> "1"
-            ]
+            ],
+            [
+                'Name'=> 'access_token',
+                'Operator'=> 'like',
+                'Value'=> "shpua_"
+            ],
             
         ];
         $authListByMerchantGuid = $arc->searchTable($pack_id, 'auth', $data_auth);
@@ -407,18 +412,14 @@ if(isset($content['cat_map'])){
                 'Name'=> 'shop',
                 'Operator'=> 'equal',
                 'Value'=> $authListByMerchantGuid['Records'][0]['shop']
-<<<<<<< Updated upstream
-            ]
-=======
             ],
 
             [
                 'Name'=> 'access_token',
                 'Operator'=> 'like',
+
                 'Value'=> 'shpua_'
-            ],
->>>>>>> Stashed changes
-            
+            ]
         ];
 
         $response = $arc->searchTable($pack_id, 'map', $data_map);
@@ -478,34 +479,14 @@ if(isset($content['cat_map'])){
         
         //if map doesnt' already exist
         } else {
-            //error_log('Map doesnt exist');
+            error_log('Map doesnt exist');
             $list_arr = [
                 [
                     "shopify_category" => $shopify_category_id,
-                    "arcadier_guid" => array(),
+                    "arcadier_guid" => $arcadier_guid,
                 ],
             ];
 
-            $arcadier_categories = $arc->getCategories(100, 1);
-            $arcadier_categories = $arcadier_categories['Records'];
-            foreach($arcadier_guid as $id){
-                $arcadier_object = [
-                    'Arcadier_Category_ID' => '',
-                    'Arcadier_Category_Name' => ''
-                ];
-                foreach($arcadier_categories as $category){
-                    $i=0;
-                    if($category['ID'] == $id){
-                        $arcadier_object['Arcadier_Category_ID'] = $id;
-                        $arcadier_object['Arcadier_Category_Name'] = $category['Name'];
-
-                        array_push($list_arr[$i]['arcadier_guid'], $arcadier_object);
-			            $i++;
-                    }
-                }
-            }
-
-            
             $map_arr = [
                 "merchant" => $content['arc_user'],
                 "list" => $list_arr,
@@ -540,7 +521,12 @@ if(isset($content['cat_map'])){
                 'Name'=> 'auth_status',
                 'Operator'=> 'equal',
                 'Value'=> "1"
-            ]
+            ],
+            [
+                'Name'=> 'access_token',
+                'Operator'=> 'like',
+                'Value'=> "shpua_"
+            ],
             
             ];
         $authListByMerchantGuid=$arc->searchTable($pack_id, 'auth', $data_auth);

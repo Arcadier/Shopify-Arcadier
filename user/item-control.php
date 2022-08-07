@@ -1,7 +1,8 @@
 <?php
+include 'callAPI.php';
 include 'api.php';
 include 'shopify_functions.php';
-
+$arc = new ApiSdk();
 //shopify authentication
 
 $shop = "tanoo-joy2";
@@ -10,9 +11,30 @@ $query = array(
     "Content-type" => "application/json" // Tell Shopify that we're expecting a response in JSON format
 );
 
+$baseUrl = getMarketplaceBaseUrl();
+$admin_token = $arc->AdminToken();
+$customFieldPrefix = getCustomFieldPrefix();
 
-$products = shopify_get_all_products($token, $shop);
-$arc = new ApiSdk();
+$userToken = $_COOKIE["webapitoken"];
+$url = $baseUrl . '/api/v2/users/'; 
+$result = callAPI("GET", $userToken, $url, false);
+$userId = $result['ID'];
+$packageId = getPackageID();
+
+$auth = array(array('Name' => 'merchant_guid', "Operator" => "in",'Value' => $userId), array(array('Name' => 'access_token', "Operator" => "like",'Value' => 'shpua_')));
+$url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
+$authDetails =  callAPI("POST", $admin_token, $url, $auth);
+
+$shop_secret_key = $authDetails['Records'][0]['secret_key'];
+$shop_api_key = $authDetails['Records'][0]['api_key'];
+$shop = $authDetails['Records'][0]['shop'];
+$auth_id = $authDetails['Records'][0]['Id'];
+$access_token= $authDetails['Records'][0]['access_token'];
+
+
+
+$products = shopify_get_all_products($access_token, $shop);
+
 
 $pack_id = getPackageID();
 $UserInfo = $arc->getUserInfo($_GET['user']);
@@ -39,16 +61,26 @@ if($isMerchant){
                 'Name'=> 'auth_status',
                 'Operator'=> 'equal',
                 'Value'=> "1"
-            ]
+            ],
+
+            [
+                'Name'=> 'access_token',
+                'Operator'=> 'like',
+                'Value'=> "shpua_"
+            ],
+
         ];
         
         $authListById=$arc->searchTable($pack_id, 'auth', $data_auth);
 
         //if merchant has not connected Shopify
         if(!empty($authListById['Records'])){
+            echo 'authorize';
             if($authListById['Records'][0]['auth_status'] == '1'){
 
                 $authRowByMerchantGuid = $authListById['Records'][0];
+
+              //  echo 'authlistbyid' . json_encode($authRowByMerchantGuid);
                 
                 $data_create_arc_item_slow = [
                     [
@@ -129,6 +161,11 @@ if($isMerchant){
             ];
 
             $category_map = $arc->searchTable($pack_id, 'map', $data);
+
+
+           // echo 'category map ' . json_encode($category_map);
+
+            
             if($category_map['TotalRecords'] == 1){
                 $category_map = $category_map['Records'][0]['map'];
             }
@@ -151,7 +188,7 @@ if($isMerchant){
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
-    
+
     <link rel="shortcut icon" href="images/favicon.ico">
     <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css">
     <link href="css/metismenu.min.css" rel="stylesheet" type="text/css">
@@ -169,75 +206,75 @@ if($isMerchant){
     <script src="scripts/bootstrap.bundle.min.js"></script>
 
     <style>
-        .loader,
-        .loader:after {
-            border-radius: 50%;
-            width: 10em;
-            height: 10em;
+    .loader,
+    .loader:after {
+        border-radius: 50%;
+        width: 10em;
+        height: 10em;
+    }
+
+    .loader {
+        margin: auto;
+        font-size: 10px;
+        position: absolute;
+        right: 0;
+        left: 0;
+        top: 50%;
+        text-indent: -9999em;
+        border-top: 1.1em solid rgba(255, 255, 255, 0.2);
+        border-right: 1.1em solid rgba(255, 255, 255, 0.2);
+        border-bottom: 1.1em solid rgba(255, 255, 255, 0.2);
+        border-left: 1.1em solid #ffffff;
+        -webkit-transform: translateZ(0);
+        -ms-transform: translateZ(0);
+        transform: translateZ(0);
+        -webkit-animation: load8 1.1s infinite linear;
+        animation: load8 1.1s infinite linear;
+    }
+
+    @-webkit-keyframes load8 {
+        0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
         }
 
-        .loader {
-            margin: auto;
-            font-size: 10px;
-            position: absolute;
-            right: 0;
-            left: 0;
-            top: 50%;
-            text-indent: -9999em;
-            border-top: 1.1em solid rgba(255, 255, 255, 0.2);
-            border-right: 1.1em solid rgba(255, 255, 255, 0.2);
-            border-bottom: 1.1em solid rgba(255, 255, 255, 0.2);
-            border-left: 1.1em solid #ffffff;
-            -webkit-transform: translateZ(0);
-            -ms-transform: translateZ(0);
-            transform: translateZ(0);
-            -webkit-animation: load8 1.1s infinite linear;
-            animation: load8 1.1s infinite linear;
+        100% {
+            -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes load8 {
+        0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
         }
 
-        @-webkit-keyframes load8 {
-            0% {
-                -webkit-transform: rotate(0deg);
-                transform: rotate(0deg);
-            }
-
-            100% {
-                -webkit-transform: rotate(360deg);
-                transform: rotate(360deg);
-            }
+        100% {
+            -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
         }
+    }
 
-        @keyframes load8 {
-            0% {
-                -webkit-transform: rotate(0deg);
-                transform: rotate(0deg);
-            }
+    #loadingDiv {
+        position: fixed;
+        top: 0;
+        z-index: 9999;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #0000006b;
+    }
 
-            100% {
-                -webkit-transform: rotate(360deg);
-                transform: rotate(360deg);
-            }
-        }
+    button.ui-dialog-titlebar-close {
+        display: none;
+    }
 
-        #loadingDiv {
-            position: fixed;
-            top: 0;
-            z-index: 9999;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #0000006b;
-        }
+    span.ui-icon.ui-icon-alert {
+        display: none;
+    }
 
-        button.ui-dialog-titlebar-close {
-            display: none;
-        }
-
-        span.ui-icon.ui-icon-alert {
-            display: none;
-        }
-
-        /* 
+    /* 
             #wrapper {
                 width: unset;
             }
@@ -246,81 +283,81 @@ if($isMerchant){
                 max-width: 18%;
             }
             */
-        input[type=checkbox],
-        input[type=radio] {
-            visibility: unset;
-        }
+    input[type=checkbox],
+    input[type=radio] {
+        visibility: unset;
+    }
 
-        /* .footer {
+    /* .footer {
                 position:unset;
                 left:unset;
             } */
-        #loadingDiv1 {
-            position: fixed;
-            top: 0;
-            z-index: 9999;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #2a3142;
-        }
+    #loadingDiv1 {
+        position: fixed;
+        top: 0;
+        z-index: 9999;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #2a3142;
+    }
 
-        ul#side-menu li a img {
-            max-width: 16px;
-        }
+    ul#side-menu li a img {
+        max-width: 16px;
+    }
 
-        #sidebar-menu {
-            padding-top: 50px;
-        }
+    #sidebar-menu {
+        padding-top: 50px;
+    }
 
-        .content-page .content {
-            margin-top: 20px;
-        }
+    .content-page .content {
+        margin-top: 20px;
+    }
 
-        /* div.footer {
+    /* div.footer {
                 display: none;
             } */
-        table.dataTable thead th,
-        table.dataTable thead td {
-            padding: 8px 10px;
-        }
+    table.dataTable thead th,
+    table.dataTable thead td {
+        padding: 8px 10px;
+    }
 
-        .foot-plugin-footer .footer {
-            padding-bottom: 10px;
-            padding-top: 30px;
-        }
+    .foot-plugin-footer .footer {
+        padding-bottom: 10px;
+        padding-top: 30px;
+    }
 
-        .foot-plugin-footer .footer .footer-navigation ul>li>a {
-            padding-right: 79px;
-        }
+    .foot-plugin-footer .footer .footer-navigation ul>li>a {
+        padding-right: 79px;
+    }
 
-        .foot-plugin-footer ul.footer-social-media,
-        .foot-plugin-footer .footer-bottom {
-            display: none;
-        }
+    .foot-plugin-footer ul.footer-social-media,
+    .foot-plugin-footer .footer-bottom {
+        display: none;
+    }
 
-        div#logTable_wrapper {
-            min-height: 410px;
-        }
+    div#logTable_wrapper {
+        min-height: 410px;
+    }
     </style>
 </head>
 
 <body>
     <script>
-        function addLoader() {
-            $('body').append('<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
-        }
+    function addLoader() {
+        $('body').append('<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
+    }
 
-        function removeClass(div_id, time) {
-            $("#" + div_id).fadeOut(time, function() {
-                $("#" + div_id).remove();
-            });
-        }
+    function removeClass(div_id, time) {
+        $("#" + div_id).fadeOut(time, function() {
+            $("#" + div_id).remove();
+        });
+    }
 
-        function addLoader1() {
-            $('body').append('<div style="" id="loadingDiv1"><div class="loader">Loading...</div></div>');
-        }
-        addLoader1();
+    function addLoader1() {
+        $('body').append('<div style="" id="loadingDiv1"><div class="loader">Loading...</div></div>');
+    }
+    addLoader1();
     </script>
     <div id="wrapper">
         <div class="topbar">
@@ -359,16 +396,20 @@ if($isMerchant){
                     <ul class="metismenu" id="side-menu">
                         <!--<li class="menu-title">Main</li>-->
                         <li>
-                            <a href="index.php?user=<?php echo $_GET['user']; ?>" class="waves-effect"><img src="images/home-icon.png"> <span> Configuration </span> </a>
+                            <a href="index.php?user=<?php echo $_GET['user']; ?>" class="waves-effect"><img
+                                    src="images/home-icon.png"> <span> Configuration </span> </a>
                         </li>
                         <li>
-                            <a href="category-mapping.php?user=<?php echo $_GET['user']; ?>" class="waves-effect"> <img src="images/list-icon.png"> <span> Category Mapping </span></a>
+                            <a href="category-mapping.php?user=<?php echo $_GET['user']; ?>" class="waves-effect"> <img
+                                    src="images/list-icon.png"> <span> Category Mapping </span></a>
                         </li>
                         <li>
-                            <a href="item-control.php?user=<?php echo $_GET['user']; ?>" class="waves-effect"> <img src="images/setting-icon.png"> <span> Item Control </span></a>
+                            <a href="item-control.php?user=<?php echo $_GET['user']; ?>" class="waves-effect"> <img
+                                    src="images/setting-icon.png"> <span> Item Control </span></a>
                         </li>
                         <li>
-                            <a href="synchronization.php?user=<?php echo $_GET['user']; ?>" class="waves-effect"> <img src="images/synchronize-icon.png"> <span> Synchronization </span></a>
+                            <a href="synchronization.php?user=<?php echo $_GET['user']; ?>" class="waves-effect"> <img
+                                    src="images/synchronize-icon.png"> <span> Synchronization </span></a>
                         </li>
                     </ul>
                 </div>
@@ -388,7 +429,8 @@ if($isMerchant){
                             <div id="dialog" title="Alert message" style="display: none">
                                 <div class="ui-dialog-content ui-widget-content">
                                     <p>
-                                        <span class="ui-icon ui-icon-alert" style="float: left; margin: 0 7px 20px 0"></span>
+                                        <span class="ui-icon ui-icon-alert"
+                                            style="float: left; margin: 0 7px 20px 0"></span>
                                         <label id="lblMessage"></label>
                                     </p>
                                 </div>
@@ -418,17 +460,22 @@ if($isMerchant){
                                     <tbody>
                                         <?php foreach($products as $shopify_products){ ?>
                                         <tr id="mag-<?php echo $shopify_products['node']['id']; ?>">
-                                            <td><?php echo $shopify_products['node']['title']; ?></td>        <!-- item name -->
-                                            <td><?php echo $shopify_products['node']['createdAt']; ?></td>   <!-- created -->
-                                            <td><?php echo $shopify_products['node']['updatedAt']; ?></td>   <!-- updated -->
-                                            <td><?php                                                 //   synced date
+                                            <td><?php echo $shopify_products['node']['title']; ?></td>
+                                            <!-- item name -->
+                                            <td><?php echo $shopify_products['node']['createdAt']; ?></td>
+                                            <!-- created -->
+                                            <td><?php echo $shopify_products['node']['updatedAt']; ?></td>
+                                            <!-- updated -->
+                                            <td><?php  //   synced date
+                                                $tag_found = false;
                                                 foreach($shopify_products['node']['tags'] as $key=>$shopify_product_tag){
                                                     if($shopify_product_tag == 'synced'){
                                                         echo '<b>Yes</b>';
+                                                        $tag_found = true;
                                                     }
-                                                    else{
-                                                        echo 'No';
-                                                    }
+                                                }
+                                                if( $tag_found == false){
+                                                    echo 'No';
                                                 }
 
                                             ?></td>
@@ -441,14 +488,17 @@ if($isMerchant){
                                                     
                                                 ?>
                                             </td>
-                                            <td>  <!-- Synchronise checkbox -->
+                                            <td>
+                                                <!-- Synchronise checkbox -->
                                                 <div class="custom-control custom-checkbox">
-                                                    <input type="checkbox" name="sync_product" class="sync_product" id="sync_product-<?php echo $shopify_products['node']['id']; ?>"
+                                                    <input type="checkbox" name="sync_product" class="sync_product"
+                                                        id="sync_product-<?php echo $shopify_products['node']['id']; ?>"
                                                         data-id="<?php echo $shopify_products['node']['title']; ?>,<?php echo $shopify_products['node']['id']; ?>,<?php if(isset($_GET['user'])){ if(!empty($_GET['user'])){ echo $_GET['user']; } } ?>">
                                                     <label class="" for=""><span name="customSpan"></span></label>
                                                 </div>
                                             </td>
-                                            <td>  <!-- Arcadier Category Map -->
+                                            <td>
+                                                <!-- Arcadier Category Map -->
                                                 <?php 
                                                     //check if category map has been loaded
                                                     if($category_map != '<b>Not Mapped</b>'){
@@ -466,7 +516,7 @@ if($isMerchant){
                                                         $category_map_unserialized = unserialize($category_map);
                                                         error_log(json_encode($category_map));
                                                         $shopify_category_list = $category_map_unserialized['list'];
-
+                                                        //echo 'shopify cat list ' . json_encode($shopify_category_list);
                                                         //find the corresponding Arcadier category according to map
                                                         $destination_arcadier_categories = [];
                                                         foreach($shopify_category_list as $li){
@@ -476,9 +526,9 @@ if($isMerchant){
                                                                 }
                                                             }
                                                         }
+
                                                         $category_names = '';
                                                         $category_div_ids = implode(',',$destination_arcadier_categories);
-                                                        
                                                         foreach($arcadier_categories as $cat){
 
                                                             if(in_array($cat['ID'], $destination_arcadier_categories)){
@@ -494,7 +544,8 @@ if($isMerchant){
 
                                                 ?>
                                             </td>
-                                            <td> <!-- Override Category checkbox -->
+                                            <td>
+                                                <!-- Override Category checkbox -->
                                                 <div class="custom-control custom-checkbox">
                                                     <?php 
                                                         foreach($arcadier_mapped_category_lists as $arcadier_mapped_category_list1){
@@ -502,12 +553,15 @@ if($isMerchant){
                                                             $default_cat = $arc_cat_arr['Records'][$arc_cat_index]["Name"];
                                                         }
                                                     ?>
-                                                    <input type="checkbox" class="sync_product1" name="override_default_category" id="override_default_category-<?php echo $mag_products['id']; ?>" />
+                                                    <input type="checkbox" class="sync_product1"
+                                                        name="override_default_category"
+                                                        id="override_default_category-<?php echo $mag_products['id']; ?>" />
                                                     <label class="" for=""><span name="customSpan"></span></label>
-                                    
+
                                                 </div>
                                             </td>
-                                            <td> <!-- Override Category List -->
+                                            <td>
+                                                <!-- Override Category List -->
                                                 <?php 
                                                     foreach($arcadier_mapped_category_lists as $arcadier_mapped_category_list2){
                                                         $arc_cat_index = array_search($arcadier_mapped_category_list2['ID'],array_column($arc_cat_arr['Records'],"ID"));
@@ -522,13 +576,15 @@ if($isMerchant){
                                                     <?php 
                                                         foreach($arc_cat_arr['Records'] as $arc_cat_arr1){
                                                             ?>
-                                                            <option value="<?php echo $arc_cat_arr1['ID']; ?>"><?php echo $arc_cat_arr1['Name']; ?></option>
-                                                            <?php 
+                                                    <option value="<?php echo $arc_cat_arr1['ID']; ?>">
+                                                        <?php echo $arc_cat_arr1['Name']; ?></option>
+                                                    <?php 
                                                         } 
                                                     ?>
                                                 </select>
                                             </td>
-                                            <td>  <!-- Sync Button -->
+                                            <td>
+                                                <!-- Sync Button -->
                                                 <a id="save_map"
                                                     onclick="sync_product('<?php echo $mag_products['sku']; ?>','<?php echo $mag_products['name']; ?>','<?php echo $mag_products['id']; ?>');"
                                                     style="margin-left: 25px;border: #0e77d4;box-sizing: border-box;background-color: #333547;border-radius: 6px;color: white;padding: 5px 10px;font-size: 14px; cursor: pointer;">Sync</a>
@@ -552,336 +608,338 @@ if($isMerchant){
     <script src="scripts/waves.min.js"></script>
     <script src="scripts/app.js"></script>
     <script>
-        $(document).ready(function() {
-            $('input[type=checkbox]').click(function() {
-                if (!$(this).is(':checked')) {
-                    $('#' + this.id).prop('checked', false);
-                }
-            });
-            $.noConflict();
-            $(".chosen-select").chosen({
-                width: "125px"
-            });
-
-            $.extend($.fn.dataTable.defaults, {
-                //searching: false,
-                ordering: false,
-                //lengthMenu:false,
-                //paging:false,
-                //info:false
-            });
-            //$('table.table').DataTable();
-
-            $('#logTable').DataTable({
-                "lengthMenu": [
-                    [10, 25, 50, -1],
-                    [10, 25, 50, "All"]
-                ]
-            });
-            myDialog = $("#dialog").dialog({
-                // dialog settings:
-                //autoOpen : false,
-                // ... 
-            });
-            myDialog.dialog("close");
-        });
-
-        function ShowCustomDialog(dialogtype, dialogmessage) {
-            ShowDialogBox(dialogtype, dialogmessage, 'Ok', '', 'GoToAssetList', null);
-        }
-
-        function ShowDialogBox(title, content, btn1text, btn2text, functionText, parameterList) {
-            var btn1css;
-            var btn2css;
-
-            if (btn1text == '') {
-                btn1css = "hidecss";
-            } else {
-                btn1css = "showcss";
-            }
-
-            if (btn2text == '') {
-                btn2css = "hidecss";
-            } else {
-                btn2css = "showcss";
-            }
-            $("#lblMessage").html(content);
-
-            $("#dialog").dialog({
-                resizable: false,
-                title: title,
-                modal: true,
-                width: '400px',
-                height: 'auto',
-                bgiframe: false,
-                hide: {
-                    effect: 'scale',
-                    duration: 400
-                },
-
-                buttons: [{
-                    text: btn1text,
-                    "class": btn1css,
-                    click: function() {
-                        myDialog.dialog("close");
-
-                    }
-                }]
-            });
-        }
-
-        function clear_form_elements(class_name) {
-            $("." + class_name).find(':input').each(function() {
-                switch (this.type) {
-                    case 'password':
-                    case 'text':
-                    case 'textarea':
-                    case 'file':
-                    case 'select-one':
-                    case 'select-multiple':
-                    case 'date':
-                    case 'number':
-                    case 'tel':
-                    case 'email':
-                        $(this).val('');
-                        break;
-                    case 'checkbox':
-                    case 'radio':
-                        this.checked = false;
-                        break;
-                }
-            });
-        }
-
-        function removeClass(div_id, time) {
-            $("#" + div_id).fadeOut(time, function() {
-                $("#" + div_id).remove();
-            });
-        }
-
-        function sync_product(sku, name, id) {
-            var configRowByMerchantGuid_min_sync_limit = '<?php echo $configRowByMerchantGuid["min_sync_limit"]; ?>';
-            var configRowByMerchantGuid_min_sync_limit1 = parseInt(configRowByMerchantGuid_min_sync_limit);
-            var mag_product1_count = '<?php echo $mag_product1_count; ?>';
-            var mag_product1_count1 = parseInt(mag_product1_count);
-            console.log(configRowByMerchantGuid_min_sync_limit);
-            console.log(configRowByMerchantGuid_min_sync_limit1);
-            console.log(mag_product1_count);
-            console.log(mag_product1_count);
-
-            sku1 = sku;
-            name1 = name;
-            id1 = id;
-
-            if ($('#sync_product-' + id).is(":checked")) {
-                if (mag_product1_count1 >= configRowByMerchantGuid_min_sync_limit1) {
-                    var override_default_category_select = $('#override_default_category_select-' + id).val();
-                    var arc_user = '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
-                    if ($('#override_default_category-' + id).is(":checked")) {
-                        if (override_default_category_select == null || override_default_category_select.length == '0') {
-                            alert("Please Select Override Category");
-                            return false;
-                        }
-                        data = {
-                            sku1: sku1,
-                            name1: name1,
-                            id1: id1,
-                            override_default_category_select: override_default_category_select,
-                            create_arc_item: 'create_arc_item',
-                            arc_user: arc_user
-                        };
-                    } else {
-                        data = {
-                            sku1: sku1,
-                            name1: name1,
-                            id1: id1,
-                            create_arc_item: 'create_arc_item',
-                            arc_user: arc_user
-                        };
-                    }
-                    $('body').append(
-                        '<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
-
-                    console.log(data);
-
-                    $.ajax({
-                        type: "POST",
-                        url: "ajaxrequest.php",
-                        contentType: 'application/json',
-                        data: JSON.stringify(data),
-                        success: function(response) {
-                            removeClass('loadingDiv', 500);
-                            console.log(JSON.parse(response));
-                            response = JSON.parse(response);
-                            if (response.message == 1) {
-                                $("tr#mag-" + id1 + " td:nth-child(4)").html("<b>Yes</b> at " +
-                                    response.data.sync_date);
-                                var message = 'Sync successfully';
-                                ShowCustomDialog('Alert', message);
-                            } else {
-                                response = JSON.parse(JSON.stringify(response));
-                                var message1 = response.toString();
-                                var message = "The following items did not have their categories mapped: " + message1 + ", and were not created.";
-                                ShowCustomDialog('Alert', message);
-                            }
-                        }
-                    });
-
-                } else {
-                    var message = 'Cannot sync, Please increase sync limit from configuration';
-                    ShowCustomDialog('Alert', message);
-                }
-            } else {
-                alert('Please check Synchronize');
-            }
-        }
-
-        const removeById = (arr, id1) => {
-            const requiredIndex = arr.findIndex(el => {
-                return el.id1 === String(id1);
-            });
-            if (requiredIndex === -1) {
-                return false;
-            };
-            return !!arr.splice(requiredIndex, 1);
-        };
-
-        const checkIdExists = (arr, id) => {
-            const requiredIndex1 = arr.findIndex(el => {
-                //return el.id === String(id);
-                return el.id === id;
-            });
-            if (requiredIndex1 === -1) {
-                return false;
-            } else {
-                return true;
-            }
-        };
-
-        $(document).ready(function() {
-            var baseUrl = window.location.hostname;
-            var token = getCookie('webapitoken');
-            var user = $("#userGuid").val();
-            var arc_user1 = '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
-            if (($('#merchantId') && $('#merchantId').length) && (user == arc_user1)) {
-                removeClass('loadingDiv1', 500);
-                return false;
-            } else {
-                window.location.replace('https://' + baseUrl);
+    $(document).ready(function() {
+        $('input[type=checkbox]').click(function() {
+            if (!$(this).is(':checked')) {
+                $('#' + this.id).prop('checked', false);
             }
         });
+        $.noConflict();
+        $(".chosen-select").chosen({
+            width: "125px"
+        });
 
-        jQuery($ => {
-            //var checked_data = [];
-            var magento_products1 = '<?php echo json_encode($mag_product1['items']); ?>';
-            var magento_products = JSON.parse(magento_products1);
-            console.log(magento_products);
+        $.extend($.fn.dataTable.defaults, {
+            //searching: false,
+            ordering: false,
+            //lengthMenu:false,
+            //paging:false,
+            //info:false
+        });
+        //$('table.table').DataTable();
 
-            var checked_data = JSON.parse(localStorage.getItem('checked_data')) || [];
-            console.log("checked_data:");
-            console.log(checked_data);
+        $('#logTable').DataTable({
+            "lengthMenu": [
+                [10, 25, 50, -1],
+                [10, 25, 50, "All"]
+            ]
+        });
+        myDialog = $("#dialog").dialog({
+            // dialog settings:
+            //autoOpen : false,
+            // ... 
+        });
+        myDialog.dialog("close");
+    });
 
-            $.each(checked_data, function(index, checked_dataByIndex) {
-                if (checkIdExists(magento_products, parseInt(checked_dataByIndex.id1))) {
-                    console.log('yes');
-                } else {
-                    console.log('no');
-                    var cart = JSON.parse(localStorage.getItem('checked_data')) || [];
-                    var idToDelete = parseInt(checked_dataByIndex.id1);
-                    removeById(cart, idToDelete);
-                    localStorage.removeItem("checked_data");
-                    localStorage.setItem("checked_data", JSON.stringify(cart));
+    function ShowCustomDialog(dialogtype, dialogmessage) {
+        ShowDialogBox(dialogtype, dialogmessage, 'Ok', '', 'GoToAssetList', null);
+    }
+
+    function ShowDialogBox(title, content, btn1text, btn2text, functionText, parameterList) {
+        var btn1css;
+        var btn2css;
+
+        if (btn1text == '') {
+            btn1css = "hidecss";
+        } else {
+            btn1css = "showcss";
+        }
+
+        if (btn2text == '') {
+            btn2css = "hidecss";
+        } else {
+            btn2css = "showcss";
+        }
+        $("#lblMessage").html(content);
+
+        $("#dialog").dialog({
+            resizable: false,
+            title: title,
+            modal: true,
+            width: '400px',
+            height: 'auto',
+            bgiframe: false,
+            hide: {
+                effect: 'scale',
+                duration: 400
+            },
+
+            buttons: [{
+                text: btn1text,
+                "class": btn1css,
+                click: function() {
+                    myDialog.dialog("close");
+
                 }
-            });
+            }]
+        });
+    }
 
+    function clear_form_elements(class_name) {
+        $("." + class_name).find(':input').each(function() {
+            switch (this.type) {
+                case 'password':
+                case 'text':
+                case 'textarea':
+                case 'file':
+                case 'select-one':
+                case 'select-multiple':
+                case 'date':
+                case 'number':
+                case 'tel':
+                case 'email':
+                    $(this).val('');
+                    break;
+                case 'checkbox':
+                case 'radio':
+                    this.checked = false;
+                    break;
+            }
+        });
+    }
 
-            var arr = JSON.parse(localStorage.getItem('checked')) || [];
-            console.log("arr1:" + arr);
-            arr.forEach((c, i) => $('.sync_product').eq(i).prop('checked', c));
+    function removeClass(div_id, time) {
+        $("#" + div_id).fadeOut(time, function() {
+            $("#" + div_id).remove();
+        });
+    }
 
-            //$(".sync_product").click((elem) => { 
-            $('.sync_product').change(function() {
-                console.log($(this).attr('data-id'));
-                var data_id = $(this).attr('data-id').split(",");
+    function sync_product(sku, name, id) {
+        var configRowByMerchantGuid_min_sync_limit = '<?php echo $configRowByMerchantGuid["min_sync_limit"]; ?>';
+        var configRowByMerchantGuid_min_sync_limit1 = parseInt(configRowByMerchantGuid_min_sync_limit);
+        var mag_product1_count = '<?php echo $mag_product1_count; ?>';
+        var mag_product1_count1 = parseInt(mag_product1_count);
+        console.log(configRowByMerchantGuid_min_sync_limit);
+        console.log(configRowByMerchantGuid_min_sync_limit1);
+        console.log(mag_product1_count);
+        console.log(mag_product1_count);
 
-                if ($('#' + $(this).attr('id')).is(":checked")) {
-                    var cart = JSON.parse(localStorage.getItem('checked_data')) || [];
-                    cart.push({
-                        sku1: data_id[0],
-                        name1: data_id[1],
-                        id1: data_id[2],
-                        create_arc_item_manual: 'create_arc_item_manual',
-                        arc_user: data_id[3]
-                    });
-                    localStorage.setItem("checked_data", JSON.stringify(cart));
+        sku1 = sku;
+        name1 = name;
+        id1 = id;
 
-
-
-
+        if ($('#sync_product-' + id).is(":checked")) {
+            if (mag_product1_count1 >= configRowByMerchantGuid_min_sync_limit1) {
+                var override_default_category_select = $('#override_default_category_select-' + id).val();
+                var arc_user = '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
+                if ($('#override_default_category-' + id).is(":checked")) {
+                    if (override_default_category_select == null || override_default_category_select.length == '0') {
+                        alert("Please Select Override Category");
+                        return false;
+                    }
+                    data = {
+                        sku1: sku1,
+                        name1: name1,
+                        id1: id1,
+                        override_default_category_select: override_default_category_select,
+                        create_arc_item: 'create_arc_item',
+                        arc_user: arc_user
+                    };
                 } else {
-                    var cart = JSON.parse(localStorage.getItem('checked_data')) || [];
-                    var idToDelete = data_id[2];
-                    removeById(cart, idToDelete);
-                    localStorage.removeItem("checked_data");
-                    localStorage.setItem("checked_data", JSON.stringify(cart));
-
-
-
+                    data = {
+                        sku1: sku1,
+                        name1: name1,
+                        id1: id1,
+                        create_arc_item: 'create_arc_item',
+                        arc_user: arc_user
+                    };
                 }
+                $('body').append(
+                    '<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
 
-                var checked_data1 = JSON.parse(localStorage.getItem('checked_data')) || [];
-                console.log("checked_data1:");
-                console.log(checked_data1);
+                console.log(data);
 
-                var arc_user2 =
-                    '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
-                var data = {
-                    create_arc_item_all_slow: 'create_arc_item_all_slow',
-                    arc_user: arc_user2,
-                    checked_data: checked_data1
-                };
                 $.ajax({
                     type: "POST",
                     url: "ajaxrequest.php",
                     contentType: 'application/json',
                     data: JSON.stringify(data),
                     success: function(response) {
-                        console.log(response);
-
+                        removeClass('loadingDiv', 500);
+                        console.log(JSON.parse(response));
+                        response = JSON.parse(response);
+                        if (response.message == 1) {
+                            $("tr#mag-" + id1 + " td:nth-child(4)").html("<b>Yes</b> at " +
+                                response.data.sync_date);
+                            var message = 'Sync successfully';
+                            ShowCustomDialog('Alert', message);
+                        } else {
+                            response = JSON.parse(JSON.stringify(response));
+                            var message1 = response.toString();
+                            var message = "The following items did not have their categories mapped: " +
+                                message1 + ", and were not created.";
+                            ShowCustomDialog('Alert', message);
+                        }
                     }
                 });
 
-                var arr = $('.sync_product').map((i, el) => el.checked).get();
-                console.log(arr);
-                localStorage.setItem("checked", JSON.stringify(arr));
-            });
-            var arr1 = JSON.parse(localStorage.getItem('sync_product1')) || [];
-            console.log("arr11:" + arr1);
-            arr1.forEach((c, i) => $('.sync_product1').eq(i).prop('checked', c));
+            } else {
+                var message = 'Cannot sync, Please increase sync limit from configuration';
+                ShowCustomDialog('Alert', message);
+            }
+        } else {
+            alert('Please check Synchronize');
+        }
+    }
 
-            $(".sync_product1").click((elem) => {
-                var arr1 = $('.sync_product1').map((i, el) => el.checked).get();
-                console.log("arr22:" + arr1);
-                localStorage.setItem("sync_product1", JSON.stringify(arr1));
-            });
+    const removeById = (arr, id1) => {
+        const requiredIndex = arr.findIndex(el => {
+            return el.id1 === String(id1);
+        });
+        if (requiredIndex === -1) {
+            return false;
+        };
+        return !!arr.splice(requiredIndex, 1);
+    };
 
-            var create_arc_item_slowRowByMerchantGuid =
-                '<?php  if(!empty($create_arc_item_slowRowByMerchantGuid)){ echo json_encode(unserialize($create_arc_item_slowRowByMerchantGuid['checked_data'])); }  ?>';
-            var create_arc_item_slowRowByMerchantGuid1 = JSON.parse(
-                create_arc_item_slowRowByMerchantGuid);
-            console.log('create_arc_item_slowRowByMerchantGuid:');
-            console.log(create_arc_item_slowRowByMerchantGuid);
-            console.log(create_arc_item_slowRowByMerchantGuid1);
+    const checkIdExists = (arr, id) => {
+        const requiredIndex1 = arr.findIndex(el => {
+            //return el.id === String(id);
+            return el.id === id;
+        });
+        if (requiredIndex1 === -1) {
+            return false;
+        } else {
+            return true;
+        }
+    };
 
+    $(document).ready(function() {
+        var baseUrl = window.location.hostname;
+        var token = getCookie('webapitoken');
+        var user = $("#userGuid").val();
+        var arc_user1 = '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
+        if (($('#merchantId') && $('#merchantId').length) && (user == arc_user1)) {
+            removeClass('loadingDiv1', 500);
+            return false;
+        } else {
+            window.location.replace('https://' + baseUrl);
+        }
+    });
+
+    jQuery($ => {
+        //var checked_data = [];
+        var magento_products1 = '<?php echo json_encode($mag_product1['items']); ?>';
+        var magento_products = JSON.parse(magento_products1);
+        console.log(magento_products);
+
+        var checked_data = JSON.parse(localStorage.getItem('checked_data')) || [];
+        console.log("checked_data:");
+        console.log(checked_data);
+
+        $.each(checked_data, function(index, checked_dataByIndex) {
+            if (checkIdExists(magento_products, parseInt(checked_dataByIndex.id1))) {
+                console.log('yes');
+            } else {
+                console.log('no');
+                var cart = JSON.parse(localStorage.getItem('checked_data')) || [];
+                var idToDelete = parseInt(checked_dataByIndex.id1);
+                removeById(cart, idToDelete);
+                localStorage.removeItem("checked_data");
+                localStorage.setItem("checked_data", JSON.stringify(cart));
+            }
         });
 
-        function getCookie(name) {
-            var value = '; ' + document.cookie;
-            var parts = value.split('; ' + name + '=');
-            if (parts.length === 2) {
-                return parts.pop().split(';').shift();
+
+        var arr = JSON.parse(localStorage.getItem('checked')) || [];
+        console.log("arr1:" + arr);
+        arr.forEach((c, i) => $('.sync_product').eq(i).prop('checked', c));
+
+        //$(".sync_product").click((elem) => { 
+        $('.sync_product').change(function() {
+            console.log($(this).attr('data-id'));
+            var data_id = $(this).attr('data-id').split(",");
+
+            if ($('#' + $(this).attr('id')).is(":checked")) {
+                var cart = JSON.parse(localStorage.getItem('checked_data')) || [];
+                cart.push({
+                    sku1: data_id[0],
+                    name1: data_id[1],
+                    id1: data_id[2],
+                    create_arc_item_manual: 'create_arc_item_manual',
+                    arc_user: data_id[3]
+                });
+                localStorage.setItem("checked_data", JSON.stringify(cart));
+
+
+
+
+            } else {
+                var cart = JSON.parse(localStorage.getItem('checked_data')) || [];
+                var idToDelete = data_id[2];
+                removeById(cart, idToDelete);
+                localStorage.removeItem("checked_data");
+                localStorage.setItem("checked_data", JSON.stringify(cart));
+
+
+
             }
+
+            var checked_data1 = JSON.parse(localStorage.getItem('checked_data')) || [];
+            console.log("checked_data1:");
+            console.log(checked_data1);
+
+            var arc_user2 =
+                '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
+            var data = {
+                create_arc_item_all_slow: 'create_arc_item_all_slow',
+                arc_user: arc_user2,
+                checked_data: checked_data1
+            };
+            $.ajax({
+                type: "POST",
+                url: "ajaxrequest.php",
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(response) {
+                    console.log(response);
+
+                }
+            });
+
+            var arr = $('.sync_product').map((i, el) => el.checked).get();
+            console.log(arr);
+            localStorage.setItem("checked", JSON.stringify(arr));
+        });
+        var arr1 = JSON.parse(localStorage.getItem('sync_product1')) || [];
+        console.log("arr11:" + arr1);
+        arr1.forEach((c, i) => $('.sync_product1').eq(i).prop('checked', c));
+
+        $(".sync_product1").click((elem) => {
+            var arr1 = $('.sync_product1').map((i, el) => el.checked).get();
+            console.log("arr22:" + arr1);
+            localStorage.setItem("sync_product1", JSON.stringify(arr1));
+        });
+
+        var create_arc_item_slowRowByMerchantGuid =
+            '<?php  if(!empty($create_arc_item_slowRowByMerchantGuid)){ echo json_encode(unserialize($create_arc_item_slowRowByMerchantGuid['checked_data'])); }  ?>';
+        var create_arc_item_slowRowByMerchantGuid1 = JSON.parse(
+            create_arc_item_slowRowByMerchantGuid);
+        console.log('create_arc_item_slowRowByMerchantGuid:');
+        console.log(create_arc_item_slowRowByMerchantGuid);
+        console.log(create_arc_item_slowRowByMerchantGuid1);
+
+    });
+
+    function getCookie(name) {
+        var value = '; ' + document.cookie;
+        var parts = value.split('; ' + name + '=');
+        if (parts.length === 2) {
+            return parts.pop().split(';').shift();
         }
+    }
     </script>
 </body>
+
 </html>
