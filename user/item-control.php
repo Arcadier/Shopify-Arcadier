@@ -466,14 +466,16 @@ if($isMerchant){
                                             <!-- created -->
                                             <td><?php echo $shopify_products['node']['updatedAt']; ?></td>
                                             <!-- updated -->
-                                            <td><?php                                                 //   synced date
+                                            <td><?php  //   synced date
+                                                $tag_found = false;
                                                 foreach($shopify_products['node']['tags'] as $key=>$shopify_product_tag){
                                                     if($shopify_product_tag == 'synced'){
                                                         echo '<b>Yes</b>';
+                                                        $tag_found = true;
                                                     }
-                                                    else{
-                                                        echo 'No';
-                                                    }
+                                                }
+                                                if( $tag_found == false){
+                                                    echo 'No';
                                                 }
 
                                             ?></td>
@@ -525,15 +527,8 @@ if($isMerchant){
                                                             }
                                                         }
 
-                                                        //echo 'destination arc cat ' . json_encode($destination_arcadier_categories);
-                                                        
                                                         $category_names = '';
-                                                       
-                                                        echo $category_div_ids;
-
                                                         $category_div_ids = implode(',',$destination_arcadier_categories);
-
-                                                        
                                                         foreach($arcadier_categories as $cat){
 
                                                             if(in_array($cat['ID'], $destination_arcadier_categories)){
