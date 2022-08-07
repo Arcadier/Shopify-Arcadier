@@ -131,6 +131,7 @@ function shopify_get_all_products($token, $shop){
 					tags
 					createdAt
 					updatedAt
+					
 				}
 			}
 			pageInfo{
@@ -236,11 +237,17 @@ function shopify_categories($token, $shop) {
 
 function shopify_add_tag($token, $shop, $product_id, $tags) {
 
-	$mutation = array("query" => 'mutation {
+	error_log('shop ' . $shop);
+	error_log('prod-id' . $product_id);
+	error_log('tags '. $tags);
+
+	
+
+	$mutation = array('query' => "mutation {
 	tagsAdd(
 		
-			id:' .  $product_id . '
-			tags:' . $tags . '
+			id: \"$product_id\",
+			tags:\"$tags\"
 			
 		) {
             node {
@@ -253,10 +260,12 @@ function shopify_add_tag($token, $shop, $product_id, $tags) {
         }
     }
     
-    ');
+    ");
+
+	error_log('mutation '. json_encode($mutation));
 
     $tagsCreate = graphql($token, $shop, $mutation);
-
+	error_log('tags create ' .json_encode($tagsCreate));
 	return $tagsCreate;
 }
 
