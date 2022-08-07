@@ -1,43 +1,43 @@
 <?php
 
 // Get our helper functions
-require_once("shopify.php");
-
 include 'callAPI.php';
-include 'admin_token.php';
+require_once("shopify.php");
+require 'api.php';
+//
+//include 'admin_token.php';
+$API = new ApiSdk;
+
+//include 'admin_token.php';
 $contentBodyJson = file_get_contents('php://input');
 $content = json_decode($contentBodyJson, true);
 //$userId = $content['userguid'];
 
 $baseUrl = getMarketplaceBaseUrl();
-$admin_token = getAdminToken();
+$admin_token = $API->AdminToken();
 $customFieldPrefix = getCustomFieldPrefix();
 
 $userToken = $_COOKIE["webapitoken"];
 $url = $baseUrl . '/api/v2/users/'; 
 $result = callAPI("GET", $userToken, $url, false);
 $userId = $result['ID'];
+$packageId = getPackageID();
 
 
+//search on 'auth' custom table instead, referencing the merchant guid, 
+//store per merchant should only be 1 at a time, 
+//else if adding another store, delete the former one
+
+$auth = array(array('Name' => 'merchant_guid', "Operator" => "in",'Value' => $userId), array(array('Name' => 'access_token', "Operator" => "like",'Value' => 'shpua_')));
+$url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
+$authDetails =  callAPI("POST", $admin_token, $url, $auth);
+
+//echo json_encode($authDetails);
+//update the access token from the obtained credentials
 
 
-
-$url = $baseUrl . '/api/v2/users/' . $userId; 
-$merchant = callAPI("GET", $admin_token['access_token'], $url, false);  
-
-foreach($merchant['CustomFields'] as $cf) 
-{ 
-    
-if ($cf['Name'] == 'shopify_key' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
-    $shop_api_key = $cf['Values'][0];
-     
- }
-  if ($cf['Name'] == 'shopify_secret_key' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
-    $shop_secret_key = $cf['Values'][0];
-    
-}
-
-}
+$shop_secret_key = $authDetails['Records'][0]['secret_key'];
+$shop_api_key = $authDetails['Records'][0]['api_key'];
 
 if ($shop_secret_key) {
 error_log($shop_secret_key);
@@ -79,30 +79,17 @@ if (hash_equals($hmac, $computed_hmac)) {
 	$result = json_decode($result, true);
 	$access_token = $result['access_token'];
 
-
-	$url = $baseUrl . '/api/developer-packages/custom-fields?packageId=' . getPackageID();
-	$packageCustomFields = callAPI("GET", null, $url, false);
-
-	foreach ($packageCustomFields as $cf) {
-    if ($cf['Name'] == 'shopify_access_token' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
-           $shopify_access_token = $cf['Code'];
-    }
-	}
-	$data = [
-    'CustomFields' => [
-        [
-            'Code' =>  $shopify_access_token,
-            'Values' => [$access_token],
-        ],
-
-
-    ],
-];
-
-$url = $baseUrl . '/api/v2/users/' . $userId;
-$result = callAPI("PUT", $admin_token['access_token'], $url, $data);
-
 	
+$auth_id = $authDetails['Records'][0]['Id'];
+
+		$auth_details = [
+            
+            'access_token' => $access_token
+    
+        ];	
+
+$response = $API->editRowEntry($packageId, 'auth', $auth_id, $auth_details);
+
 	// Show the access token (don't do this in production!)
 	echo 'This application has already been installed.';
 	echo $access_token;
