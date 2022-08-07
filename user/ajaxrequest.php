@@ -407,7 +407,17 @@ if(isset($content['cat_map'])){
                 'Name'=> 'shop',
                 'Operator'=> 'equal',
                 'Value'=> $authListByMerchantGuid['Records'][0]['shop']
+<<<<<<< Updated upstream
             ]
+=======
+            ],
+
+            [
+                'Name'=> 'access_token',
+                'Operator'=> 'like',
+                'Value'=> 'shpua_'
+            ],
+>>>>>>> Stashed changes
             
         ];
 
