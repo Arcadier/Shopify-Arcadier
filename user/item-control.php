@@ -477,7 +477,7 @@ if($isMerchant){
                                                             }
                                                         }
                                                         $category_names = '';
-                                                        $category_div_ids = implode(', ',$destination_arcadier_categories);
+                                                        $category_div_ids = implode(',',$destination_arcadier_categories);
                                                         
                                                         foreach($arcadier_categories as $cat){
 
@@ -486,7 +486,7 @@ if($isMerchant){
                                                             }
                                                         }
                                                         
-                                                        echo '<div id='.$category_div_ids.'>'.$category_names.'</div>';
+                                                        echo '<div class='.$category_div_ids.'>'.$category_names.'</div>';
                                                     }
                                                     else{
                                                         echo $category_map;
