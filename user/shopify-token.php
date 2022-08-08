@@ -9,34 +9,18 @@
 
 	$shop = str_replace('.myshopify.com', '', $content['shop']);
 	error_log(json_encode($shop));
-	error_log('MongoDB data: '.json_encode($data));
 
+	$data = [
+		'marketplace'=> $content['marketplace'],
+		'shop' => $shop,
+		'merchant_guid' => $content['merchant_guid'],
+		'pluginID' => $content['pluginID']
+	];
+	error_log("Data object: ".json_encode($data));
+	$url = 'https://arcadier-shopify.herokuapp.com/shopify_link_account';
 
-	$curl = curl_init();
-
-	curl_setopt_array($curl, array(
-	CURLOPT_URL => 'https://arcadier-shopify.herokuapp.com/shopify_link_account',
-	CURLOPT_RETURNTRANSFER => true,
-	CURLOPT_ENCODING => '',
-	CURLOPT_MAXREDIRS => 10,
-	CURLOPT_TIMEOUT => 0,
-	CURLOPT_FOLLOWLOCATION => true,
-	CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-	CURLOPT_CUSTOMREQUEST => 'POST',
-	CURLOPT_POSTFIELDS =>'{
-		"shop": '.$shop.',
-		"marketplace": '.$baseUrl.',
-		"pluginID": '.$content['pluginID'].',
-		"merchant_guid": '.$content['merchant_guid']'
-	}',
-	CURLOPT_HTTPHEADER => array(
-		'Content-Type: application/json'
-	),
-	));
-
-	$response = curl_exec($curl);
-
-	curl_close($curl);
+	$response = callAPI("POST", null, $url, $data);
+	error_log(json_encode($response));
 	echo $response;
 	
 // // Get our helper functions
