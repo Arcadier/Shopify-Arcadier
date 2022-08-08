@@ -1,11 +1,8 @@
 <?php
 	include 'callAPI.php';
-	require 'api.php';
+	
 	$contentBodyJson = file_get_contents('php://input');
 	$content = json_decode($contentBodyJson, true);
-
-	$baseUrl = getMarketplaceBaseUrl();
-	$customFieldPrefix = getCustomFieldPrefix();
 
 	$shop = str_replace('.myshopify.com', '', $content['shop']);
 	error_log(json_encode($shop));
