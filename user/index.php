@@ -28,8 +28,8 @@ $auth = array(array('Name' => 'merchant_guid', "Operator" => "in",'Value' => $us
 $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
 $authDetails =  callAPI("POST", $admin_token, $url, $auth);
 
-$shop_secret_key = $authDetails['Records'][0]['secret_key'];
-$shop_api_key = $authDetails['Records'][0]['api_key'];
+// $shop_secret_key = $authDetails['Records'][0]['secret_key'];
+// $shop_api_key = $authDetails['Records'][0]['api_key'];
 $shop = $authDetails['Records'][0]['shop'];
 $auth_id = $authDetails['Records'][0]['Id'];
 
@@ -81,9 +81,9 @@ if($isMerchant){
               'Value'=> $_GET['user']
             ],
             [
-                'Name'=> 'domain',
+                'Name'=> 'shop',
                 'Operator'=> 'equal',
-                'Value'=> $row['domain']
+                'Value'=> $row['shop']
             ]
           ];
         $configListById=$arc->searchTable($pack_id, 'config', $data_config);
@@ -443,33 +443,16 @@ if($isMerchant){
                             </div>
                         </div>
                         <div class="row">
-
-
                             <div class="col-12 col-md-12 p-2">
                                 <div class="mb-2">
-                                    <span class="font-weight-bolder ">Shopify Credentials</span>
+                                    <span class="font-weight-bolder ">Shopify Store Name</span>
                                 </div>
                                 <div class="row mt-3" auth-id=<?php echo $auth_id; ?>>
-                                    <div class="col-3">
-                                        <label for="usr">API Key: </label>
-                                    </div>
-                                    <div class="col-9 pr-5">
-                                        <input type="text" class="form-control" id="api-key"
-                                            value="<?php if(!empty($shop_api_key)) { echo $shop_api_key; } ?>">
-                                    </div>
-                                    <div class="col-3">
-                                        <label for="usr">Secret Key: </label>
-                                    </div>
-                                    <div class="col-9 pr-5">
-                                        <input type="text" class="form-control" id="secret-key"
-                                            value="<?php if(!empty($shop_secret_key)) { echo $shop_secret_key; } ?>">
-                                    </div>
-
                                     <div class="col-3 mt-2">
                                         <label for="pwd">Store name: </label>
                                     </div>
                                     <div class="col-8 pr-5 mt-2">
-                                        <input type="text" class="form-control" id="store-name"
+                                        <input type="text" class="form-control" id="store-name" placeholder="your-store.myshopify.com"
                                             value="<?php if(!empty($shop)) { echo $shop; } ?>" style="width: 113.5%;">
                                     </div>
                                 </div>

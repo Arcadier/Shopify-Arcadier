@@ -25,8 +25,8 @@ $auth = array(array('Name' => 'merchant_guid', "Operator" => "in",'Value' => $us
 $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
 $authDetails =  callAPI("POST", $admin_token, $url, $auth);
 
-$shop_secret_key = $authDetails['Records'][0]['secret_key'];
-$shop_api_key = $authDetails['Records'][0]['api_key'];
+// $shop_secret_key = $authDetails['Records'][0]['secret_key'];
+// $shop_api_key = $authDetails['Records'][0]['api_key'];
 $shop = $authDetails['Records'][0]['shop'];
 $auth_id = $authDetails['Records'][0]['Id'];
 $access_token= $authDetails['Records'][0]['access_token'];

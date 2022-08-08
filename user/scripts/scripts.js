@@ -34,12 +34,13 @@
     
       function saveShopifyData(){
         // console.log(result);
-        var apiUrl = packagePath + '/shopify_link_account.php';
+        var apiUrl = packagePath + '/shopify-token.php';
         var data = {
-            'shopify-key': $('#api-key').val(),
-            'shopify-store': $('#store-name').val(),
-            'secret-key': $('#secret-key').val()
-        }
+            'shop': $('#store-name').val(),
+            'pluginID': packageId,
+            'marketplace': window.location.hostname,
+            'merchant_guid': userId
+        };
         
         $.ajax({
             url: apiUrl,
@@ -51,7 +52,7 @@
                     console.log(`cf ${result}`);
 
                     setTimeout(
-                        window.location.href = result,
+                        location.href = result,
                     5000);
                 },
                 error: function(jqXHR, status, err) {
