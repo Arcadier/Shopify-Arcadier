@@ -131,6 +131,26 @@ function shopify_get_all_products($token, $shop){
 					tags
 					createdAt
 					updatedAt
+					images(first: 5) {
+						edges{
+							node {
+								originalSrc
+								altText	
+
+							}
+						}
+					}
+					variants(first: 1) {
+						edges{
+							node {
+								price
+								id
+							}
+
+						}
+					}
+					
+					
 				}
 			}
 			pageInfo{
@@ -143,7 +163,7 @@ function shopify_get_all_products($token, $shop){
 	//error_log(json_encode($api_call['body']));
 	$products = json_decode($api_call['body'], true);
 	$productlist = $products['data']['products']['edges'];
-
+	
 	return $productlist;
 }
 
@@ -209,9 +229,9 @@ function shopify_call($token, $shop, $api_endpoint, $query = array(), $method = 
 }
 
 function shopify_products($token, $shop){
-    $products = shopify_call($token, $shop, "/admin/products.json", array(), 'GET');
+    $products = shopify_call($token, $shop, "/admin/api/2022-04/products.json", array(), 'GET');
     $products = json_decode($products['response'], TRUE);
-    
+    echo $products;
     return $products;
 
 }
@@ -236,11 +256,17 @@ function shopify_categories($token, $shop) {
 
 function shopify_add_tag($token, $shop, $product_id, $tags) {
 
-	$mutation = array("query" => 'mutation {
+	error_log('shop ' . $shop);
+	error_log('prod-id' . $product_id);
+	error_log('tags '. $tags);
+
+	
+
+	$mutation = array('query' => "mutation {
 	tagsAdd(
 		
-			id:' .  $product_id . '
-			tags:' . $tags . '
+			id: \"$product_id\",
+			tags:\"$tags\"
 			
 		) {
             node {
@@ -253,10 +279,12 @@ function shopify_add_tag($token, $shop, $product_id, $tags) {
         }
     }
     
-    ');
+    ");
+
+	error_log('mutation '. json_encode($mutation));
 
     $tagsCreate = graphql($token, $shop, $mutation);
-
+	error_log('tags create ' .json_encode($tagsCreate));
 	return $tagsCreate;
 }
 

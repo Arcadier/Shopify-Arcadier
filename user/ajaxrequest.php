@@ -604,170 +604,173 @@ elseif(isset($content['create_arc_item'])){
     //echo "<pre>"; print_r($authRowByMerchantGuid);
 	if(isset($content['override_default_category_select'])){
 
-       
-	$arc_cat=$arc->getCategories();
-	$baseURL = $arc->baseUrl11($authRowByMerchantGuid['arc_domain']);
-	$packageID = $pack_id;
-	$admintoken = $authRowByMerchantGuid['arc_token'];
-	$merchant = $authRowByMerchantGuid['merchant_guid'];
-	$mag_product=$mag->magento_get_one_sku($authRowByMerchantGuid['domain'], $authRowByMerchantGuid['token'], $content['sku1']);
-	$mag_product1 = $mag_product;
+        
+        $arc_cat=$arc->getCategories();
+        $baseURL = $arc->baseUrl11($authRowByMerchantGuid['arc_domain']);
+        $packageID = $pack_id;
+        $admintoken = $authRowByMerchantGuid['arc_token'];
+        $merchant = $authRowByMerchantGuid['merchant_guid'];
+        $mag_product=$mag->magento_get_one_sku($authRowByMerchantGuid['domain'], $authRowByMerchantGuid['token'], $content['sku1']);
+        $mag_product1 = $mag_product;
 
 
-    $sync_date = date("Y-m-d H:i:s");
-			$sync_type = 'Item';
-			$sync_trigger = 'Manual';
-			$sync_created = 0;
-			$sync_changed = 0;
-			$sync_unchanged = 0;
+        $sync_date = date("Y-m-d H:i:s");
+                $sync_type = 'Item';
+                $sync_trigger = 'Manual';
+                $sync_created = 0;
+                $sync_changed = 0;
+                $sync_unchanged = 0;
 
-	$category_arrays = $content['override_default_category_select'];
-	$item=array();
-	array_push($item,$mag_product1);
-	 foreach($item as &$sku){
-		$sku->category_id = $category_arrays;
-	} 
-	$items = $item;
-	$domain = $authRowByMerchantGuid['domain'];
-    $username = $authRowByMerchantGuid['username'];
-    $password = $authRowByMerchantGuid['password'];
-    $token = $authRowByMerchantGuid['token'];
-    $unsuccessful_imports = [];
-    $success = true;
-    foreach($items as $sku){
-        $product = $mag->magento_get_one_sku($domain, $token, $sku->sku);
-        $url = $baseURL.'/api/v2/merchants/'.$merchant.'/items';
-        $data = $arc->map($product, $domain, $merchant, $baseURL, $packageID, $sku->category_id);
-		if($data != 0){
-			$datt = [
-						'keywords' => $content['name1']
-					];
+        $category_arrays = $content['override_default_category_select'];
+        $item=array();
+        array_push($item,$mag_product1);
+        foreach($item as &$sku){
+            $sku->category_id = $category_arrays;
+        } 
+        $items = $item;
+        $domain = $authRowByMerchantGuid['domain'];
+        $username = $authRowByMerchantGuid['username'];
+        $password = $authRowByMerchantGuid['password'];
+        $token = $authRowByMerchantGuid['token'];
+        $unsuccessful_imports = [];
+        $success = true;
+        foreach($items as $sku){
+            $product = $mag->magento_get_one_sku($domain, $token, $sku->sku);
+            $url = $baseURL.'/api/v2/merchants/'.$merchant.'/items';
+            $data = $arc->map($product, $domain, $merchant, $baseURL, $packageID, $sku->category_id);
+            if($data != 0){
+                $datt = [
+                            'keywords' => $content['name1']
+                        ];
 
-			$checkItemExist=$arc->searchItems($datt);
-			if(!empty($checkItemExist['Records'])){
-			$result = $arc->editItem($data, $merchant, $checkItemExist['Records'][0]['ID']);
-            $sync_changed++;
-			}else{
-			$result = $arc->createItem($data, $merchant);
-            $sync_created++;
-			}
-			if($result['SKU'] = $sku->sku){
-				//$mag->update_magento($domain, $token, $sku->sku, 1);
-				//$mag->update_magento_arcadier_sync_timestamp($domain, $token, $sku->sku, $sync_date);
-
-                $arcadier_sync_marketplace = '';
-                foreach($sku->custom_attributes as $mag_products_attr_key1=>$mag_products_attr_value1){
-                    if($mag_products_attr_value1->attribute_code == 'arcadier_sync_marketplace'){
-                        $arcadier_sync_marketplace = $mag_products_attr_value1->value;
-                    }
-                }
-                if(!empty($arcadier_sync_marketplace)){
-                    $marketplace_domain_array = explode(',',$arcadier_sync_marketplace);
-                    if(in_array($marketplace_domain,$marketplace_domain_array)){
-                        $marketplace_domain1 = implode(',',$marketplace_domain_array);
-                    }else{
-                        array_push($marketplace_domain_array,$marketplace_domain);
-                        $marketplace_domain1 = implode(',',$marketplace_domain_array);
-                    }
+                $checkItemExist=$arc->searchItems($datt);
+                if(!empty($checkItemExist['Records'])){
+                $result = $arc->editItem($data, $merchant, $checkItemExist['Records'][0]['ID']);
+                $sync_changed++;
                 }else{
-                    $marketplace_domain1 = $marketplace_domain;
+                $result = $arc->createItem($data, $merchant);
+                $sync_created++;
                 }
-				//$mag->update_magento_arcadier_sync_marketplace($domain, $token, $sku->sku, $marketplace_domain1);
-                
-                
-                $arcadier_sync_merchant_guid = '';
-                foreach($sku->custom_attributes as $mag_products_attr_key11=>$mag_products_attr_value11){
-                    if($mag_products_attr_value11->attribute_code == 'arcadier_sync_merchant_guid'){
-                        $arcadier_sync_merchant_guid = $mag_products_attr_value11->value;
+                if($result['SKU'] = $sku->sku){
+                    //$mag->update_magento($domain, $token, $sku->sku, 1);
+                    //$mag->update_magento_arcadier_sync_timestamp($domain, $token, $sku->sku, $sync_date);
+
+                    $arcadier_sync_marketplace = '';
+                    foreach($sku->custom_attributes as $mag_products_attr_key1=>$mag_products_attr_value1){
+                        if($mag_products_attr_value1->attribute_code == 'arcadier_sync_marketplace'){
+                            $arcadier_sync_marketplace = $mag_products_attr_value1->value;
+                        }
                     }
-                }
-                if(!empty($arcadier_sync_merchant_guid)){
-                    $merchant_guid_array = explode(',',$arcadier_sync_merchant_guid);
-                    if(in_array($merchant,$merchant_guid_array)){
-                        $merchant_guid_sync1 = implode(',',$merchant_guid_array);
+                    if(!empty($arcadier_sync_marketplace)){
+                        $marketplace_domain_array = explode(',',$arcadier_sync_marketplace);
+                        if(in_array($marketplace_domain,$marketplace_domain_array)){
+                            $marketplace_domain1 = implode(',',$marketplace_domain_array);
+                        }else{
+                            array_push($marketplace_domain_array,$marketplace_domain);
+                            $marketplace_domain1 = implode(',',$marketplace_domain_array);
+                        }
                     }else{
-                        array_push($merchant_guid_array,$merchant);
-                        $merchant_guid_sync1 = implode(',',$merchant_guid_array);
+                        $marketplace_domain1 = $marketplace_domain;
                     }
-                }else{
-                    $merchant_guid_sync1 = $merchant;
-                }                       
-                //$mag->update_magento_arcadier_sync_marketplace($domain, $token, $sku->sku, $merchant_guid_sync1);
-                
-                /* $arcadier_sync_package_id = '';
-                foreach($sku->custom_attributes as $mag_products_attr_key111=>$mag_products_attr_value111){
-                    if($mag_products_attr_value111->attribute_code == 'arcadier_sync_package_id'){
-                        $arcadier_sync_package_id = $mag_products_attr_value111->value;
+                    //$mag->update_magento_arcadier_sync_marketplace($domain, $token, $sku->sku, $marketplace_domain1);
+                    
+                    
+                    $arcadier_sync_merchant_guid = '';
+                    foreach($sku->custom_attributes as $mag_products_attr_key11=>$mag_products_attr_value11){
+                        if($mag_products_attr_value11->attribute_code == 'arcadier_sync_merchant_guid'){
+                            $arcadier_sync_merchant_guid = $mag_products_attr_value11->value;
+                        }
                     }
-                }
-                if(!empty($arcadier_sync_package_id)){
-                    $package_id_array = explode(',',$arcadier_sync_package_id);
-                    if(in_array($pack_id,$package_id_array)){
-                        $package_id_sync1 = implode(',',$package_id_array);
+                    if(!empty($arcadier_sync_merchant_guid)){
+                        $merchant_guid_array = explode(',',$arcadier_sync_merchant_guid);
+                        if(in_array($merchant,$merchant_guid_array)){
+                            $merchant_guid_sync1 = implode(',',$merchant_guid_array);
+                        }else{
+                            array_push($merchant_guid_array,$merchant);
+                            $merchant_guid_sync1 = implode(',',$merchant_guid_array);
+                        }
                     }else{
-                        array_push($package_id_array,$pack_id);
-                        $package_id_sync1 = implode(',',$package_id_array);
+                        $merchant_guid_sync1 = $merchant;
+                    }                       
+                    //$mag->update_magento_arcadier_sync_marketplace($domain, $token, $sku->sku, $merchant_guid_sync1);
+                    
+                    /* $arcadier_sync_package_id = '';
+                    foreach($sku->custom_attributes as $mag_products_attr_key111=>$mag_products_attr_value111){
+                        if($mag_products_attr_value111->attribute_code == 'arcadier_sync_package_id'){
+                            $arcadier_sync_package_id = $mag_products_attr_value111->value;
+                        }
                     }
-                }else{
+                    if(!empty($arcadier_sync_package_id)){
+                        $package_id_array = explode(',',$arcadier_sync_package_id);
+                        if(in_array($pack_id,$package_id_array)){
+                            $package_id_sync1 = implode(',',$package_id_array);
+                        }else{
+                            array_push($package_id_array,$pack_id);
+                            $package_id_sync1 = implode(',',$package_id_array);
+                        }
+                    }else{
+                        $package_id_sync1 = $pack_id;
+                    }     */    
+                    
                     $package_id_sync1 = $pack_id;
-                }     */    
-                
-                $package_id_sync1 = $pack_id;
 
-                $mag->update_magento1($domain, $token, $sku->sku, 1, $marketplace_domain1, $sync_date, $merchant_guid_sync1, $package_id_sync1);
-			} 
-        }
-        else{
-            $success = false;
-            array_push($unsuccessful_imports, $product->name);
-        }
-    }
-    unset($sku);
-    if($success){
-        /* $getAllItemsAfter = $arc->getAllItems();
-        foreach($getAllItemsAfter['Records'] as $getAllItemsAfters){
-            if($getAllItemsAfters['CreatedDateTime'] == $getAllItemsAfters['ModifiedDateTime']){
-                $sync_unchanged++;
+                    $mag->update_magento1($domain, $token, $sku->sku, 1, $marketplace_domain1, $sync_date, $merchant_guid_sync1, $package_id_sync1);
+                } 
+            }
+            else{
+                $success = false;
+                array_push($unsuccessful_imports, $product->name);
             }
         }
-        //$mag_product2 = json_decode($mag_product1,true);
-        $sync_status = 'Completed';
-        $sync_table_array = array(
-            "magento_id"=>$mag_product1->id,
-            "arcadier_guid"=>$authRowByMerchantGuid['merchant_guid'],
-            "sync_date" => $sync_date,
-            "sync_type" => $sync_type,
-            "sync_trigger" => $sync_trigger,
-            "sync_created" => $sync_created,
-            "sync_changed" => $sync_changed,
-            "sync_unchanged" => $sync_unchanged,
-            "sync_status" => $sync_status
-        );
-        $file = file_get_contents('item_control_data.json');
-        $data = json_decode($file);
-        unset($file);
-
-      
-        $data_index = array_search($mag_product1->id,array_column($data,"magento_id"));
-        if ($data_index !== false) {
-            $data[$data_index] = $sync_table_array;
-        }else{
-            $data[] = $sync_table_array;
-
-        }    
-           
+        unset($sku);
+        if($success){
+            /* $getAllItemsAfter = $arc->getAllItems();
+            foreach($getAllItemsAfter['Records'] as $getAllItemsAfters){
+                if($getAllItemsAfters['CreatedDateTime'] == $getAllItemsAfters['ModifiedDateTime']){
+                    $sync_unchanged++;
+                }
+            }
+            //$mag_product2 = json_decode($mag_product1,true);
+            $sync_status = 'Completed';
+            $sync_table_array = array(
+                "magento_id"=>$mag_product1->id,
+                "arcadier_guid"=>$authRowByMerchantGuid['merchant_guid'],
+                "sync_date" => $sync_date,
+                "sync_type" => $sync_type,
+                "sync_trigger" => $sync_trigger,
+                "sync_created" => $sync_created,
+                "sync_changed" => $sync_changed,
+                "sync_unchanged" => $sync_unchanged,
+                "sync_status" => $sync_status
+            );
+            $file = file_get_contents('item_control_data.json');
+            $data = json_decode($file);
+            unset($file);
 
         
-        file_put_contents('item_control_data.json',json_encode($data));
-        unset($data);  */
-       
-        //echo 1;
-        echo json_encode(array("message"=>1,"data"=>array("sync_date"=>$sync_date)));
-    }
+            $data_index = array_search($mag_product1->id,array_column($data,"magento_id"));
+            if ($data_index !== false) {
+                $data[$data_index] = $sync_table_array;
+            }else{
+                $data[] = $sync_table_array;
+
+            }    
+            
+
+            
+            file_put_contents('item_control_data.json',json_encode($data));
+            unset($data);  */
+        
+            //echo 1;
+            echo json_encode(array("message"=>1,"data"=>array("sync_date"=>$sync_date)));
+        }
+        else{
+            echo json_encode($unsuccessful_imports);
+        }
+	}
+    
+    
     else{
-        echo json_encode($unsuccessful_imports);
-    }
-	}else{
 	$arc_cat=$arc->getCategories();
 	$baseURL = $arc->baseUrl11($authRowByMerchantGuid['arc_domain']);
 	$packageID = $pack_id;

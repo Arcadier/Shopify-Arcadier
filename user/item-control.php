@@ -31,8 +31,6 @@ $shop = $authDetails['Records'][0]['shop'];
 $auth_id = $authDetails['Records'][0]['Id'];
 $access_token= $authDetails['Records'][0]['access_token'];
 
-
-
 $products = shopify_get_all_products($access_token, $shop);
 
 
@@ -126,7 +124,7 @@ if($isMerchant){
                 //         'token' => $mag_token
                 //     ];
                 //     $UpdateRowInauth=$arc->editRowEntry($pack_id, 'auth', $authRowByMerchantGuid['Id'], $data);
-                //     $mag_cat_arrr=$mag->get_categories($authRowByMerchantGuid['domain'], $mag_token);
+                //     $mag_cat_arrr=$mag->get_categories($authRowByMerchantGuid['domain'], $mag_token);\playlist\09nugdIJO4dg24kdXSLscH
                 // }else{
                 //     $mag_cat_arrr=$mag_cat_arr;
                 // }
@@ -451,25 +449,38 @@ if($isMerchant){
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php foreach($products as $shopify_products){ ?>
-                                        <tr id="mag-<?php echo $shopify_products['node']['id']; ?>">
+                                        <?php foreach($products as $shopify_products){ 
+                                            //echo ('tags ' . json_encode($shopify_products['node']['tags']));
+                                            ?>
+                                        <tr id="<?php echo $shopify_products['node']['id']; ?>">
                                             <td><?php echo $shopify_products['node']['title']; ?></td>
-                                            <!-- item name -->
-                                            <td><?php echo $shopify_products['node']['createdAt']; ?></td>
+                                            <!-- item name $date=date_create("2022-08-06T23:48:22Z");
+    echo date_format($date,"d/m/Y H:i"); -->
+                                            <td><?php echo date_format(date_create($shopify_products['node']['createdAt']),"d/m/Y H:i"); ?>
+                                            </td>
                                             <!-- created -->
-                                            <td><?php echo $shopify_products['node']['updatedAt']; ?></td>
+                                            <td><?php echo date_format(date_create($shopify_products['node']['updatedAt']),"d/m/Y H:i"); ?>
+                                            </td>
                                             <!-- updated -->
                                             <td><?php  //   synced date
-                                                $tag_found = false;
-                                                foreach($shopify_products['node']['tags'] as $key=>$shopify_product_tag){
-                                                    if($shopify_product_tag == 'synced'){
-                                                        echo '<b>Yes</b>';
-                                                        $tag_found = true;
-                                                    }
+                                                //$tag_found = false;
+
+                                                if ( in_array("synced",$shopify_products['node']['tags'] )){
+                                                     echo '<b>Yes</b>';
+                                                }else {
+                                                     echo '<b>No</b>';
                                                 }
-                                                if( $tag_found == false){
-                                                    echo 'No';
-                                                }
+                                                
+                                                // foreach($shopify_products['node']['tags'] as $key=>$shopify_product_tag){
+                                                    
+                                                //     if($shopify_product_tag == 'synced'){
+                                                //         echo '<b>Yes</b>';
+                                                //         $tag_found = true;
+                                                //     }
+                                                // }
+                                                // if( $tag_found == false){
+                                                //     echo 'No';
+                                                // }
 
                                             ?></td>
                                             <td><?php  //Shopify Category
@@ -485,8 +496,9 @@ if($isMerchant){
                                                 <!-- Synchronise checkbox -->
                                                 <div class="custom-control custom-checkbox">
                                                     <input type="checkbox" name="sync_product" class="sync_product"
-                                                        id="sync_product-<?php echo $shopify_products['node']['id']; ?>"
-                                                        data-id="<?php echo $shopify_products['node']['title']; ?>,<?php echo $shopify_products['node']['id']; ?>,<?php if(isset($_GET['user'])){ if(!empty($_GET['user'])){ echo $_GET['user']; } } ?>">
+                                                        id="sync_product-<?php echo ltrim($shopify_products['node']['id'],"gid://shopify/Product/"); ?>"
+                                                        data-name="<?php echo $shopify_products['node']['title']; ?>"
+                                                        data-id="<?php echo $shopify_products['node']['id']; ?>">
                                                     <label class="" for=""><span name="customSpan"></span></label>
                                                 </div>
                                             </td>
@@ -581,8 +593,13 @@ if($isMerchant){
                                             </td>
                                             <td>
                                                 <!-- Sync Button -->
+
+                                                <?php
+
+                                                    $short_id = ltrim($shopify_products['node']['id'],"gid://shopify/Product/");
+                                                ?>
                                                 <a id="save_map"
-                                                    onclick="sync_product('<?php echo $mag_products['sku']; ?>','<?php echo $mag_products['name']; ?>','<?php echo $mag_products['id']; ?>');"
+                                                    onclick="sync_shopify_product('<?php echo $shopify_products['node']['id']; ?>','<?php echo $shopify_products['node']['title']; ?>','<?php echo $short_id; ?>');"
                                                     style="margin-left: 25px;border: #0e77d4;box-sizing: border-box;background-color: #333547;border-radius: 6px;color: white;padding: 5px 10px;font-size: 14px; cursor: pointer;">Sync</a>
                                             </td>
                                         </tr>
@@ -711,6 +728,57 @@ if($isMerchant){
         });
     }
 
+
+    function sync_shopify_product(id, name, shortId) {
+
+        console.log('syncing');
+
+        if ($('#sync_product-' + shortId).is(":checked")) {
+
+            data = {
+                id,
+                name,
+                'method': 'sync_one'
+
+            };
+            $('body').append(
+                '<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
+
+            $.ajax({
+                type: "POST",
+                url: "shopify_single_sync.php",
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(response) {
+                    removeClass('loadingDiv', 500);
+                    console.log(JSON.parse(response));
+                    response = JSON.parse(response);
+                    if (response.message == 1) {
+                        // $("tr#mag-" + id1 + " td:nth-child(4)").html("<b>Yes</b> at " +
+                        //     response.data.sync_date);
+                        var message = 'Sync successfully';
+                        ShowCustomDialog('Alert', message);
+                    } else {
+                        // response = JSON.parse(JSON.stringify(response));
+                        // var message1 = response.toString();
+                        // var message = "The following items did not have their categories mapped: " +
+                        //    message1 + ", and were not created.";
+                        // ShowCustomDialog('Alert', message);
+                    }
+                }
+            });
+
+        } else {
+            alert('Please check Synchronize');
+        }
+
+
+
+    }
+
+
+
+
     function sync_product(sku, name, id) {
         var configRowByMerchantGuid_min_sync_limit = '<?php echo $configRowByMerchantGuid["min_sync_limit"]; ?>';
         var configRowByMerchantGuid_min_sync_limit1 = parseInt(configRowByMerchantGuid_min_sync_limit);
@@ -726,64 +794,64 @@ if($isMerchant){
         id1 = id;
 
         if ($('#sync_product-' + id).is(":checked")) {
-            if (mag_product1_count1 >= configRowByMerchantGuid_min_sync_limit1) {
-                var override_default_category_select = $('#override_default_category_select-' + id).val();
-                var arc_user = '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
-                if ($('#override_default_category-' + id).is(":checked")) {
-                    if (override_default_category_select == null || override_default_category_select.length == '0') {
-                        alert("Please Select Override Category");
-                        return false;
-                    }
-                    data = {
-                        sku1: sku1,
-                        name1: name1,
-                        id1: id1,
-                        override_default_category_select: override_default_category_select,
-                        create_arc_item: 'create_arc_item',
-                        arc_user: arc_user
-                    };
-                } else {
-                    data = {
-                        sku1: sku1,
-                        name1: name1,
-                        id1: id1,
-                        create_arc_item: 'create_arc_item',
-                        arc_user: arc_user
-                    };
+            // if (mag_product1_count1 >= configRowByMerchantGuid_min_sync_limit1) {
+            var override_default_category_select = $('#override_default_category_select-' + id).val();
+            var arc_user = '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
+            if ($('#override_default_category-' + id).is(":checked")) {
+                if (override_default_category_select == null || override_default_category_select.length == '0') {
+                    alert("Please Select Override Category");
+                    return false;
                 }
-                $('body').append(
-                    '<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
-
-                console.log(data);
-
-                $.ajax({
-                    type: "POST",
-                    url: "ajaxrequest.php",
-                    contentType: 'application/json',
-                    data: JSON.stringify(data),
-                    success: function(response) {
-                        removeClass('loadingDiv', 500);
-                        console.log(JSON.parse(response));
-                        response = JSON.parse(response);
-                        if (response.message == 1) {
-                            $("tr#mag-" + id1 + " td:nth-child(4)").html("<b>Yes</b> at " +
-                                response.data.sync_date);
-                            var message = 'Sync successfully';
-                            ShowCustomDialog('Alert', message);
-                        } else {
-                            response = JSON.parse(JSON.stringify(response));
-                            var message1 = response.toString();
-                            var message = "The following items did not have their categories mapped: " +
-                                message1 + ", and were not created.";
-                            ShowCustomDialog('Alert', message);
-                        }
-                    }
-                });
-
+                data = {
+                    sku1: sku1,
+                    name1: name1,
+                    id1: id1,
+                    override_default_category_select: override_default_category_select,
+                    create_arc_item: 'create_arc_item',
+                    arc_user: arc_user
+                };
             } else {
-                var message = 'Cannot sync, Please increase sync limit from configuration';
-                ShowCustomDialog('Alert', message);
+                data = {
+                    sku1: sku1,
+                    name1: name1,
+                    id1: id1,
+                    create_arc_item: 'create_arc_item',
+                    arc_user: arc_user
+                };
             }
+            $('body').append(
+                '<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
+
+            console.log(data);
+
+            $.ajax({
+                type: "POST",
+                url: "ajaxrequest.php",
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(response) {
+                    removeClass('loadingDiv', 500);
+                    console.log(JSON.parse(response));
+                    response = JSON.parse(response);
+                    if (response.message == 1) {
+                        $("tr#mag-" + id1 + " td:nth-child(4)").html("<b>Yes</b> at " +
+                            response.data.sync_date);
+                        var message = 'Sync successfully';
+                        ShowCustomDialog('Alert', message);
+                    } else {
+                        response = JSON.parse(JSON.stringify(response));
+                        var message1 = response.toString();
+                        var message = "The following items did not have their categories mapped: " +
+                            message1 + ", and were not created.";
+                        ShowCustomDialog('Alert', message);
+                    }
+                }
+            });
+
+            // } else {
+            //    var message = 'Cannot sync, Please increase sync limit from configuration';
+            //    ShowCustomDialog('Alert', message);
+            // }
         } else {
             alert('Please check Synchronize');
         }
