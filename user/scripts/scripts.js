@@ -32,35 +32,33 @@
     }
 
     
-      function saveShopifyData()
-  {
-    // console.log(result);
-    var apiUrl = packagePath + '/shopify_link_account.php';
-    var data = {
-        'shopify-key': $('#api-key').val(),
-        'shopify-store': $('#store-name').val(),
-        'secret-key': $('#secret-key').val()
+      function saveShopifyData(){
+        // console.log(result);
+        var apiUrl = packagePath + '/shopify_link_account.php';
+        var data = {
+            'shopify-key': $('#api-key').val(),
+            'shopify-store': $('#store-name').val(),
+            'secret-key': $('#secret-key').val()
+        }
+        
+        $.ajax({
+            url: apiUrl,
+            method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(result) {
+                    result =  JSON.parse(result);
+                    console.log(`cf ${result}`);
 
-    }
-      
-      $.ajax({
-        url: apiUrl,
-        method: 'POST',
-              contentType: 'application/json',
-            data: JSON.stringify(data),
-            success: function(result) {
-                result =  JSON.parse(result);
-                console.log(`cf ${result}`);
-
-                setTimeout(
-                    window.location.href = result,
-                5000);
-            },
-            error: function(jqXHR, status, err) {
-            //	toastr.error('Error!');
-            }
-        });
-    }
+                    setTimeout(
+                        window.location.href = result,
+                    5000);
+                },
+                error: function(jqXHR, status, err) {
+                //	toastr.error('Error!');
+                }
+            });
+        }
 
 
     var pathname = (window.location.pathname + window.location.search).toLowerCase();
