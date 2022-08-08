@@ -32,6 +32,10 @@ $auth_id = $authDetails['Records'][0]['Id'];
 $access_token= $authDetails['Records'][0]['access_token'];
 
 $products = shopify_get_all_products($access_token, $shop);
+//$products_rest = shopify_products($access_token, $shop);
+
+//echo json_encode($products);
+
 
 
 $pack_id = getPackageID();
@@ -449,7 +453,7 @@ if($isMerchant){
                                             <th>Arcadier Synced</th>
                                             <th>Shopify Category</th>
                                             <th>Syncronise</th>
-                                            <th>Default Category</th>
+                                            <th>DefaultCategory</th>
                                             <th>Override Default Category</th>
                                             <th>Override Category</th>
                                             <th>Action</th>
@@ -458,6 +462,8 @@ if($isMerchant){
                                     <tbody>
                                         <?php foreach($products as $shopify_products){ 
                                             //echo ('tags ' . json_encode($shopify_products['node']['tags']));
+                                            //echo json_encode($shopify_products);
+                                            
                                             ?>
                                         <tr id="<?php echo $shopify_products['node']['id']; ?>">
                                             <td><?php echo $shopify_products['node']['title']; ?></td>
@@ -548,7 +554,7 @@ if($isMerchant){
                                                             }
                                                         }
                                                         
-                                                        echo '<div class='.$category_div_ids.'>'.$category_names.'</div>';
+                                                        echo '<div cat-id='.$category_div_ids.'  id=cat-' . ltrim($shopify_products['node']['id'],"gid://shopify/Product/") .' image-src='. $shopify_products['node']['images']['edges'][0]['node']['originalSrc'] .' price=' .  $shopify_products['node']['variants']['edges'][0]['node']['price'] .' qty='. $shopify_products['node']['totalInventory'] .'>'.$category_names.'</div>';
                                                     }
                                                     else{
                                                         echo $category_map;
@@ -738,13 +744,19 @@ if($isMerchant){
         console.log('syncing');
 
         if ($('#sync_product-' + shortId).is(":checked")) {
-
+            console.log($(`#cat-${shortId}`).attr('image-src'));
             data = {
                 id,
                 name,
-                'method': 'sync_one'
+                'method': 'sync_one',
+                'category': $(`#cat-${shortId}`).attr('cat-id').split(','),
+                'images': $(`#cat-${shortId}`).attr('image-src'),
+                'price': $(`#cat-${shortId}`).attr('price'),
+                'qty': $(`#cat-${shortId}`).attr('qty')
+
 
             };
+            // console.table(data);
             $('body').append(
                 '<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
 
@@ -779,8 +791,6 @@ if($isMerchant){
 
 
     }
-
-
 
 
     function sync_product(sku, name, id) {
