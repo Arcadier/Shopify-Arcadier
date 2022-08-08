@@ -48,11 +48,12 @@
                 contentType: 'application/json',
                 data: JSON.stringify(data),
                 success: function(result) {
-                    result =  JSON.parse(result);
-                    console.log(`cf ${result}`);
 
-                    setTimeout(
-                        location.href = result,
+                    setTimeout(function(){
+                        if(result.startsWith("https://")){
+                            location.href = result;
+                        }
+                    },   
                     5000);
                 },
                 error: function(jqXHR, status, err) {

@@ -21,7 +21,7 @@ $result = callAPI("GET", $userToken, $url, false);
 $userId = $result['ID'];
 $packageId = getPackageID();
 
-$auth = array(array('Name' => 'merchant_guid', "Operator" => "in",'Value' => $userId));
+$auth = array(array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
 $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
 $authDetails =  callAPI("POST", $admin_token, $url, $auth);
 
