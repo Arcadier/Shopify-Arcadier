@@ -33,17 +33,9 @@ if($isMerchant){
                 'Name'=> 'auth_status',
                 'Operator'=> 'equal',
                 'Value'=> '1'
-            ],
-            
-            [
-                'Name'=> 'access_token',
-                'Operator'=> 'like',
-                'Value'=> "shpua_"
-            ],
-
-            
+            ]
         ];
-        error_Log(json_encode($data_auth));
+        error_Log('Data object: '.json_encode($data_auth));
         error_Log(json_encode('Plugin ID: '.$plugin_id));
         $authListById = $arcadier->searchTable($plugin_id, 'auth', $data_auth);
         error_log(json_encode($authListById));
@@ -223,20 +215,20 @@ if($isMerchant){
 
 <body>
     <script>
-    function addLoader() {
-        $('body').append('<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
-    }
+        function addLoader() {
+            $('body').append('<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
+        }
 
-    function removeClass(div_id, time) {
-        $("#" + div_id).fadeOut(time, function() {
-            $("#" + div_id).remove();
-        });
-    }
+        function removeClass(div_id, time) {
+            $("#" + div_id).fadeOut(time, function() {
+                $("#" + div_id).remove();
+            });
+        }
 
-    function addLoader1() {
-        $('body').append('<div style="" id="loadingDiv1"><div class="loader">Loading...</div></div>');
-    }
-    addLoader1();
+        function addLoader1() {
+            $('body').append('<div style="" id="loadingDiv1"><div class="loader">Loading...</div></div>');
+        }
+        addLoader1();
     </script>
     <div id="wrapper">
         <div class="topbar">

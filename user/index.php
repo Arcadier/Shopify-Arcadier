@@ -414,9 +414,6 @@ if($isMerchant){
                                         <span class="font-weight-bolder ">Mode</span>
                                     </div>
                                     <div class="col-12 bg-white p-3 rounded shadow">
-                                        <div class="mb-2">
-                                            <span class="font-weight-bolder">Mode</span>
-                                        </div>
                                         <div class="row pl-2">
                                             <div class="col-12 col-md-8 mb-3 bg-light p-2 rounded">
                                                 <div class="row w-100">
@@ -432,26 +429,11 @@ if($isMerchant){
                                                         <div class="mb-2">
                                                             <span class="font-weight-bolder">Items:</span>
                                                         </div>
-                                                        <div class="mb-2">
-                                                            <span class="font-weight-bolder">Orders:</span>
-                                                        </div>
                                                     </div>
                                                     <div class="col-4">
                                                         <div class="mb-2">
                                                             <span class="font-weight-bolder">Shopify -> Arcadier</span>
                                                         </div>
-                                                        <div class="mb-2">
-                                                            <span class="font-weight-bolder">Arcadier -> Shopify</span>
-                                                        </div>
-                                                    </div>
-
-
-                                                </div>
-                                            </div>
-                                            <div class="col-12 col-md-8 bg-light p-2 rounded">
-                                                <div class="row w-100">
-                                                    <div class="col-7">
-                                                        Contact the developer to obtain a license for this version
                                                     </div>
                                                 </div>
                                             </div>
@@ -498,19 +480,6 @@ if($isMerchant){
                         </div>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-12 col-md-12 p-2">
-                        <div class="bg-white rounded pt-3 pb-3 pl-3 shadow">
-                            <div class="text-center">
-                                DO NOT SYNC ITEMS WITH LESS THAN <span>
-                                    <input type="text" style="width: 35px; border-radius: 5px;" name="min_sync_limit"
-                                        id="min_sync_limit" value="">
-                                </span> IN STOCK. <span class="alert alert-success" style="display:none;"
-                                    id="min_sync_limit_alert">Min Sync Limit Changed Successfully</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -521,521 +490,516 @@ if($isMerchant){
     <script src="scripts/waves.min.js"></script>
     <script src="scripts/app.js"></script>
 
-
     <script>
         var $j = jQuery.noConflict();
         $(document).ready(function() {
 
-        var min_sync_limit1 =
-            '<?php if(!empty($configRowByMerchantGuid["min_sync_limit"])){echo $configRowByMerchantGuid["min_sync_limit"]; } ?>';
-        $("#min_sync_limit").val(min_sync_limit1);
+            var min_sync_limit1 =
+                '<?php if(!empty($configRowByMerchantGuid["min_sync_limit"])){echo $configRowByMerchantGuid["min_sync_limit"]; } ?>';
+            $("#min_sync_limit").val(min_sync_limit1);
 
-        myDialog = $j("#dialog").dialog({
-            // dialog settings:
-            //autoOpen : false,
-            //
-        });
-        myDialog.dialog("close");
+            myDialog = $j("#dialog").dialog({
+                // dialog settings:
+                //autoOpen : false,
+                //
+            });
+            myDialog.dialog("close");
 
-        $("#min_sync_limit").on("keyup", function(e) {
-            e.preventDefault();
-            //addLoader();
-            var min_sync_limit = $("#min_sync_limit").val();
+            $("#min_sync_limit").on("keyup", function(e) {
+                e.preventDefault();
+                //addLoader();
+                var min_sync_limit = $("#min_sync_limit").val();
+                var Id =
+                    '<?php if(!empty($configRowByMerchantGuid["Id"])){echo $configRowByMerchantGuid["Id"]; } ?>';
+                var merchant_guid =
+                    '<?php if(!empty($configRowByMerchantGuid["merchant_guid"])){ echo $configRowByMerchantGuid["merchant_guid"]; }?>';
+
+                var data = {
+                    min_sync_limit: min_sync_limit,
+                    Id: Id,
+                    merchant_guid: merchant_guid
+                };
+                $.ajax({
+                    async: false,
+                    url: 'ajaxrequest.php',
+                    type: "POST",
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(data) {
+                        //removeClass('loadingDiv',500);
+
+                        console.log(data);
+                        if (data == 'min_sync_limit') {
+
+                            $("#min_sync_limit_alert").css('display', 'inline');
+                            $("#min_sync_limit_alert").text(
+                                'Sync Limit saved Successfully');
+
+                            //ShowCustomDialog('Alert','Sync Limit saved Successfully');
+                        } else {
+                            $("#min_sync_limit_alert").css('display', 'inline');
+                            $("#min_sync_limit_alert").text(data);
+
+                            //ShowCustomDialog('Alert',data);
+                        }
+
+                        setTimeout(function() {
+                            $("#min_sync_limit_alert").css('display', 'none');
+                        }, 7000);
+
+                    }
+                });
+            });
+
+
+            var auth1 =
+                "<?php if(!empty($row)){if($row['auth_status'] == '1'){ echo 'auth'; }else{ echo ''; } } ?>";
+            if (auth1 != '') {
+                $('#connectFail').css("display", "none");
+                $('#connectSuccess').css("display", "block");
+                $('#testFail').css("display", "none");
+                $('#testSuccess').css("display", "block");
+            } else {
+                $('#connectFail').css("display", "block");
+                $('#connectSuccess').css("display", "none");
+                $('#testFail').css("display", "block");
+                $('#testSuccess').css("display", "none");
+            }
+
+            var disabled = $('#disable').val();
+            var enabled = $('#enable').val();
             var Id =
                 '<?php if(!empty($configRowByMerchantGuid["Id"])){echo $configRowByMerchantGuid["Id"]; } ?>';
             var merchant_guid =
                 '<?php if(!empty($configRowByMerchantGuid["merchant_guid"])){ echo $configRowByMerchantGuid["merchant_guid"]; }?>';
+            $(document).on("click", "#disable", function() {
+                addLoader();
+                var data = {
+                    disabled: disabled,
+                    Id: Id,
+                    merchant_guid: merchant_guid
+                };
+                $.ajax({
+                    url: 'ajaxrequest.php',
+                    type: "POST",
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(data) {
+                        removeClass('loadingDiv', 500);
+                        if (data == 'Disabled') {
 
-            var data = {
-                min_sync_limit: min_sync_limit,
-                Id: Id,
-                merchant_guid: merchant_guid
-            };
-            $.ajax({
-                async: false,
-                url: 'ajaxrequest.php',
-                type: "POST",
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function(data) {
-                    //removeClass('loadingDiv',500);
+                            $('#disable').prop("checked", true);
+                            $('#enable').prop("checked", false);
 
-                    console.log(data);
-                    if (data == 'min_sync_limit') {
+                            ShowCustomDialog('Alert', 'Disabled Successfully');
 
-                        $("#min_sync_limit_alert").css('display', 'inline');
-                        $("#min_sync_limit_alert").text(
-                            'Sync Limit saved Successfully');
-
-                        //ShowCustomDialog('Alert','Sync Limit saved Successfully');
-                    } else {
-                        $("#min_sync_limit_alert").css('display', 'inline');
-                        $("#min_sync_limit_alert").text(data);
-
-                        //ShowCustomDialog('Alert',data);
+                        } else {
+                            ShowCustomDialog('Alert', data);
+                        }
                     }
+                });
+            });
+            $(document).on("click", "#enable", function() {
+                addLoader();
+                var data = {
+                    enabled: enabled,
+                    Id: Id,
+                    merchant_guid: merchant_guid
+                };
+                $.ajax({
+                    url: 'ajaxrequest.php',
+                    type: "POST",
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(data) {
+                        removeClass('loadingDiv', 500);
+                        if (data == 'Enabled') {
 
-                    setTimeout(function() {
-                        $("#min_sync_limit_alert").css('display', 'none');
-                    }, 7000);
+                            $('#enable').prop('checked', true);
+                            $('#disable').prop('checked', false);
 
-                }
+                            ShowCustomDialog('Alert', 'Enabled Successfully');
+                        } else {
+                            ShowCustomDialog('Alert', data);
+                        }
+                    }
+                });
+            });
+
+            var ma = $('#ma').val();
+            var am = $('#am').val();
+            $(document).on("click", "#ma", function() {
+                addLoader();
+                var data = {
+                    ma: ma,
+                    Id: Id,
+                    merchant_guid: merchant_guid
+                };
+                $.ajax({
+                    url: 'ajaxrequest.php',
+                    type: "POST",
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(data) {
+                        removeClass('loadingDiv', 500);
+                        if (data == 'ma') {
+
+                            $('#ma').prop("checked", true);
+                            $('#am').prop("checked", false);
+
+                            //alert('Magento To Arcadier Mode Done Successfully');
+                            ShowCustomDialog('Alert','Magento To Arcadier Mode Done Successfully');
+
+                        } else {
+                            //alert('Unable to Change Mode MA');
+                            //alert(data);
+                            ShowCustomDialog('Alert', data);
+                        }
+                    }
+                });
+            });
+            $(document).on("click", "#am", function() {
+                addLoader();
+                var data = {
+                    am: am,
+                    Id: Id,
+                    merchant_guid: merchant_guid
+                };
+                $.ajax({
+                    url: 'ajaxrequest.php',
+                    type: "POST",
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(data) {
+                        removeClass('loadingDiv', 500);
+                        if (data == 'am') {
+                            $('#am').prop('checked', true);
+                            $('#ma').prop('checked', false);
+                            //alert('Arcadier To Magento Mode Done Successfully');
+                            ShowCustomDialog('Alert','Arcadier To Magento Mode Done Successfully');
+                        } else {
+                            ShowCustomDialog('Alert', data);
+                        }
+                    }
+                });
             });
         });
 
 
-        var auth1 =
-            "<?php if(!empty($row)){if($row['auth_status'] == '1'){ echo 'auth'; }else{ echo ''; } } ?>";
-        if (auth1 != '') {
-            $('#connectFail').css("display", "none");
-            $('#connectSuccess').css("display", "block");
-            $('#testFail').css("display", "none");
-            $('#testSuccess').css("display", "block");
-        } else {
-            $('#connectFail').css("display", "block");
-            $('#connectSuccess').css("display", "none");
-            $('#testFail').css("display", "block");
-            $('#testSuccess').css("display", "none");
+
+        function ShowCustomDialog(dialogtype, dialogmessage) {
+            ShowDialogBox(dialogtype, dialogmessage, 'Ok', '', 'GoToAssetList', null);
         }
 
-        var disabled = $('#disable').val();
-        var enabled = $('#enable').val();
-        var Id =
-            '<?php if(!empty($configRowByMerchantGuid["Id"])){echo $configRowByMerchantGuid["Id"]; } ?>';
-        var merchant_guid =
-            '<?php if(!empty($configRowByMerchantGuid["merchant_guid"])){ echo $configRowByMerchantGuid["merchant_guid"]; }?>';
-        $(document).on("click", "#disable", function() {
-            addLoader();
-            var data = {
-                disabled: disabled,
-                Id: Id,
-                merchant_guid: merchant_guid
-            };
-            $.ajax({
-                url: 'ajaxrequest.php',
-                type: "POST",
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function(data) {
-                    removeClass('loadingDiv', 500);
-                    if (data == 'Disabled') {
+        function ShowDialogBox(title, content, btn1text, btn2text, functionText, parameterList) {
+            var btn1css;
+            var btn2css;
 
-                        $('#disable').prop("checked", true);
-                        $('#enable').prop("checked", false);
-
-                        ShowCustomDialog('Alert', 'Disabled Successfully');
-
-                    } else {
-                        ShowCustomDialog('Alert', data);
-                    }
-                }
-            });
-        });
-        $(document).on("click", "#enable", function() {
-            addLoader();
-            var data = {
-                enabled: enabled,
-                Id: Id,
-                merchant_guid: merchant_guid
-            };
-            $.ajax({
-                url: 'ajaxrequest.php',
-                type: "POST",
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function(data) {
-                    removeClass('loadingDiv', 500);
-                    if (data == 'Enabled') {
-
-                        $('#enable').prop('checked', true);
-                        $('#disable').prop('checked', false);
-
-                        ShowCustomDialog('Alert', 'Enabled Successfully');
-                    } else {
-                        ShowCustomDialog('Alert', data);
-                    }
-                }
-            });
-        });
-
-        var ma = $('#ma').val();
-        var am = $('#am').val();
-        $(document).on("click", "#ma", function() {
-            addLoader();
-            var data = {
-                ma: ma,
-                Id: Id,
-                merchant_guid: merchant_guid
-            };
-            $.ajax({
-                url: 'ajaxrequest.php',
-                type: "POST",
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function(data) {
-                    removeClass('loadingDiv', 500);
-                    if (data == 'ma') {
-
-                        $('#ma').prop("checked", true);
-                        $('#am').prop("checked", false);
-
-                        //alert('Magento To Arcadier Mode Done Successfully');
-                        ShowCustomDialog('Alert','Magento To Arcadier Mode Done Successfully');
-
-                    } else {
-                        //alert('Unable to Change Mode MA');
-                        //alert(data);
-                        ShowCustomDialog('Alert', data);
-                    }
-                }
-            });
-        });
-        $(document).on("click", "#am", function() {
-            addLoader();
-            var data = {
-                am: am,
-                Id: Id,
-                merchant_guid: merchant_guid
-            };
-            $.ajax({
-                url: 'ajaxrequest.php',
-                type: "POST",
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function(data) {
-                    removeClass('loadingDiv', 500);
-                    if (data == 'am') {
-                        $('#am').prop('checked', true);
-                        $('#ma').prop('checked', false);
-                        //alert('Arcadier To Magento Mode Done Successfully');
-                        ShowCustomDialog('Alert','Arcadier To Magento Mode Done Successfully');
-                    } else {
-                        ShowCustomDialog('Alert', data);
-                    }
-                }
-            });
-        });
-    });
-
-
-
-    function ShowCustomDialog(dialogtype, dialogmessage) {
-        ShowDialogBox(dialogtype, dialogmessage, 'Ok', '', 'GoToAssetList', null);
-    }
-
-    function ShowDialogBox(title, content, btn1text, btn2text, functionText, parameterList) {
-        var btn1css;
-        var btn2css;
-
-        if (btn1text == '') {
-            btn1css = "hidecss";
-        } else {
-            btn1css = "showcss";
-        }
-
-        if (btn2text == '') {
-            btn2css = "hidecss";
-        } else {
-            btn2css = "showcss";
-        }
-        $("#lblMessage").html(content);
-
-        $j("#dialog").dialog({
-            resizable: false,
-            title: title,
-            modal: true,
-            width: '400px',
-            height: 'auto',
-            bgiframe: false,
-            hide: {
-                effect: 'scale',
-                duration: 400
-            },
-
-            buttons: [{
-                text: btn1text,
-                "class": btn1css,
-                click: function() {
-                    myDialog.dialog("close");
-                }
-            }]
-        });
-    }
-
-    function clear_form_elements(class_name) {
-        jQuery("." + class_name).find(':input').each(function() {
-            switch (this.type) {
-                case 'password':
-                case 'text':
-                case 'textarea':
-                case 'file':
-                case 'select-one':
-                case 'select-multiple':
-                case 'date':
-                case 'number':
-                case 'tel':
-                case 'email':
-                    jQuery(this).val('');
-                    break;
-                case 'checkbox':
-                case 'radio':
-                    this.checked = false;
-                    break;
-            }
-        });
-    }
-
-
-    function clearAll() {
-        addLoader();
-        
-        var username = $('#usr').val();
-        var password = $('#pwd').val();
-        var domain1 = $('#domain').val();
-        var del = $('#deleteField').is(":checked");
-        var arc_user = '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
-
-        if (del == true) {
-            data1 = {
-                username: username,
-                password: password,
-                domain1: domain1,
-                del: del,
-                deauth: 'deauth',
-                arc_user: arc_user
-            };
-        } else {
-            data1 = {
-                username: username,
-                password: password,
-                domain1: domain1,
-                deauth: 'deauth',
-                arc_user: arc_user
-            };
-        }
-        //return;
-        $.ajax({
-            //url: 'authentication.php',
-            url: 'ajaxrequest.php',
-            type: "POST",
-            contentType: 'application/json',
-            data: JSON.stringify(data1),
-            success: function(data) {
-                removeClass('loadingDiv', 500);
-                console.log(data);
-                if (data == 'Disconnected') {
-                    if (del == true) {
-                        document.getElementById('usr').value = '';
-                        document.getElementById('pwd').value = '';
-                        document.getElementById('domain').value = '';
-                        document.getElementById('myDate').value = '';
-                    }
-                    $("#connectSuccess").css('display', 'none');
-                    $("#connectFail").css('display', 'block');
-                    $("#testSuccess").css('display', 'none');
-                    $("#testFail").css('display', 'block');
-
-                    var message = 'Disconnected successfully';
-                    ShowCustomDialog('Alert', message);
-                } else {
-                    var message = 'Unable to Disconnect';
-                    ShowCustomDialog('Alert', message);
-                }
-            }
-        });
-    }
-
-    function timestamp_to_datetime(timestamp, hours, minutes) {
-        var date = new Date(timestamp * 1000);
-        date.setHours(date.getHours() + hours);
-        date.setMinutes(date.getMinutes() + minutes);
-        var iso = date.toISOString().match(/(\d{4}\-\d{2}\-\d{2})T(\d{2}:\d{2}:\d{2})/);
-        var myDate = iso[1] + ' ' + iso[2];
-        return myDate;
-    }
-
-    function testPerform() {
-        addLoader();
-        var usr = $('#usr').val();
-        var pwd = $('#pwd').val();
-        var domain = $('#domain').val();
-        if (usr == '' || pwd == '' || domain == '') {
-            var alert_message = 'Please Fill These Fields: <br>';
-            var newLine = "\r\n";
-            alert_message += newLine;
-
-            if (usr == '') {
-                alert_message += "Username can not be left blank. <br>";
-                alert_message += newLine;
-            }
-            if (pwd == '') {
-                alert_message += "Password can not be left blank. <br>";
-                alert_message += newLine;
-            }
-            if (domain == '') {
-                alert_message += "Domain can not be left blank. <br>";
-                alert_message += newLine;
-            }
-            
-            ShowCustomDialog('Alert', alert_message);
-            removeClass('loadingDiv', 500);
-            return false;
-        }
-
-        var data = {
-            usr: usr,
-            pwd: pwd,
-            domain: domain,
-            test: 'test'
-        };
-        $.ajax({
-            url: 'ajaxrequest.php',
-            type: "POST",
-            contentType: 'application/json',
-            data: JSON.stringify(data),
-            success: function(data) {
-                removeClass('loadingDiv', 500);
-                var obj = JSON.parse(data);
-                console.log(obj);
-                if (obj.message == 'Successful') {
-                    $("#testSuccess").css('display', 'block');
-                    $("#testFail").css('display', 'none');
-                    
-                    var message = 'All credentials verfied. You can now proceed to connect.';
-                    ShowCustomDialog('Alert', message);
-                } else {
-                    $("#testSuccess").css('display', 'none');
-                    $("#testFail").css('display', 'block');
-
-                    var message = obj.message;
-                    ShowCustomDialog('Alert', message);
-                }
-            }
-        });
-    };
-
-    function connectPerform() {
-        addLoader();
-        var usr = $('#usr').val();
-        var pwd = $('#pwd').val();
-        var domain = $('#domain').val();
-        if (usr == '' || pwd == '' || domain == '') {
-            var alert_message = 'Please Fill These Fields: <br>';
-            var newLine = "\r\n";
-            alert_message += newLine;
-
-            if (usr == '') {
-                alert_message += "Username can not be left blank. <br>";
-                alert_message += newLine;
-            }
-            if (pwd == '') {
-                alert_message += "Password can not be left blank. <br>";
-                alert_message += newLine;
-            }
-            if (domain == '') {
-                alert_message += "Domain can not be left blank. <br>";
-                alert_message += newLine;
-            }
-            
-            ShowCustomDialog('Alert', alert_message);
-            removeClass('loadingDiv', 500);
-            return false;
-        }
-
-        var arc_user = '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
-        
-        var data = {
-            usr: usr,
-            pwd: pwd,
-            domain: domain,
-            auth: 'auth',
-            arc_user: arc_user
-        };
-
-        $.ajax({
-            url: 'ajaxrequest.php',
-            type: "POST",
-            contentType: 'application/json',
-            data: JSON.stringify(data),
-            
-            success: function(data) {
-                removeClass('loadingDiv', 500);
-                
-                var obj = JSON.parse(data);
-
-                if (obj.message == 'Authenticated') {
-                    $("#connectSuccess").css('display', 'block');
-                    $("#connectFail").css('display', 'none');
-                    $("#testSuccess").css('display', 'block');
-                    $("#testFail").css('display', 'none');
-
-                    $('#usr').val(obj.row1['username']);
-                    $('#pwd').val(obj.row1['password']);
-                    $('#domain').val(obj.row1['domain']);
-
-                    var timestamp = obj.row1['ModifiedDateTime'];
-                    var myDate = timestamp_to_datetime(timestamp, 5, 30);
-
-                    $('#myDate').val(myDate);
-
-                    var message = 'Connection Established';
-                    ShowCustomDialog('Alert', message);
-                } else {
-                    $("#connectSuccess").css('display', 'none');
-                    $("#connectFail").css('display', 'block');
-                    $("#testSuccess").css('display', 'none');
-                    $("#testFail").css('display', 'block');
-
-                    var message = obj.message;
-                    ShowCustomDialog('Alert', message);
-                }
-            }
-        });
-    };
-
-    function myFunction() {
-        const x = new Date();
-        console.log(x);
-        console.log(x.getDate(), x.getMonth(), x.getFullYear());
-        document.getElementById("myDate").value = (x.getDate()).toString() + "-" + (x.getMonth() + 1).toString() +
-            '-' + (x.getFullYear()).toString();
-    };
-
-    function deleteIt() {
-
-    };
-
-    $(document).ready(function() {
-
-        $("#hide_show").on('click', function() {
-            var inputPasswordType = $('#pwd').attr('type');
-            if (inputPasswordType == 'password') {
-                $('#pwd').attr('type', 'text');
+            if (btn1text == '') {
+                btn1css = "hidecss";
             } else {
-                $('#pwd').attr('type', 'password');
+                btn1css = "showcss";
+            }
+
+            if (btn2text == '') {
+                btn2css = "hidecss";
+            } else {
+                btn2css = "showcss";
+            }
+            $("#lblMessage").html(content);
+
+            $j("#dialog").dialog({
+                resizable: false,
+                title: title,
+                modal: true,
+                width: '400px',
+                height: 'auto',
+                bgiframe: false,
+                hide: {
+                    effect: 'scale',
+                    duration: 400
+                },
+
+                buttons: [{
+                    text: btn1text,
+                    "class": btn1css,
+                    click: function() {
+                        myDialog.dialog("close");
+                    }
+                }]
+            });
+        }
+
+        function clear_form_elements(class_name) {
+            jQuery("." + class_name).find(':input').each(function() {
+                switch (this.type) {
+                    case 'password':
+                    case 'text':
+                    case 'textarea':
+                    case 'file':
+                    case 'select-one':
+                    case 'select-multiple':
+                    case 'date':
+                    case 'number':
+                    case 'tel':
+                    case 'email':
+                        jQuery(this).val('');
+                        break;
+                    case 'checkbox':
+                    case 'radio':
+                        this.checked = false;
+                        break;
+                }
+            });
+        }
+
+
+        function clearAll() {
+            addLoader();
+            
+            var username = $('#usr').val();
+            var password = $('#pwd').val();
+            var domain1 = $('#domain').val();
+            var del = $('#deleteField').is(":checked");
+            var arc_user = '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
+
+            if (del == true) {
+                data1 = {
+                    username: username,
+                    password: password,
+                    domain1: domain1,
+                    del: del,
+                    deauth: 'deauth',
+                    arc_user: arc_user
+                };
+            } else {
+                data1 = {
+                    username: username,
+                    password: password,
+                    domain1: domain1,
+                    deauth: 'deauth',
+                    arc_user: arc_user
+                };
+            }
+            //return;
+            $.ajax({
+                //url: 'authentication.php',
+                url: 'ajaxrequest.php',
+                type: "POST",
+                contentType: 'application/json',
+                data: JSON.stringify(data1),
+                success: function(data) {
+                    removeClass('loadingDiv', 500);
+                    console.log(data);
+                    if (data == 'Disconnected') {
+                        if (del == true) {
+                            document.getElementById('usr').value = '';
+                            document.getElementById('pwd').value = '';
+                            document.getElementById('domain').value = '';
+                            document.getElementById('myDate').value = '';
+                        }
+                        $("#connectSuccess").css('display', 'none');
+                        $("#connectFail").css('display', 'block');
+                        $("#testSuccess").css('display', 'none');
+                        $("#testFail").css('display', 'block');
+
+                        var message = 'Disconnected successfully';
+                        ShowCustomDialog('Alert', message);
+                    } else {
+                        var message = 'Unable to Disconnect';
+                        ShowCustomDialog('Alert', message);
+                    }
+                }
+            });
+        }
+
+        function timestamp_to_datetime(timestamp, hours, minutes) {
+            var date = new Date(timestamp * 1000);
+            date.setHours(date.getHours() + hours);
+            date.setMinutes(date.getMinutes() + minutes);
+            var iso = date.toISOString().match(/(\d{4}\-\d{2}\-\d{2})T(\d{2}:\d{2}:\d{2})/);
+            var myDate = iso[1] + ' ' + iso[2];
+            return myDate;
+        }
+
+        function testPerform() {
+            addLoader();
+            var usr = $('#usr').val();
+            var pwd = $('#pwd').val();
+            var domain = $('#domain').val();
+            if (usr == '' || pwd == '' || domain == '') {
+                var alert_message = 'Please Fill These Fields: <br>';
+                var newLine = "\r\n";
+                alert_message += newLine;
+
+                if (usr == '') {
+                    alert_message += "Username can not be left blank. <br>";
+                    alert_message += newLine;
+                }
+                if (pwd == '') {
+                    alert_message += "Password can not be left blank. <br>";
+                    alert_message += newLine;
+                }
+                if (domain == '') {
+                    alert_message += "Domain can not be left blank. <br>";
+                    alert_message += newLine;
+                }
+                
+                ShowCustomDialog('Alert', alert_message);
+                removeClass('loadingDiv', 500);
+                return false;
+            }
+
+            var data = {
+                usr: usr,
+                pwd: pwd,
+                domain: domain,
+                test: 'test'
+            };
+            $.ajax({
+                url: 'ajaxrequest.php',
+                type: "POST",
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(data) {
+                    removeClass('loadingDiv', 500);
+                    var obj = JSON.parse(data);
+                    console.log(obj);
+                    if (obj.message == 'Successful') {
+                        $("#testSuccess").css('display', 'block');
+                        $("#testFail").css('display', 'none');
+                        
+                        var message = 'All credentials verfied. You can now proceed to connect.';
+                        ShowCustomDialog('Alert', message);
+                    } else {
+                        $("#testSuccess").css('display', 'none');
+                        $("#testFail").css('display', 'block');
+
+                        var message = obj.message;
+                        ShowCustomDialog('Alert', message);
+                    }
+                }
+            });
+        };
+
+        function connectPerform() {
+            addLoader();
+            var usr = $('#usr').val();
+            var pwd = $('#pwd').val();
+            var domain = $('#domain').val();
+            if (usr == '' || pwd == '' || domain == '') {
+                var alert_message = 'Please Fill These Fields: <br>';
+                var newLine = "\r\n";
+                alert_message += newLine;
+
+                if (usr == '') {
+                    alert_message += "Username can not be left blank. <br>";
+                    alert_message += newLine;
+                }
+                if (pwd == '') {
+                    alert_message += "Password can not be left blank. <br>";
+                    alert_message += newLine;
+                }
+                if (domain == '') {
+                    alert_message += "Domain can not be left blank. <br>";
+                    alert_message += newLine;
+                }
+                
+                ShowCustomDialog('Alert', alert_message);
+                removeClass('loadingDiv', 500);
+                return false;
+            }
+
+            var arc_user = '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
+            
+            var data = {
+                usr: usr,
+                pwd: pwd,
+                domain: domain,
+                auth: 'auth',
+                arc_user: arc_user
+            };
+
+            $.ajax({
+                url: 'ajaxrequest.php',
+                type: "POST",
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                
+                success: function(data) {
+                    removeClass('loadingDiv', 500);
+                    
+                    var obj = JSON.parse(data);
+
+                    if (obj.message == 'Authenticated') {
+                        $("#connectSuccess").css('display', 'block');
+                        $("#connectFail").css('display', 'none');
+                        $("#testSuccess").css('display', 'block');
+                        $("#testFail").css('display', 'none');
+
+                        $('#usr').val(obj.row1['username']);
+                        $('#pwd').val(obj.row1['password']);
+                        $('#domain').val(obj.row1['domain']);
+
+                        var timestamp = obj.row1['ModifiedDateTime'];
+                        var myDate = timestamp_to_datetime(timestamp, 5, 30);
+
+                        $('#myDate').val(myDate);
+
+                        var message = 'Connection Established';
+                        ShowCustomDialog('Alert', message);
+                    } else {
+                        $("#connectSuccess").css('display', 'none');
+                        $("#connectFail").css('display', 'block');
+                        $("#testSuccess").css('display', 'none');
+                        $("#testFail").css('display', 'block');
+
+                        var message = obj.message;
+                        ShowCustomDialog('Alert', message);
+                    }
+                }
+            });
+        };
+
+        function myFunction() {
+            const x = new Date();
+            console.log(x);
+            console.log(x.getDate(), x.getMonth(), x.getFullYear());
+            document.getElementById("myDate").value = (x.getDate()).toString() + "-" + (x.getMonth() + 1).toString() +
+                '-' + (x.getFullYear()).toString();
+        };
+
+        $(document).ready(function() {
+
+            $("#hide_show").on('click', function() {
+                var inputPasswordType = $('#pwd').attr('type');
+                if (inputPasswordType == 'password') {
+                    $('#pwd').attr('type', 'text');
+                } else {
+                    $('#pwd').attr('type', 'password');
+                }
+            });
+
+            var baseUrl = window.location.hostname;
+            var token = getCookie('webapitoken');
+            var user = $("#userGuid").val();
+            var arc_user1 =
+                '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
+            if (($('#merchantId') && $('#merchantId').length) && (user == arc_user1)) {
+                removeClass('loadingDiv1', 500);
+                return false;
+            } else {
+                window.location.replace('https://' + baseUrl);
             }
         });
 
-        var baseUrl = window.location.hostname;
-        var token = getCookie('webapitoken');
-        var user = $("#userGuid").val();
-        var arc_user1 =
-            '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
-        if (($('#merchantId') && $('#merchantId').length) && (user == arc_user1)) {
-            removeClass('loadingDiv1', 500);
-            return false;
-        } else {
-            window.location.replace('https://' + baseUrl);
+        function getCookie(name) {
+            var value = '; ' + document.cookie;
+            var parts = value.split('; ' + name + '=');
+            if (parts.length === 2) {
+                return parts.pop().split(';').shift();
+            }
         }
-    });
-
-    function getCookie(name) {
-        var value = '; ' + document.cookie;
-        var parts = value.split('; ' + name + '=');
-        if (parts.length === 2) {
-            return parts.pop().split(';').shift();
-        }
-    }
     </script>
 
     </div>
