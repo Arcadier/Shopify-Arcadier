@@ -92,6 +92,12 @@ function shopify_categories_api($token, $shop, $page) {
 	return array_unique($category_array);
 }
 
+function get_next_items($token, $shop, $last_cursor){
+	$next_items = shopify_get_all_products($token, $shop, $last_cursor, true);
+
+	return $next_items;
+}
+
 function shopify_get_all_products($token, $shop){
 	if(!isset($token)){
 		$error_m = [
@@ -136,7 +142,6 @@ function shopify_get_all_products($token, $shop){
 							node {
 								originalSrc
 								altText	
-
 							}
 						}
 					}
@@ -146,7 +151,6 @@ function shopify_get_all_products($token, $shop){
 								price
 								id
 							}
-
 						}
 					}
 					
@@ -164,6 +168,210 @@ function shopify_get_all_products($token, $shop){
 	$products = json_decode($api_call['body'], true);
 	$productlist = $products['data']['products']['edges'];
 	
+	return $productlist;
+}
+
+function shopify_get_all_products_unstable($token, $shop, $page, $all){
+	/*
+		shopify_get_all_products($token, $shop, null, false)
+			gets only first 10 items
+		
+		shopify_get_all_products($token, $shop, null, true)
+			gets all items
+	*/
+
+	if(!isset($token)){
+		$error_m = [
+			"Error" => [
+				"No access token"
+			]
+		];
+
+		return json_encode($error_m);
+	}
+
+	if(!isset($shop)){
+		$error_m = [
+			"Error" => [
+				"No specified Shopify store"
+			]
+		];
+
+		return json_encode($error_m);
+	}
+
+	//get 10 items only
+	if(!isset($page) && $all == false){
+		$query = array("query" => '{
+			products(first:10) {
+				edges {
+					cursor
+					node {
+						id
+						title
+						description
+						vendor
+						customProductType
+						productType
+						hasOnlyDefaultVariant
+						totalInventory
+						totalVariants
+						status
+						tags
+						createdAt
+						updatedAt
+						images(first: 5) {
+							edges{
+								node {
+									originalSrc
+									altText	
+	
+								}
+							}
+						}
+						variants(first: 1) {
+							edges{
+								node {
+									price
+									id
+								}
+	
+							}
+						}
+						
+						
+					}
+				}
+				pageInfo{
+					hasNextPage
+				}
+			}
+		}');
+	}
+
+	//get ALL items
+	if(!isset($page) && $all == true){
+		error_log('Querying all items');
+		$query = array("query" => '{
+			products(first:10, after: null) {
+				edges {
+					cursor
+					node {
+						id
+						title
+						description
+						vendor
+						customProductType
+						productType
+						hasOnlyDefaultVariant
+						totalInventory
+						totalVariants
+						status
+						tags
+						createdAt
+						updatedAt
+						images(first: 5) {
+							edges{
+								node {
+									originalSrc
+									altText	
+	
+								}
+							}
+						}
+						variants(first: 1) {
+							edges{
+								node {
+									price
+									id
+								}
+	
+							}
+						}
+						
+						
+					}
+				}
+				pageInfo{
+					hasNextPage
+				}
+			}
+		}');
+	}
+
+	if($page != null && $all == true){
+		error_log('Querying next 10 items');
+		$query = array("query" => '{
+			products(first:10, after: "'.$page.'") {
+				edges {
+					cursor
+					node {
+						id
+						title
+						description
+						vendor
+						customProductType
+						productType
+						hasOnlyDefaultVariant
+						totalInventory
+						totalVariants
+						status
+						tags
+						createdAt
+						updatedAt
+						images(first: 5) {
+							edges{
+								node {
+									originalSrc
+									altText	
+	
+								}
+							}
+						}
+						variants(first: 1) {
+							edges{
+								node {
+									price
+									id
+								}
+	
+							}
+						}
+						
+						
+					}
+				}
+				pageInfo{
+					hasNextPage
+				}
+			}
+		}');
+	}
+
+	error_log(json_encode($query));
+	$api_call  = graphql($token, $shop, $query);   
+	$products = json_decode($api_call['body'], true);
+	$productlist = $products['data']['products']['edges'];
+	$hasnextpage = $products['data']['products']['pageInfo']['hasNextPage'];
+	error_log(json_encode($api_call));
+	error_log($productlist[0]['node']['title']);
+
+
+	if($hasnextpage == false){
+		error_log('Last items found');
+		return $productlist;
+	} 
+	error_log('Found more items');
+	
+	foreach($productlist as $product){
+		if(!next($productlist)){
+			$last_cursor = $product['cursor'];
+			error_log($last_cursor);
+			// sleep(2);
+			$productlist = array_merge($productlist, shopify_get_all_products($token, $shop, $last_cursor, true));
+		}
+	}
+
 	return $productlist;
 }
 
