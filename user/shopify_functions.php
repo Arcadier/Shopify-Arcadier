@@ -131,6 +131,25 @@ function shopify_get_all_products($token, $shop){
 					tags
 					createdAt
 					updatedAt
+					images(first: 5) {
+						edges{
+							node {
+								originalSrc
+								altText	
+
+							}
+						}
+					}
+					variants(first: 1) {
+						edges{
+							node {
+								price
+								id
+							}
+
+						}
+					}
+					
 					
 				}
 			}
@@ -144,7 +163,7 @@ function shopify_get_all_products($token, $shop){
 	//error_log(json_encode($api_call['body']));
 	$products = json_decode($api_call['body'], true);
 	$productlist = $products['data']['products']['edges'];
-
+	
 	return $productlist;
 }
 
@@ -210,9 +229,9 @@ function shopify_call($token, $shop, $api_endpoint, $query = array(), $method = 
 }
 
 function shopify_products($token, $shop){
-    $products = shopify_call($token, $shop, "/admin/products.json", array(), 'GET');
+    $products = shopify_call($token, $shop, "/admin/api/2022-04/products.json", array(), 'GET');
     $products = json_decode($products['response'], TRUE);
-    
+    echo $products;
     return $products;
 
 }
