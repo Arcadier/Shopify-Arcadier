@@ -21,7 +21,7 @@ $result = callAPI("GET", $userToken, $url, false);
 $userId = $result['ID'];
 $packageId = getPackageID();
 
-$auth = array(array('Name' => 'merchant_guid', "Operator" => "in",'Value' => $userId), array(array('Name' => 'access_token', "Operator" => "like",'Value' => 'shpua_')));
+$auth = array(array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
 $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
 $authDetails =  callAPI("POST", $admin_token, $url, $auth);
 
@@ -35,8 +35,6 @@ $products = shopify_get_all_products($access_token, $shop);
 //$products_rest = shopify_products($access_token, $shop);
 
 //echo json_encode($products);
-
-
 
 $pack_id = getPackageID();
 $UserInfo = $arc->getUserInfo($_GET['user']);
@@ -156,15 +154,17 @@ if($isMerchant){
 
             //Load Category Map
             //search custom table for category map
-            $data = [
-                'Name' => 'merchant_guid',
-                'Operator' => 'equal',
-                'Value' => $authRowByMerchantGuid['merchant_guid']
-            ];
+            // $data = [
+            //     array (
+            //     'Name' => 'merchant_guid',
+            //     'Operator' => 'equal',
+            //     'Value' => $userId )
+            // ];
+            $data = array(array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
+            $url =  $baseUrl . '/api/v2/plugins/'. $pack_id.'/custom-tables/map';
+            $category_map  =  callAPI("POST", $admin_token, $url, $data);
 
-            $category_map = $arc->searchTable($pack_id, 'map', $data);
-
-
+        
            // echo 'category map ' . json_encode($category_map);
 
             
@@ -547,6 +547,7 @@ if($isMerchant){
 
                                                         $category_names = '';
                                                         $category_div_ids = implode(',',$destination_arcadier_categories);
+                                                        
                                                         foreach($arcadier_categories as $cat){
 
                                                             if(in_array($cat['ID'], $destination_arcadier_categories)){

@@ -855,10 +855,10 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
                                         </div>
                                         <div class="col-4">
                                             <div class="mb-2">
-                                                <span class="font-weight-bolder">Magento -> Arcadier</span>
+                                                <span class="font-weight-bolder">Shopify -> Arcadier</span>
                                             </div>
                                             <div class="mb-2">
-                                                <span class="font-weight-bolder"> Arcadier -> Magento </span>
+                                                <span class="font-weight-bolder"> Arcadier -> Shopify </span>
                                             </div>
                                         </div>
 
@@ -960,7 +960,7 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
                           </div>-->
                                         </div>
                                         <div class="col-6 justify-content-center mx-auto text-center">
-                                            <button class="btn btn-primary mt-5" onclick="sync_product_manual();">Run
+                                            <button class="btn btn-primary mt-5" onclick="sync_bulk_manual();">Run
                                                 Now</button>
                                         </div>
 
@@ -1518,8 +1518,33 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
 
                     }
 
+                    function sync_bulk_manual() {
+                        $('body').append('<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
+
+                        if ($('#m_orders').is(":checked") || $('#m_quantity').is(":checked") || $('#m_details').is(
+                                ":checked") || $('#m_prices').is(":checked")) {
+
+                            $.ajax({
+                                type: "POST",
+                                url: "bulk_sync.php",
+                                contentType: 'application/json',
+                                // data: JSON.stringify(data),
+                                success: function(response) {
+                                    console.log(JSON.parse(response));
+                                    removeClass('loadingDiv', 500);
+                                    ShowCustomDialog('Alert', JSON.parse(response));
+                                }
+                            });
+
+                        } else {
+                            alert('Please check atleast one');
+                        }
+
+
+                    }
 
                     function sync_product_manual() {
+
                         var arr = JSON.parse(localStorage.getItem('checked')) || [];
                         var checked_data = JSON.parse(localStorage.getItem('checked_data')) || [];
                         //console.log("arr1:"+arr);

@@ -38,11 +38,11 @@ $shopify_products = shopify_get_all_products_paginated($access_token, $shop, nul
 
 //step 2.  Loop and check if the item has been sync e.g if item exists on synced products custom table
 
-//foreach($shopify_products as $product) {
+foreach($shopify_products as $product) {
 
     //get the shopify id
-    $product_id = $shopify_products[2]['node']['id'];
-    echo $product_id;
+    $product_id = $product['node']['id'];
+   // echo $product_id;
 
     //check if the item has been sync
 
@@ -50,23 +50,126 @@ $syncItems = array(array('Name' => 'product_id', "Operator" => "equal",'Value' =
 $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/synced_items';
 $isItemSyncResult =  callAPI("POST", $admin_token, $url, $syncItems);
     
-echo 'sync  result ' . json_encode($isItemSyncResult);
+//echo 'sync  result ' . json_encode($isItemSyncResult);
 
 if ($isItemSyncResult['TotalRecords'] == 0) {
 
-    //if 0 - not exist yet, create a new row on synced_items table
-
-    $sync_details = [
-
-    "product_id" => $product_id,
-    "synced_date" => time(),
-    "merchant_guid" => $userId
-    
-    ];
-
-    $response = $arc->createRowEntry($packageId, 'synced_items', $sync_details);
-   
     //create a new item on arcadier 
+    
+    //check if the shopify category has been mapped
+
+    //Load arcadier categories
+            $arcadier_categories = $arc->getCategories(1000, 1);
+            error_log('Arcadier Categories: '.json_encode($arcadier_categories));
+            $arcadier_categories = $arcadier_categories['Records'];
+
+            //Load Category Map
+            //search custom table for category map
+            // $data = [
+            //     'Name' => 'merchant_guid',
+            //     'Operator' => 'equal',
+            //     'Value' => $userId
+            // ];
+            // $category_map = $arc->searchTable($packageId, 'map', $data);
+            
+            $data = array(array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
+            $url =  $baseUrl . '/api/v2/plugins/'. $packageId.'/custom-tables/map';
+            $category_map  =  callAPI("POST", $admin_token, $url, $data);    
+
+            //echo 'category map ' . json_encode($category_map);
+            if($category_map['TotalRecords'] == 1){
+                $category_map = $category_map['Records'][0]['map'];
+                if($product['node']['customProductType'] == null){
+                    $shopify_product_category = $shopify_products['node']['product_type'];
+                }else{
+                    $shopify_product_category = $shopify_products['node']['customProductType'];
+                }
+               // echo 'item has been mapped';
+                //echo json_encode($category_map);
+                $category_map_unserialized = unserialize($category_map);
+                $shopify_category_list = $category_map_unserialized['list'];
+        
+                //find the corresponding Arcadier category according to map
+                $destination_arcadier_categories = []; //these are the arcadier category id's needed
+                foreach($shopify_category_list as $li){
+                    if($li['shopify_category'] == $shopify_product_category.'_category'){
+                        foreach($li['arcadier_guid'] as $arcadier_category){
+                            array_push($destination_arcadier_categories, $arcadier_category);
+                        }
+                    }
+                }
+
+            //finally create the item with the mapped category
+            $all_categories = [];
+            foreach($destination_arcadier_categories as $category) {
+                    $all_categories[] = array("ID" => $category);
+                    
+            }
+
+
+
+            $item_details = array(
+                'SKU' =>  'sku',
+                'Name' =>  $product['node']['title'],
+                'BuyerDescription' => $product['node']['description'],
+                'SellerDescription' => $product['node']['description'],
+                'Price' => (float)$product['node']['variants']['edges'][0]['node']['price'],
+                'PriceUnit' => null,
+                'StockLimited' => true,
+                'StockQuantity' => $product['node']['totalInventory'] ,
+                'IsVisibleToCustomer' => true,
+                'Active' => true,
+                'IsAvailable' => '',
+                'CurrencyCode' =>  'SGD',
+                'Categories' =>   $all_categories,
+                'ShippingMethods'  => null,
+                'PickupAddresses' => null,
+                'Media' => [
+                    array( "MediaUrl" => $product['node']['images']['edges'][0]['node']['originalSrc'])
+                    
+                    ],
+                'Tags' => null,
+                'CustomFields' => null,
+                'ChildItems' => null,
+
+            );
+
+            $url =  $baseUrl . '/api/v2/merchants/' . $userId . '/items';
+            $result =  callAPI("POST", $admin_token, $url, $item_details);
+            $result1 = json_encode(['err' => $result]);
+            //echo $result1;
+            //echo 'item added';
+
+
+            //update the tag of the item in shopify after a successful item upload
+
+            if ($result['ID']){
+
+                error_log($result['ID']);
+                //after syncing the product on arcadier, update the tags on shopify to 'synced'
+
+                shopify_add_tag($access_token, $shop, $product_id, "synced");
+
+                //if 0 - not exist yet, create a new row on synced_items table
+
+                $sync_details = [
+
+                "product_id" => $product_id,
+                "synced_date" => time(),
+                "merchant_guid" => $userId
+                
+                ];
+
+                $response = $arc->createRowEntry($packageId, 'synced_items', $sync_details);
+                            
+            }
+            
+
+        }
+        else{
+           // echo 'not mapped';
+            $category_map = '<b>Not Mapped</b>';
+        }
     
 
     
@@ -82,8 +185,10 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
     ];	
 
     $response = $arc->editRowEntry($packageId, 'synced_items', $synced_item_id, $sync_details);
-    echo 'the sync details has been updated';
+    //echo 'the sync details has been updated';
 
 }
     
-//}
+}
+
+echo json_encode('done syncing');

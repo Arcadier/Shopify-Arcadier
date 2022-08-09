@@ -33,15 +33,8 @@ if($isMerchant){
                 'Name'=> 'auth_status',
                 'Operator'=> 'equal',
                 'Value'=> '1'
-            ],
-            
-            [
-                'Name'=> 'access_token',
-                'Operator'=> 'like',
-                'Value'=> "shpua_"
-            ],
-
-            
+            ]
+        
         ];
         error_Log(json_encode($data_auth));
         error_Log(json_encode('Plugin ID: '.$plugin_id));
@@ -51,7 +44,7 @@ if($isMerchant){
             
             $credentials = $authListById['Records'][0];
             $shopify_categories = shopify_categories_api($credentials['access_token'], $credentials['shop'], null);
-
+            
            // error_log(json_encode($shopify_categories));
 
             $count = count($shopify_categories);

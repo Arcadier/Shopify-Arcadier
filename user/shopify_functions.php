@@ -249,7 +249,7 @@ function shopify_get_all_products_paginated($token, $shop, $page, $all){
 	if(!isset($page) && $all == true){
 		error_log('Querying all items');
 		$query = array("query" => '{
-			products(first:10, after: null) {
+			products(first:50, after: null) {
 				edges {
 					cursor
 					node {
@@ -298,7 +298,7 @@ function shopify_get_all_products_paginated($token, $shop, $page, $all){
 	if($page != null && $all == true){
 		error_log('Querying next 10 items');
 		$query = array("query" => '{
-			products(first:10, after: "'.$page.'") {
+			products(first:50, after: "'.$page.'") {
 				edges {
 					cursor
 					node {
