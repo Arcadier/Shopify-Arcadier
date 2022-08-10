@@ -34,7 +34,7 @@
     
       function saveShopifyData(){
         // console.log(result);
-        var apiUrl = packagePath + '/shopify-token.php';
+        var apiUrl = 'https://arcadier-shopify.herokuapp.com/shopify_link_account';
         var data = {
             'shop': $('#store-name').val(),
             'pluginID': packageId,
