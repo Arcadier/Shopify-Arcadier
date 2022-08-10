@@ -392,12 +392,8 @@ if(isset($content['cat_map'])){
                 'Name'=> 'auth_status',
                 'Operator'=> 'equal',
                 'Value'=> "1"
-            ],
-            [
-                'Name'=> 'access_token',
-                'Operator'=> 'like',
-                'Value'=> "shpua_"
-            ],
+            ]
+            
             
         ];
         $authListByMerchantGuid = $arc->searchTable($pack_id, 'auth', $data_auth);
@@ -414,11 +410,7 @@ if(isset($content['cat_map'])){
                 'Value'=> $authListByMerchantGuid['Records'][0]['shop']
             ],
 
-            [
-                'Name'=> 'access_token',
-                'Operator'=> 'like',
-                'Value'=> "shpua_"
-            ],
+        
             
         ];
 
@@ -521,13 +513,8 @@ if(isset($content['cat_map'])){
                 'Name'=> 'auth_status',
                 'Operator'=> 'equal',
                 'Value'=> "1"
-            ],
-            [
-                'Name'=> 'access_token',
-                'Operator'=> 'like',
-                'Value'=> "shpua_"
-            ],
-            
+            ]
+          
             ];
         $authListByMerchantGuid=$arc->searchTable($pack_id, 'auth', $data_auth);
         $data_map = [

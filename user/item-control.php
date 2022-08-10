@@ -31,7 +31,7 @@ $shop = $authDetails['Records'][0]['shop'];
 $auth_id = $authDetails['Records'][0]['Id'];
 $access_token= $authDetails['Records'][0]['access_token'];
 
-$products = shopify_get_all_products($access_token, $shop);
+$products = shopify_get_all_products_unstable($access_token, $shop, null,true);//shopify_get_all_products($access_token, $shop);
 //$products_rest = shopify_products($access_token, $shop);
 
 //echo json_encode($products);
@@ -149,7 +149,7 @@ if($isMerchant){
             }
             //Load arcadier categories
             $arcadier_categories = $arc->getCategories(1000, 1);
-            error_log('Arcadier Categories: '.json_encode($arcadier_categories));
+            //error_log('Arcadier Categories: '.json_encode($arcadier_categories));
             $arcadier_categories = $arcadier_categories['Records'];
 
             //Load Category Map
@@ -520,19 +520,19 @@ if($isMerchant){
                                                 <?php 
                                                     //check if category map has been loaded
                                                     if($category_map != '<b>Not Mapped</b>'){
-                                                        error_log('Got in the if condition');
+                                                        //error_log('Got in the if condition');
                                                         //get shopify product category
                                                         if($shopify_products['node']['customProductType'] == null){
                                                             $shopify_product_category = $shopify_products['node']['product_type'];
                                                         }else{
                                                             $shopify_product_category = $shopify_products['node']['customProductType'];
                                                         }
-                                                        error_log('Product Type: '.$shopify_product_category);
+                                                        //('Product Type: '.$shopify_product_category);
 
                                                         //unserialize the map from table
-                                                        error_log(json_encode($category_map));
+                                                        //error_log(json_encode($category_map));
                                                         $category_map_unserialized = unserialize($category_map);
-                                                        error_log(json_encode($category_map));
+                                                        //error_log(json_encode($category_map));
                                                         $shopify_category_list = $category_map_unserialized['list'];
                                                         //echo 'shopify cat list ' . json_encode($shopify_category_list);
                                                         //find the corresponding Arcadier category according to map

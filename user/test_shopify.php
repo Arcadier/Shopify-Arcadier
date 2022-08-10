@@ -12,7 +12,7 @@ $query = array(
 
 //$//cats = shopify_categories($token, $shop);
 
-$products = shopify_get_all_products_paginated($token, $shop,null,true);
+$products = shopify_get_all_products_paginated($token, $shop, null, true);
 
 echo json_encode($products);
 // $mutation = array("query" => 'mutation {

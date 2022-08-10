@@ -114,7 +114,7 @@ function shopify_get_all_products($token, $shop){
 	}
 
 	$query = array("query" => '{
-		products(first:10) {
+		products(first:50) {
 			edges {
 				cursor
 				node {
@@ -167,7 +167,8 @@ function shopify_get_all_products($token, $shop){
 	return $productlist;
 }
 
-function shopify_get_all_products_paginated($token, $shop, $page, $all){
+
+function shopify_get_all_products_unstable($token, $shop, $page, $all){
 	/*
 		shopify_get_all_products($token, $shop, null, false)
 			gets only first 10 items
@@ -234,8 +235,6 @@ function shopify_get_all_products_paginated($token, $shop, $page, $all){
 	
 							}
 						}
-						
-						
 					}
 				}
 				pageInfo{
@@ -247,9 +246,9 @@ function shopify_get_all_products_paginated($token, $shop, $page, $all){
 
 	//get ALL items
 	if(!isset($page) && $all == true){
-		error_log('Querying all items');
+		//error_log('Querying all items');
 		$query = array("query" => '{
-			products(first:50, after: null) {
+			products(first:10, after: null) {
 				edges {
 					cursor
 					node {
@@ -284,8 +283,6 @@ function shopify_get_all_products_paginated($token, $shop, $page, $all){
 	
 							}
 						}
-						
-						
 					}
 				}
 				pageInfo{
@@ -296,9 +293,9 @@ function shopify_get_all_products_paginated($token, $shop, $page, $all){
 	}
 
 	if($page != null && $all == true){
-		error_log('Querying next 10 items');
+		//error_log('Querying next 10 items');
 		$query = array("query" => '{
-			products(first:50, after: "'.$page.'") {
+			products(first:10, after: "'.$page.'") {
 				edges {
 					cursor
 					node {
@@ -333,8 +330,6 @@ function shopify_get_all_products_paginated($token, $shop, $page, $all){
 	
 							}
 						}
-						
-						
 					}
 				}
 				pageInfo{
@@ -344,34 +339,28 @@ function shopify_get_all_products_paginated($token, $shop, $page, $all){
 		}');
 	}
 
-	error_log(json_encode($query));
 	$api_call  = graphql($token, $shop, $query);   
-	$curl_response = escapeJsonString($api_call );
-	$products = json_decode($curl_response['body'], true);
-	
+	$products = json_decode($api_call['body'], true);
 	$productlist = $products['data']['products']['edges'];
 	$hasnextpage = $products['data']['products']['pageInfo']['hasNextPage'];
-	error_log(json_encode($api_call));
-	error_log($productlist[0]['node']['title']);
-
 
 	if($hasnextpage == false){
-		error_log('Last items found');
 		return $productlist;
 	} 
-	error_log('Found more items');
-	
+	//error_log('Found more items');
 	foreach($productlist as $product){
 		if(!next($productlist)){
 			$last_cursor = $product['cursor'];
-			error_log($last_cursor);
-			// sleep(2);
-			$productlist = array_merge($productlist, shopify_get_all_products($token, $shop, $last_cursor, true));
+			$productlist = array_merge($productlist, shopify_get_all_products_unstable($token, $shop, $last_cursor, true));
 		}
 	}
 
 	return $productlist;
 }
+
+
+
+
 
 function escapeJsonString($value) { 
     $escapers = array("\'");
@@ -580,23 +569,28 @@ function graphql($token, $shop, $query = array()) {
 	$url = "https://" . $shop .  '.myshopify.com/admin/api/2022-07/graphql.json';
 
 	$curl = curl_init($url);
+	
 	curl_setopt($curl, CURLOPT_HEADER, TRUE);
 	curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
 	curl_setopt($curl, CURLOPT_FOLLOWLOCATION, TRUE);
 	curl_setopt($curl, CURLOPT_MAXREDIRS, 3);
 	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-
+	
 
 	$request_headers[] = "";
 	$request_headers[] = "Content-Type: application/json";
 	if (!is_null($token)) $request_headers[] = "X-Shopify-Access-Token: " . $token;
 	curl_setopt($curl, CURLOPT_HTTPHEADER, $request_headers);
+	
 	curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($query));
+	
 	curl_setopt($curl, CURLOPT_POST, true);
+	
 
 	$response = curl_exec($curl);
 	$error_number = curl_errno($curl);
 	$error_message = curl_error($curl);
+	curl_setopt($curl, CURLOPT_HTTPHEADER,array("Expect:"));
 	curl_close($curl);
 
 	if ($error_number) {

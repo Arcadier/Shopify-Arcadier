@@ -1542,7 +1542,7 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
 
 
                     }
-
+                    //shopify used
                     function sync_product_manual() {
 
                         var arr = JSON.parse(localStorage.getItem('checked')) || [];
@@ -1688,7 +1688,6 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
 
                     }
 
-
                     function sync_product_fast() {
                         var f_schedule = $("#f_schedule").val();
                         if ($('#f_orders').is(":checked") || $('#f_quantity').is(":checked") || $('#f_details').is(
@@ -1740,8 +1739,6 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
                         }
 
                     }
-
-
 
                     function sync_product_event() {
 
@@ -1804,8 +1801,6 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
                         }
 
                     }
-
-
 
 
                     $(document).ready(function() {
