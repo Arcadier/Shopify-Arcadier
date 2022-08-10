@@ -35,24 +35,16 @@ if($isMerchant){
                 'Value'=> '1'
             ]
         ];
-        error_Log('Data object: '.json_encode($data_auth));
-        error_Log(json_encode('Plugin ID: '.$plugin_id));
+        
         $authListById = $arcadier->searchTable($plugin_id, 'auth', $data_auth);
-        error_log(json_encode($authListById));
+        
         if(!empty($authListById['Records'])){
             
             $credentials = $authListById['Records'][0];
             $shopify_categories = shopify_categories_api($credentials['access_token'], $credentials['shop'], null);
 
-           // error_log(json_encode($shopify_categories));
-
             $count = count($shopify_categories);
-            // $mag_cat_arr1 = json_decode(json_encode($mag_cat_arrr), true);
-            // $mag_cat_arr2 = $mag_cat_arr1['items'];
-            // unset($mag_cat_arr2[0]); 
-            // unset($mag_cat_arr2[1]);
-            // $mag_cat_arr3 = array_values($mag_cat_arr2);
-
+            
             $arcadier_categories = $arcadier->getCategories();
 
             if($authListById['Records'][0]['auth_status'] == '1'){

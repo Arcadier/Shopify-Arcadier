@@ -14,7 +14,6 @@ function get_shopify_categories($productTypes, $category_array, $token, $shop){
         foreach ($productTypes as $category){
             if(in_array($category['node']['productType'], $temp) == false){
                 array_push($temp, $category['node']['productType']);
-                error_log(json_encode($temp));
             }
             if(!next($productTypes) && $hasnextpage == true) {
                 $cursor = $category['cursor'];
@@ -164,7 +163,6 @@ function shopify_get_all_products($token, $shop){
 	}');
 
 	$api_call  = graphql($token, $shop, $query);   
-	error_log(json_encode($api_call), 3, "tanoo_log.php");
 	$products = json_decode($api_call['body'], true);
 	$productlist = $products['data']['products']['edges'];
 	
@@ -238,8 +236,6 @@ function shopify_get_all_products_unstable($token, $shop, $page, $all){
 	
 							}
 						}
-						
-						
 					}
 				}
 				pageInfo{
@@ -251,7 +247,7 @@ function shopify_get_all_products_unstable($token, $shop, $page, $all){
 
 	//get ALL items
 	if(!isset($page) && $all == true){
-		error_log('Querying all items');
+		//error_log('Querying all items');
 		$query = array("query" => '{
 			products(first:10, after: null) {
 				edges {
@@ -288,8 +284,6 @@ function shopify_get_all_products_unstable($token, $shop, $page, $all){
 	
 							}
 						}
-						
-						
 					}
 				}
 				pageInfo{
@@ -300,7 +294,7 @@ function shopify_get_all_products_unstable($token, $shop, $page, $all){
 	}
 
 	if($page != null && $all == true){
-		error_log('Querying next 10 items');
+		//error_log('Querying next 10 items');
 		$query = array("query" => '{
 			products(first:10, after: "'.$page.'") {
 				edges {
@@ -337,8 +331,6 @@ function shopify_get_all_products_unstable($token, $shop, $page, $all){
 	
 							}
 						}
-						
-						
 					}
 				}
 				pageInfo{
@@ -348,27 +340,19 @@ function shopify_get_all_products_unstable($token, $shop, $page, $all){
 		}');
 	}
 
-	error_log(json_encode($query));
 	$api_call  = graphql($token, $shop, $query);   
 	$products = json_decode($api_call['body'], true);
 	$productlist = $products['data']['products']['edges'];
 	$hasnextpage = $products['data']['products']['pageInfo']['hasNextPage'];
-	error_log(json_encode($api_call));
-	error_log($productlist[0]['node']['title']);
-
 
 	if($hasnextpage == false){
-		error_log('Last items found');
 		return $productlist;
 	} 
-	error_log('Found more items');
-	
+	//error_log('Found more items');
 	foreach($productlist as $product){
 		if(!next($productlist)){
 			$last_cursor = $product['cursor'];
-			error_log($last_cursor);
-			// sleep(2);
-			$productlist = array_merge($productlist, shopify_get_all_products($token, $shop, $last_cursor, true));
+			$productlist = array_merge($productlist, shopify_get_all_products_unstable($token, $shop, $last_cursor, true));
 		}
 	}
 

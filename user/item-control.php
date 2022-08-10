@@ -23,7 +23,7 @@ $shop = $authDetails->Records[0]->shop;
 $access_token= $authDetails->Records[0]->access_token;
 
 //import Shopify Products
-$products = shopify_get_all_products($access_token, $shop);
+$products = shopify_get_all_products_unstable($access_token, $shop, null, true);
 
 $pack_id = getPackageID();
 $UserInfo = $arc->getUserInfo($_GET['user']);
