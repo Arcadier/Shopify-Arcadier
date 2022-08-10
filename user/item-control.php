@@ -18,6 +18,7 @@ $packageId = getPackageID();
 $auth = array(array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
 $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
 $authDetails =  callAPI("POST", null, $url, $auth);
+error_log(json_encode($authDetails), "tanoo_log.php");
 
 // $shop_secret_key = $authDetails['Records'][0]['secret_key'];
 // $shop_api_key = $authDetails['Records'][0]['api_key'];
