@@ -34,7 +34,7 @@
     
       function saveShopifyData(){
         // console.log(result);
-        var apiUrl = 'https://arcadier-shopify.herokuapp.com/shopify_link_account';
+        var apiUrl = packagePath + '/shopify-token.php';
         var data = {
             'shop': $('#store-name').val(),
             'pluginID': packageId,
@@ -45,22 +45,22 @@
         $.ajax({
             url: apiUrl,
             method: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function(result) {
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(result) {
 
-                    setTimeout(function(){
-                        if(result.startsWith("https://")){
-                            location.href = result;
-                        }
-                    },   
-                    5000);
-                },
-                error: function(jqXHR, status, err) {
-                //	toastr.error('Error!');
-                }
-            });
-        }
+                setTimeout(function(){
+                    if(result.startsWith("https://")){
+                        location.href = result;
+                    }
+                },   
+                5000);
+            },
+            error: function(jqXHR, status, err) {
+            //	toastr.error('Error!');
+            }
+        });
+    }
 
 
     var pathname = (window.location.pathname + window.location.search).toLowerCase();

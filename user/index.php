@@ -453,7 +453,7 @@ if($isMerchant){
                                     </div>
                                     <div class="col-8 pr-5 mt-2">
                                         <input type="text" class="form-control" id="store-name" placeholder="your-store.myshopify.com"
-                                            value="<?php if(!empty($shop)) { echo $shop; } ?>" style="width: 113.5%;">
+                                            value="<?php if(!empty($shop)) { echo $shop; } else { return; } ?>" style="width: 113.5%;">
                                     </div>
                                 </div>
                                 <div class="col-5 pr-5 mt-2">
@@ -667,8 +667,6 @@ if($isMerchant){
                 });
             });
         });
-
-
 
         function ShowCustomDialog(dialogtype, dialogmessage) {
             ShowDialogBox(dialogtype, dialogmessage, 'Ok', '', 'GoToAssetList', null);
