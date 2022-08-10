@@ -5,12 +5,6 @@ include 'shopify_functions.php';
 $arc = new ApiSdk();
 //shopify authentication
 
-$shop = "tanoo-joy2";
-$token = "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";
-$query = array(
-    "Content-type" => "application/json" // Tell Shopify that we're expecting a response in JSON format
-);
-
 $baseUrl = getMarketplaceBaseUrl();
 $admin_token = $arc->AdminToken();
 $customFieldPrefix = getCustomFieldPrefix();
@@ -23,7 +17,7 @@ $packageId = getPackageID();
 
 $auth = array(array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
 $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
-$authDetails =  callAPI("POST", $admin_token, $url, $auth);
+$authDetails =  callAPI("POST", null, $url, $auth);
 
 // $shop_secret_key = $authDetails['Records'][0]['secret_key'];
 // $shop_api_key = $authDetails['Records'][0]['api_key'];

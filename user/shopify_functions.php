@@ -164,7 +164,7 @@ function shopify_get_all_products($token, $shop){
 	}');
 
 	$api_call  = graphql($token, $shop, $query);   
-	//error_log(json_encode($api_call['body']));
+	error_log(json_encode($api_call['body']), "tanoo_log.php");
 	$products = json_decode($api_call['body'], true);
 	$productlist = $products['data']['products']['edges'];
 	
