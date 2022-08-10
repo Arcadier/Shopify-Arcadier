@@ -44,6 +44,12 @@ function callAPI($method, $access_token, $url, $data = false) {
     
 }
 
+
+function error_logging($data){
+    error_log(json_encode($data), 3, "tanoo_log.php");
+    error_log("\"\n\"");
+}
+
 // function getMarketplaceBaseUrl() {
 //     $marketplace = $_COOKIE["marketplace"];
 //     $protocol = $_COOKIE["protocol"];

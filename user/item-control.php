@@ -12,22 +12,18 @@ $customFieldPrefix = getCustomFieldPrefix();
 $userToken = $_COOKIE["webapitoken"];
 $url = $baseUrl . '/api/v2/users/'; 
 $result = callAPI("GET", $userToken, $url, false);
-$userId = $result['ID'];
+$userId = $result->ID;
 $packageId = getPackageID();
 
 $auth = array(array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
 $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
-$authDetails =  callAPI("POST", null, $url, $auth);
-error_log(json_encode($authDetails), "tanoo_log.php");
+$authDetails =  json_decode(callAPI("POST", null, $url, $auth));
 
-// $shop_secret_key = $authDetails['Records'][0]['secret_key'];
-// $shop_api_key = $authDetails['Records'][0]['api_key'];
-$shop = $authDetails['Records'][0]['shop'];
-$auth_id = $authDetails['Records'][0]['Id'];
-$access_token= $authDetails['Records'][0]['access_token'];
+$shop = $authDetails->Records[0]->shop;
+$access_token= $authDetails->Records[0]->access_token;
 
+//import Shopify Products
 $products = shopify_get_all_products($access_token, $shop);
-
 
 $pack_id = getPackageID();
 $UserInfo = $arc->getUserInfo($_GET['user']);
