@@ -123,7 +123,7 @@ function shopify_get_all_products($token, $shop){
 	}
 
 	$query = array("query" => '{
-		products(first:10) {
+		products(first:50) {
 			edges {
 				cursor
 				node {
@@ -172,6 +172,7 @@ function shopify_get_all_products($token, $shop){
 	
 	return $productlist;
 }
+
 
 function shopify_get_all_products_unstable($token, $shop, $page, $all){
 	/*
@@ -294,7 +295,7 @@ function shopify_get_all_products_unstable($token, $shop, $page, $all){
 	$products = json_decode($api_call['body'], true);
 	$productlist = $products['data']['products']['edges'];
 	$hasnextpage = $products['data']['products']['pageInfo']['hasNextPage'];
-	error_log($api_call, 3, "tanoo_log.php");
+
 	if($hasnextpage == false){
 		return $productlist;
 	} 
@@ -502,23 +503,28 @@ function graphql($token, $shop, $query = array()) {
 	$url = "https://" . $shop .  '.myshopify.com/admin/api/2022-07/graphql.json';
 
 	$curl = curl_init($url);
+	
 	curl_setopt($curl, CURLOPT_HEADER, TRUE);
 	curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
 	curl_setopt($curl, CURLOPT_FOLLOWLOCATION, TRUE);
 	curl_setopt($curl, CURLOPT_MAXREDIRS, 3);
 	curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-
+	
 
 	$request_headers[] = "";
 	$request_headers[] = "Content-Type: application/json";
 	if (!is_null($token)) $request_headers[] = "X-Shopify-Access-Token: " . $token;
 	curl_setopt($curl, CURLOPT_HTTPHEADER, $request_headers);
+	
 	curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($query));
+	
 	curl_setopt($curl, CURLOPT_POST, true);
+	
 
 	$response = curl_exec($curl);
 	$error_number = curl_errno($curl);
 	$error_message = curl_error($curl);
+	//curl_setopt($curl, CURLOPT_HTTPHEADER,array("Expect:"));
 	curl_close($curl);
 
 	if ($error_number) {

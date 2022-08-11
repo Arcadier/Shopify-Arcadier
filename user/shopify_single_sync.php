@@ -38,29 +38,38 @@ $access_token= $authDetails['Records'][0]['access_token'];
 
 $product_id =  $content['id'];
 $product_name = $content['name'];
+$categories =  $content['category'];
+$images = $content['images'];
+$price = $content['price'];
+$stock = $content['qty'];
+
 //1.  save the items on arc using merchant API,
+
+$all_categories = [];
+
+foreach($categories as $category) {
+    $all_categories[] = array("ID" => $category);
+    
+}
 
 $item_details = array(
       'SKU' =>  'sku',
       'Name' =>  $product_name,
       'BuyerDescription' => 'description',
       'SellerDescription' => 'description',
-      'Price' => 5,
+      'Price' => (float)$price,
       'PriceUnit' => null,
       'StockLimited' => true,
-      'StockQuantity' =>  10,
+      'StockQuantity' =>  $stock,
       'IsVisibleToCustomer' => true,
       'Active' => true,
       'IsAvailable' => '',
       'CurrencyCode' =>  'SGD',
-      'Categories' =>   [
-          array( "ID" => "6afe4787-3867-4b27-b897-467534410aa2")
-           
-         ],
+      'Categories' =>   $all_categories,
       'ShippingMethods'  => null,
       'PickupAddresses' => null,
       'Media' => [
-          array( "MediaUrl" => "https://blog.hubspot.com/hubfs/customers%20enjoying%20the%20best%20product%20page%20designs%20while%20online%20shopping-1.jpg")
+          array( "MediaUrl" => $images)
            
          ],
       'Tags' => null,
@@ -73,7 +82,6 @@ $url =  $baseUrl . '/api/v2/merchants/' . $userId . '/items';
 $result =  callAPI("POST", $admin_token, $url, $item_details);
 $result1 = json_encode(['err' => $result]);
 echo $result1;
-
 
 if ($result['ID']){
 

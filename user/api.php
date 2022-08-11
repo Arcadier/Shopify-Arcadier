@@ -632,10 +632,10 @@ class ApiSdk
 
     ///////////////////////////////////////////////////// BEGIN CUSTOM TABLE APIs /////////////////////////////////////////////////////
 
-    public function getCustomTable($packageId, $tableName)
+    public function getCustomTable($packageId, $tableName, $token)
     {
         $url         = $this->baseUrl . '/api/v2/plugins/' . $packageId . '/custom-tables/' . $tableName;
-        $customTable = $this->callAPI("GET", null, $url, null);
+        $customTable = $this->callAPI("GET", $token, $url, null);
         return $customTable;
     }
 

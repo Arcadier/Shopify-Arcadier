@@ -1,6 +1,16 @@
 <?php
+include 'callAPI.php';
 include 'magento_functions.php';
 include 'api.php';
+$arc = new ApiSdk();
+
+$admin_token = $arc->AdminToken();
+$packageId = getPackageID();
+
+//retrieve the sync events from custom table
+
+
+$all_events =  $arc->getCustomTable($packageId, "sync_events", $admin_token);
 
 $arc = new ApiSdk();
 $mag = new MagSdk();
@@ -696,37 +706,39 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
                                             <th>Date Time</th>
                                             <th>Type</th>
                                             <th>Trigger</th>
-                                            <th>Created</th>
-                                            <th>Unchanged</th>
-                                            <th>Changed</th>
+                                            <th>Total Item Created</th>
+                                            <th>Total Item Unchanged</th>
+                                            <th>Total Item Changed</th>
                                             <!--<th>Deleted</th>-->
                                             <th>Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php 
-				foreach($data_by_arcadier_guid as $data_by_arcadier_guid1){
-				?>
+                                    foreach($all_events['Records'] as $event){
+                                    ?>
                                         <tr>
-                                            <td><?php echo $data_by_arcadier_guid1['sync_date'] ?></td>
-                                            <td><?php echo $data_by_arcadier_guid1['sync_type'] ?></td>
+                                            <td><?php echo date_format(date_create($event['node']['CreatedDateTime']),"d/m/Y H:i"); ?>
+                                            </td>
+
+                                            <td><?php echo $event['sync_type'] ?></td>
                                             <td>
-                                                <?php echo $data_by_arcadier_guid1['sync_trigger'] ?>
+                                                <?php echo $event['sync_trigger'] ?>
                                             </td>
                                             <td>
-                                                <?php echo $data_by_arcadier_guid1['sync_created'] ?>
+                                                <?php echo $event['total_created'] ?>
                                             </td>
                                             <td>
-                                                <?php echo $data_by_arcadier_guid1['sync_unchanged'] ?>
+                                                <?php echo $event['total_unchanged'] ?>
                                             </td>
                                             <td>
-                                                <?php echo $data_by_arcadier_guid1['sync_changed'] ?>
+                                                <?php echo $event['total_changed'] ?>
                                             </td>
                                             <!--<td>
                             3
                         </td>-->
                                             <td>
-                                                <?php echo $data_by_arcadier_guid1['sync_status'] ?>
+                                                <?php echo $event['status'] ?>
                                             </td>
                                         </tr>
                                         <?php 
@@ -855,10 +867,10 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
                                         </div>
                                         <div class="col-4">
                                             <div class="mb-2">
-                                                <span class="font-weight-bolder">Magento -> Arcadier</span>
+                                                <span class="font-weight-bolder">Shopify -> Arcadier</span>
                                             </div>
                                             <div class="mb-2">
-                                                <span class="font-weight-bolder"> Arcadier -> Magento </span>
+                                                <span class="font-weight-bolder"> Arcadier -> Shopify </span>
                                             </div>
                                         </div>
 
@@ -960,7 +972,7 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
                           </div>-->
                                         </div>
                                         <div class="col-6 justify-content-center mx-auto text-center">
-                                            <button class="btn btn-primary mt-5" onclick="sync_product_manual();">Run
+                                            <button class="btn btn-primary mt-5" onclick="sync_bulk_manual();">Run
                                                 Now</button>
                                         </div>
 
@@ -1518,8 +1530,33 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
 
                     }
 
+                    function sync_bulk_manual() {
+                        $('body').append('<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
 
+                        if ($('#m_orders').is(":checked") || $('#m_quantity').is(":checked") || $('#m_details').is(
+                                ":checked") || $('#m_prices').is(":checked")) {
+
+                            $.ajax({
+                                type: "POST",
+                                url: "bulk_sync.php",
+                                contentType: 'application/json',
+                                // data: JSON.stringify(data),
+                                success: function(response) {
+                                    console.log(JSON.parse(response));
+                                    removeClass('loadingDiv', 500);
+                                    ShowCustomDialog('Alert', JSON.parse(response));
+                                }
+                            });
+
+                        } else {
+                            alert('Please check atleast one');
+                        }
+
+
+                    }
+                    //shopify used
                     function sync_product_manual() {
+
                         var arr = JSON.parse(localStorage.getItem('checked')) || [];
                         var checked_data = JSON.parse(localStorage.getItem('checked_data')) || [];
                         //console.log("arr1:"+arr);
@@ -1663,7 +1700,6 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
 
                     }
 
-
                     function sync_product_fast() {
                         var f_schedule = $("#f_schedule").val();
                         if ($('#f_orders').is(":checked") || $('#f_quantity').is(":checked") || $('#f_details').is(
@@ -1715,8 +1751,6 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
                         }
 
                     }
-
-
 
                     function sync_product_event() {
 
@@ -1779,8 +1813,6 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
                         }
 
                     }
-
-
 
 
                     $(document).ready(function() {
