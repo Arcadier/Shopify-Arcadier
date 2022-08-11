@@ -407,7 +407,8 @@ if(isset($content['cat_map'])){
                 'Name'=> 'shop',
                 'Operator'=> 'equal',
                 'Value'=> $authListByMerchantGuid['Records'][0]['shop']
-        ];
+            ]
+            ];
 
         $response = $arc->searchTable($pack_id, 'map', $data_map);
 
