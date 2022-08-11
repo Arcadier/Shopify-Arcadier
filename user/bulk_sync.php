@@ -31,6 +31,9 @@ $shop = $authDetails['Records'][0]['shop'];
 $auth_id = $authDetails['Records'][0]['Id'];
 $access_token= $authDetails['Records'][0]['access_token'];
 
+$total_created = 0;
+$total_unchanged = 0;
+$total_changed = 0;
 
 //step 1. Get all shopify products
 
@@ -160,6 +163,11 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
                 ];
 
                 $response = $arc->createRowEntry($packageId, 'synced_items', $sync_details);
+
+                //add counter to the total created 
+
+                $total_created++;
+
                             
             }
             
@@ -282,13 +290,30 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
             echo 'total changed ' . $changed;
             echo 'total unchanged ' . $unchanged;
             echo json_encode($field_changed);
-        
-        
 
+            $changed !== 0 ?  $total_changed++ : $total_unchanged++;
+
+
+            
+    
             $response = $arc->editRowEntry($packageId, 'synced_items', $synced_item_id, $sync_details);
 
         }
     }
 }
+
+
+$count_details = [
+
+    'sync_type' => 'manual',
+    'sync_trigger' => 'Bulk sync',
+    'total_changed' => $total_changed,
+    'total_unchanged' => $total_unchanged,
+    'total_created' => $total_created,
+    'status' => 'Sync successful'
+];
+
+
+$create_event = $arc->createRowEntry($packageId, 'sync_events', $count_details);;
 
 echo json_encode('done syncing');

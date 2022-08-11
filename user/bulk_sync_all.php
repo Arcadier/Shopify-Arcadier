@@ -47,6 +47,12 @@ $shop = $merchant['shop'];
 $auth_id = $merchant['Id'];
 $access_token= $merchant['access_token'];
 
+
+$total_created = 0;
+$total_unchanged = 0;
+$total_changed = 0;
+
+
 //step 1. Get all shopify products
 $shopify_products = shopify_get_all_products($access_token, $shop);
 
@@ -176,7 +182,7 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
                 ];
 
                 $response = $arc->createRowEntry($packageId, 'synced_items', $sync_details);
-                            
+                $total_created++;
             }
             
 
@@ -282,6 +288,27 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
 
             ];	
 
+
+             $item_details =  $arc->getItemInfo($isItemSyncResult['Records'][0]['arc_item_guid']);
+
+            $changed = 0;
+            $unchanged = 0;
+            $field_changed = [];
+
+            //check each properties 
+            $product['node']['title'] != $item_details['Name'] ? ($changed++). ($field_changed[]='Title')  : $unchanged++;
+            $product['node']['description'] != $item_details['SellerDescription'] ? ($changed++). ($field_changed[]='Description')  : $unchanged++;
+            (float)$product['node']['variants']['edges'][0]['node']['price'] != $item_details['Price'] ? ($changed++). ($field_changed[]='Price')  : $unchanged++;
+            $product['node']['totalInventory'] != $item_details['StockQuantity'] ? ($changed++). ($field_changed[]='Total Inventory')  : $unchanged++;
+              
+            
+            echo 'total changed ' . $changed;
+            echo 'total unchanged ' . $unchanged;
+            echo json_encode($field_changed);
+
+            $changed !== 0 ?  $total_changed++ : $total_unchanged++;
+
+
             $response = $arc->editRowEntry($packageId, 'synced_items', $synced_item_id, $sync_details);
             //echo 'the sync details has been updated';
          }
@@ -289,5 +316,18 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
     
     }
 }
+
+$count_details = [
+
+    'sync_type' => 'Scheduled (every 15 minutes)',
+    'sync_trigger' => 'Bulk sync',
+    'total_changed' => $total_changed,
+    'total_unchanged' => $total_unchanged,
+    'total_created' => $total_created,
+    'status' => 'Sync successful'
+];
+
+
+$create_event = $arc->createRowEntry($packageId, 'sync_events', $count_details);;
 echo json_encode('done syncing');
 error_log('bulk sync has been run ');

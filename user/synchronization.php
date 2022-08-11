@@ -1,6 +1,16 @@
 <?php
+include 'callAPI.php';
 include 'magento_functions.php';
 include 'api.php';
+$arc = new ApiSdk();
+
+$admin_token = $arc->AdminToken();
+$packageId = getPackageID();
+
+//retrieve the sync events from custom table
+
+
+$all_events =  $arc->getCustomTable($packageId, "sync_events", $admin_token);
 
 $arc = new ApiSdk();
 $mag = new MagSdk();
@@ -696,37 +706,39 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
                                             <th>Date Time</th>
                                             <th>Type</th>
                                             <th>Trigger</th>
-                                            <th>Created</th>
-                                            <th>Unchanged</th>
-                                            <th>Changed</th>
+                                            <th>Total Item Created</th>
+                                            <th>Total Item Unchanged</th>
+                                            <th>Total Item Changed</th>
                                             <!--<th>Deleted</th>-->
                                             <th>Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php 
-				foreach($data_by_arcadier_guid as $data_by_arcadier_guid1){
-				?>
+                                    foreach($all_events['Records'] as $event){
+                                    ?>
                                         <tr>
-                                            <td><?php echo $data_by_arcadier_guid1['sync_date'] ?></td>
-                                            <td><?php echo $data_by_arcadier_guid1['sync_type'] ?></td>
+                                            <td><?php echo date_format(date_create($event['node']['CreatedDateTime']),"d/m/Y H:i"); ?>
+                                            </td>
+
+                                            <td><?php echo $event['sync_type'] ?></td>
                                             <td>
-                                                <?php echo $data_by_arcadier_guid1['sync_trigger'] ?>
+                                                <?php echo $event['sync_trigger'] ?>
                                             </td>
                                             <td>
-                                                <?php echo $data_by_arcadier_guid1['sync_created'] ?>
+                                                <?php echo $event['total_created'] ?>
                                             </td>
                                             <td>
-                                                <?php echo $data_by_arcadier_guid1['sync_unchanged'] ?>
+                                                <?php echo $event['total_unchanged'] ?>
                                             </td>
                                             <td>
-                                                <?php echo $data_by_arcadier_guid1['sync_changed'] ?>
+                                                <?php echo $event['total_changed'] ?>
                                             </td>
                                             <!--<td>
                             3
                         </td>-->
                                             <td>
-                                                <?php echo $data_by_arcadier_guid1['sync_status'] ?>
+                                                <?php echo $event['status'] ?>
                                             </td>
                                         </tr>
                                         <?php 

@@ -75,7 +75,7 @@ if($isMerchant){
 
         //if merchant has not connected Shopify
         if(!empty($authListById['Records'])){
-            echo 'authorize';
+          //  echo 'authorize';
             if($authListById['Records'][0]['auth_status'] == '1'){
 
                 $authRowByMerchantGuid = $authListById['Records'][0];
