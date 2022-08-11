@@ -20,6 +20,52 @@ $url = $baseUrl . '/api/v2/users/';
 $result = callAPI("GET", $userToken, $url, false);
 $userId = $result['ID'];
 
+// $url = $baseUrl . '/api/developer-packages/custom-fields?packageId=' . getPackageID();
+// $packageCustomFields = callAPI("GET", null, $url, false);
+
+// //this will be for the later part once the connection is established
+
+// foreach ($packageCustomFields as $cf) {
+//     if ($cf['Name'] == 'shopify_key' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+//            $shopify_key_code = $cf['Code'];
+//     }
+//     if ($cf['Name'] == 'shopify_store_name' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+//         $shopify_storename_key = $cf['Code'];
+//     }
+
+//      if ($cf['Name'] == 'shopify_secret_key' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+//            $shopify_secretkey_code = $cf['Code'];
+//     }
+   
+// }
+
+// $data = [
+//     'CustomFields' => [
+//         [
+//             'Code' =>  $shopify_key_code,
+//             'Values' => [$shopify_key],
+//         ],
+
+//         [
+//             'Code' =>  $shopify_storename_key,
+//             'Values' => [$shopify_store_name],
+//         ],
+
+//         [
+//             'Code' =>   $shopify_secretkey_code,
+//             'Values' => [$shopify_secret_key],
+//         ],
+
+//     ],
+// ];
+
+// $url = $baseUrl . '/api/v2/users/' . $userId;
+// $result = callAPI("PUT", $admin_token['access_token'], $url, $data);
+//echo json_encode(['data' =>  $result ]);
+
+
+//save to 'auth' custom table instead
+
 $credentials = [
 
     "api_key" => $shopify_key,

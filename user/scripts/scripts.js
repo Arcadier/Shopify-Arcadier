@@ -12,7 +12,7 @@
 			//console.log('test');
 			var a = document.createElement("a");
             a.href = "https://" + baseUrl + "/user/plugins/" + packageId + "/index.php?user=" + user;
-            a.innerHTML = "Tanoo_Test";
+            a.innerHTML = "MagentoTest1";
             a.target = "_blank";
 
             var b = document.createElement("li");
@@ -32,35 +32,38 @@
     }
 
     
-      function saveShopifyData(){
-        // console.log(result);
-        var apiUrl = packagePath + '/shopify-token.php';
-        var data = {
-            'shop': $('#store-name').val(),
-            'pluginID': packageId,
-            'marketplace': window.location.hostname,
-            'merchant_guid': userId
-        };
-        
-        $.ajax({
-            url: apiUrl,
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(data),
-            success: function(result) {
+      function saveShopifyData()
+  {
+    // console.log(result);
+    var apiUrl = packagePath + '/shopify_link_account.php';
+    var data = {
+        'shopify-key': $('#api-key').val(),
+        'shopify-store': $('#store-name').val(),
+        'secret-key': $('#secret-key').val()
 
-                setTimeout(function(){
-                    if(result.startsWith("https://")){
-                        location.href = result;
-                    }
-                },   
-                5000);
-            },
-            error: function(jqXHR, status, err) {
-            //	toastr.error('Error!');
-            }
-        });
     }
+      
+      $.ajax({
+        url: apiUrl,
+        method: 'POST',
+              contentType: 'application/json',
+            data: JSON.stringify(data),
+        success: function(result) {
+          result =  JSON.parse(result);
+            console.log(`cf ${result}`);
+
+            setTimeout(
+            window.location.href = result,
+            
+                5000);
+           
+        
+        },
+        error: function(jqXHR, status, err) {
+        //	toastr.error('Error!');
+        }
+      });
+  }
 
 
     var pathname = (window.location.pathname + window.location.search).toLowerCase();
