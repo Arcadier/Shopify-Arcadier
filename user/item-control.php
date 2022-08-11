@@ -11,7 +11,7 @@ $customFieldPrefix = getCustomFieldPrefix();
 
 $userToken = $_COOKIE["webapitoken"];
 $url = $baseUrl . '/api/v2/users/'; 
-$result = callAPI("GET", $userToken, $url, false);
+$result = json_decode(callAPI("GET", $userToken, $url, false));
 $userId = $result->ID;
 $packageId = getPackageID();
 
