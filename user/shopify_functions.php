@@ -200,7 +200,7 @@ function shopify_get_all_products_unstable($token, $shop, $page, $all){
 	//get 10 items only
 	if(!isset($page) && $all == false){
 		$query = array("query" => '{
-			products(first:10) {
+			products(first:50) {
 				edges {
 					cursor
 					node {
@@ -248,7 +248,7 @@ function shopify_get_all_products_unstable($token, $shop, $page, $all){
 	if(!isset($page) && $all == true){
 		//error_log('Querying all items');
 		$query = array("query" => '{
-			products(first:10, after: null) {
+			products(first:50, after: null) {
 				edges {
 					cursor
 					node {
@@ -295,7 +295,7 @@ function shopify_get_all_products_unstable($token, $shop, $page, $all){
 	if($page != null && $all == true){
 		//error_log('Querying next 10 items');
 		$query = array("query" => '{
-			products(first:10, after: "'.$page.'") {
+			products(first:50, after: "'.$page.'") {
 				edges {
 					cursor
 					node {
@@ -368,10 +368,6 @@ function escapeJsonString($value) {
     $result = str_replace($escapers, $replacements, $value);
     return $result;
 }
-
-
-
-
 
 
 
@@ -590,7 +586,7 @@ function graphql($token, $shop, $query = array()) {
 	$response = curl_exec($curl);
 	$error_number = curl_errno($curl);
 	$error_message = curl_error($curl);
-	curl_setopt($curl, CURLOPT_HTTPHEADER,array("Expect:"));
+	//curl_setopt($curl, CURLOPT_HTTPHEADER,array("Expect:"));
 	curl_close($curl);
 
 	if ($error_number) {
