@@ -31,10 +31,23 @@ function callAPI($method, $access_token, $url, $data = false) {
     curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($curl, CURLOPT_URL, $url);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-
+    
     $result = curl_exec($curl);
+    
     curl_close($curl);
-    return json_decode($result, true);
+    if(is_string($result)){
+        return $result;
+    }
+    else{
+        return json_decode($result, true);
+    }
+    
+}
+
+
+function error_logging($data){
+    error_log(json_encode($data), 3, "tanoo_log.php");
+    error_log("\"\n\"");
 }
 
 // function getMarketplaceBaseUrl() {

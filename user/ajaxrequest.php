@@ -394,7 +394,6 @@ if(isset($content['cat_map'])){
                 'Value'=> "1"
             ]
             
-            
         ];
         $authListByMerchantGuid = $arc->searchTable($pack_id, 'auth', $data_auth);
 
@@ -408,10 +407,6 @@ if(isset($content['cat_map'])){
                 'Name'=> 'shop',
                 'Operator'=> 'equal',
                 'Value'=> $authListByMerchantGuid['Records'][0]['shop']
-            ],
-
-        
-            
         ];
 
         $response = $arc->searchTable($pack_id, 'map', $data_map);
@@ -419,6 +414,7 @@ if(isset($content['cat_map'])){
         //if map already exists
         if ($response['Records'][0]['merchant_guid'] == $content['arc_user']) {
             error_log('Map exists');
+            error_log(json_encode($response['Records'][0]));
             
             $map_arr_unserialize = unserialize($response['Records'][0]['map']);
             $list = $map_arr_unserialize['list'];
