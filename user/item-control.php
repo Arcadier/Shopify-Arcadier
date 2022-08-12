@@ -3,7 +3,6 @@ include 'callAPI.php';
 include 'api.php';
 include 'shopify_functions.php';
 $arc = new ApiSdk();
-//shopify authentication
 
 $baseUrl = getMarketplaceBaseUrl();
 $admin_token = $arc->AdminToken();
@@ -25,7 +24,7 @@ $access_token= $authDetails->Records[0]->access_token;
 //import Shopify Products
 $products = shopify_get_all_products_unstable($access_token, $shop, null, true);
 
-$pack_id = getPackageID();
+$pack_id = $packageId;
 $UserInfo = $arc->getUserInfo($_GET['user']);
 $isMerchant = false;
 if(!empty($UserInfo)){
@@ -57,13 +56,9 @@ if($isMerchant){
 
         //if merchant has not connected Shopify
         if(!empty($authListById['Records'])){
-          //  echo 'authorize';
             if($authListById['Records'][0]['auth_status'] == '1'){
 
                 $authRowByMerchantGuid = $authListById['Records'][0];
-
-              //  echo 'authlistbyid' . json_encode($authRowByMerchantGuid);
-                
                 $data_create_arc_item_slow = [
                     [
                     'Name'=> 'merchant_guid',
@@ -79,78 +74,18 @@ if($isMerchant){
 
                 //find if merchant has slow sync
                 $create_arc_item_slowListById = $arc->searchTable($pack_id, 'create_arc_item_slow', $data_create_arc_item_slow);
-
-                // $data_config = [
-                //     [
-                //     'Name'=> 'merchant_guid',
-                //     'Operator'=> 'equal',
-                //     'Value'=> $_GET['user']
-                //     ],
-                //     [
-                //         'Name'=> 'domain',
-                //         'Operator'=> 'equal',
-                //         'Value'=> $authRowByMerchantGuid['shop']
-                //     ]
-                // ];
-
-                // $configListById = $arc->searchTable($pack_id, 'config', $data_config);
-                // $configRowByMerchantGuid = $configListById['Records'][0];
-
-                // if(!empty($create_arc_item_slowListById['Records'])){
-                //     $create_arc_item_slowRowByMerchantGuid = $create_arc_item_slowListById['Records'][0];
-                // }else{
-                //     $create_arc_item_slowRowByMerchantGuid = array();
-                // }
-
-
-                // $mag_product=$mag->magento_products_all($authRowByMerchantGuid['domain'],$authRowByMerchantGuid['token']);
-                // $mag_product1 = json_decode($mag_product, true);
-                // $mag_product1_count = count($mag_product1['items']);
-                
-                // $mag_cat_arr=$mag->get_categories($authRowByMerchantGuid['domain'], $authRowByMerchantGuid['token']);
-                // if(empty($mag_cat_arr->items)){
-                //     $response = $mag->magento_auth($authRowByMerchantGuid['domain'], $authRowByMerchantGuid['username'], $authRowByMerchantGuid['password']);
-                //     $mag_token = json_decode($response);
-                //     $data = [
-                //         'token' => $mag_token
-                //     ];
-                //     $UpdateRowInauth=$arc->editRowEntry($pack_id, 'auth', $authRowByMerchantGuid['Id'], $data);
-                //     $mag_cat_arrr=$mag->get_categories($authRowByMerchantGuid['domain'], $mag_token);\playlist\09nugdIJO4dg24kdXSLscH
-                // }else{
-                //     $mag_cat_arrr=$mag_cat_arr;
-                // }
-                // $count=count($mag_cat_arrr->items);
-                // $mag_cat_arr1 = json_decode(json_encode($mag_cat_arrr), true);
-                // $mag_cat_arr2 = $mag_cat_arr1['items'];
-                // unset($mag_cat_arr2[0]); 
-                // unset($mag_cat_arr2[1]);
-                // $mag_cat_arr3 = array_values($mag_cat_arr2);
-                // $arc_cat_arr = $arc->getCategories();                
+               
             }else{
                 header('location:'.$_COOKIE['protocol'].'://'.$_COOKIE['marketplace']);
             }
             //Load arcadier categories
             $arcadier_categories = $arc->getCategories(1000, 1);
-            //error_log('Arcadier Categories: '.json_encode($arcadier_categories));
             $arcadier_categories = $arcadier_categories['Records'];
 
-            //Load Category Map
-            //search custom table for category map
-            // $data = [
-            //     array (
-            //     'Name' => 'merchant_guid',
-            //     'Operator' => 'equal',
-            //     'Value' => $userId )
-            // ];
+            //Load category map
             $data = array(array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
             
             $category_map  =  $arc->searchTable($pack_id, "map", $data);
-            error_log($category_map['Records'][0]['map'], 3, "tanoo_log.php");
-
-        
-           // echo 'category map ' . json_encode($category_map);
-
-            
             if($category_map['TotalRecords'] == 1){
                 $category_map = $category_map['Records'][0]['map'];
             }
@@ -445,50 +380,26 @@ if($isMerchant){
                                     </thead>
                                     <tbody>
                                         <?php foreach($products as $shopify_products){ 
-                                            //echo ('tags ' . json_encode($shopify_products['node']['tags']));
-                                            //echo json_encode($shopify_products);
-                                            
                                             ?>
                                         <tr id="<?php echo $shopify_products['node']['id']; ?>">
                                             <td><?php echo $shopify_products['node']['title']; ?></td>
-                                            <!-- item name $date=date_create("2022-08-06T23:48:22Z");
-    echo date_format($date,"d/m/Y H:i"); -->
-                                            <td><?php echo date_format(date_create($shopify_products['node']['createdAt']),"d/m/Y H:i"); ?>
-                                            </td>
-                                            <!-- created -->
-                                            <td><?php echo date_format(date_create($shopify_products['node']['updatedAt']),"d/m/Y H:i"); ?>
-                                            </td>
-                                            <!-- updated -->
+                                            <td><?php echo date_format(date_create($shopify_products['node']['createdAt']),"d/m/Y H:i"); ?></td>
+                                            <td><?php echo date_format(date_create($shopify_products['node']['updatedAt']),"d/m/Y H:i"); ?></td>
                                             <td><?php  //   synced date
-                                                //$tag_found = false;
-
                                                 if ( in_array("synced",$shopify_products['node']['tags'] )){
                                                      echo '<b>Yes</b>';
                                                 }else {
                                                      echo '<b>No</b>';
                                                 }
-                                                
-                                                // foreach($shopify_products['node']['tags'] as $key=>$shopify_product_tag){
-                                                    
-                                                //     if($shopify_product_tag == 'synced'){
-                                                //         echo '<b>Yes</b>';
-                                                //         $tag_found = true;
-                                                //     }
-                                                // }
-                                                // if( $tag_found == false){
-                                                //     echo 'No';
-                                                // }
-
                                             ?></td>
                                             <td><?php  //Shopify Category
-                                                    if($shopify_products['node']['customProductType'] == null){
-                                                        echo $shopify_products['node']['product_type'];
-                                                    }else{
-                                                        echo $shopify_products['node']['customProductType'];
-                                                    }
+                                                if($shopify_products['node']['customProductType'] == null){
+                                                    echo $shopify_products['node']['product_type'];
+                                                }else{
+                                                    echo $shopify_products['node']['customProductType'];
+                                                }
                                                     
-                                                ?>
-                                            </td>
+                                            ?></td>
                                             <td>
                                                 <!-- Synchronise checkbox -->
                                                 <div class="custom-control custom-checkbox">
@@ -499,56 +410,52 @@ if($isMerchant){
                                                     <label class="" for=""><span name="customSpan"></span></label>
                                                 </div>
                                             </td>
-                                            <td>
-                                                <!-- Arcadier Category Map -->
-                                                <?php 
-                                                    //check if category map has been loaded
-                                                    if($category_map != '<b>Not Mapped</b>'){
-                                                        //error_log('Got in the if condition');
-                                                        //get shopify product category
-                                                        if($shopify_products['node']['customProductType'] == null){
-                                                            $shopify_product_category = $shopify_products['node']['product_type'];
-                                                        }else{
-                                                            $shopify_product_category = $shopify_products['node']['customProductType'];
-                                                        }
-                                                        //('Product Type: '.$shopify_product_category);
+                                            <td><?php // Arcadier Category Map
+                                                //check if category map has been loaded
+                                                if($category_map != '<b>Not Mapped</b>'){
+                                                    //error_log('Got in the if condition');
+                                                    //get shopify product category
+                                                    if($shopify_products['node']['customProductType'] == null){
+                                                        $shopify_product_category = $shopify_products['node']['product_type'];
+                                                    }else{
+                                                        $shopify_product_category = $shopify_products['node']['customProductType'];
+                                                    }
+                                                    //('Product Type: '.$shopify_product_category);
 
-                                                        //unserialize the map from table
-                                                        //error_log(json_encode($category_map));
-                                                        $category_map_unserialized = unserialize($category_map);
-                                                        //error_log(json_encode($category_map));
-                                                        $shopify_category_list = $category_map_unserialized['list'];
-                                                        //echo 'shopify cat list ' . json_encode($shopify_category_list);
-                                                        //find the corresponding Arcadier category according to map
-                                                        $destination_arcadier_categories = [];
-                                                        foreach($shopify_category_list as $li){
-                                                            if($li['shopify_category'] == $shopify_product_category.'_category'){
-                                                                foreach($li['arcadier_guid'] as $arcadier_category){
-                                                                    array_push($destination_arcadier_categories, $arcadier_category);
-                                                                }
+                                                    //unserialize the map from table
+                                                    //error_log(json_encode($category_map));
+                                                    $category_map_unserialized = unserialize($category_map);
+                                                    //error_log(json_encode($category_map));
+                                                    $shopify_category_list = $category_map_unserialized['list'];
+                                                    //echo 'shopify cat list ' . json_encode($shopify_category_list);
+                                                    //find the corresponding Arcadier category according to map
+                                                    $destination_arcadier_categories = [];
+                                                    foreach($shopify_category_list as $li){
+                                                        if($li['shopify_category'] == $shopify_product_category.'_category'){
+                                                            foreach($li['arcadier_guid'] as $arcadier_category){
+                                                                array_push($destination_arcadier_categories, $arcadier_category);
                                                             }
                                                         }
+                                                    }
 
-                                                        $category_names = '';
-                                                        $category_div_ids = implode(',',$destination_arcadier_categories);
-                                                        
-                                                        foreach($arcadier_categories as $cat){
+                                                    $category_names = '';
+                                                    $category_div_ids = implode(',',$destination_arcadier_categories);
+                                                    
+                                                    foreach($arcadier_categories as $cat){
 
-                                                            if(in_array($cat['ID'], $destination_arcadier_categories)){
-                                                                $category_names = $category_names.$cat['Name'].' ';
-                                                            }
+                                                        if(in_array($cat['ID'], $destination_arcadier_categories)){
+                                                            $category_names = $category_names.$cat['Name'].' ';
                                                         }
-                                                        
-                                                        echo '<div cat-id='.$category_div_ids.'  id=cat-' . ltrim($shopify_products['node']['id'],"gid://shopify/Product/") .' image-src='. $shopify_products['node']['images']['edges'][0]['node']['originalSrc'] .' price=' .  $shopify_products['node']['variants']['edges'][0]['node']['price'] .' qty='. $shopify_products['node']['totalInventory'] .'>'.$category_names.'</div>';
                                                     }
-                                                    else{
-                                                        echo $category_map;
-                                                    }
-
-                                                ?>
-                                            </td>
+                                                    
+                                                    echo '<div cat-id='.$category_div_ids.'  id=cat-' . ltrim($shopify_products['node']['id'],"gid://shopify/Product/") .' image-src='. $shopify_products['node']['images']['edges'][0]['node']['originalSrc'] .' price=' .  $shopify_products['node']['variants']['edges'][0]['node']['price'] .' qty='. $shopify_products['node']['totalInventory'] .'>'.$category_names.'</div>';
+                                                }
+                                                else{
+                                                    echo $category_map;
+                                                }
+                                                ?></td>
                                             <td>
-                                                    <!-- Override Category checkbox -->
+                                                <!-- Override Category checkbox -->
                                                 <div style="opacity: .6; background: #a5a5a5; pointer-events: none;">
                                                     <div class="custom-control custom-checkbox" style="opacity:.6; background: #fff; pointer-events:none;">
                                                         <?php 
@@ -576,22 +483,19 @@ if($isMerchant){
                                                     <select style="opacity:.6; background: #A5A5A5; pointer-events:none;"
                                                         id="override_default_category_select-<?php echo $mag_products['id']; ?>"
                                                         name="override_default_category_select" class="chosen-select"
-                                                        data-placeholder="Select Arc Cat" multiple>
-                                                        <!--<option value="0">Select Arc Cat</option>-->
+                                                        data-placeholder="Select Arcadier Category" multiple>
                                                         <?php 
                                                             foreach($arc_cat_arr['Records'] as $arc_cat_arr1){
                                                                 ?>
-                                                        <option value="<?php echo $arc_cat_arr1['ID']; ?>">
-                                                            <?php echo $arc_cat_arr1['Name']; ?></option>
+                                                        <option value="<?php echo $arc_cat_arr1['ID']; ?>"><?php echo $arc_cat_arr1['Name']; ?></option>
                                                         <?php 
-                                                            } 
+                                                        } 
                                                         ?>
                                                     </select>
                                                 </div>
                                             </td>
                                             <td>
                                                 <!-- Sync Button -->
-
                                                 <?php
 
                                                     $short_id = ltrim($shopify_products['node']['id'],"gid://shopify/Product/");
@@ -726,7 +630,6 @@ if($isMerchant){
         });
     }
 
-
     function sync_shopify_product(id, name, shortId) {
 
         console.log('syncing');
@@ -775,9 +678,6 @@ if($isMerchant){
         } else {
             alert('Please check Synchronize');
         }
-
-
-
     }
 
 

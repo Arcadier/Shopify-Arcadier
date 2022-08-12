@@ -17,7 +17,7 @@
 	$url = 'https://arcadier-shopify.herokuapp.com/shopify_link_account?shop='.$shop.'&merchant_guid='.$content['merchant_guid'].'&marketplace='.$content['marketplace'].'&pluginID='.$content['pluginID'];
 
 	$response = callAPI("GET", null, $url, false);
-	//error_log(json_encode($response), 3, "tanoo_log.php" );
+
 	echo $response;
 	
 ?>
