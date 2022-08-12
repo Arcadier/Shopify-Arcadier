@@ -54,7 +54,7 @@
                         location.href = result;
                     }
                 },   
-                5000);
+                1000);
             },
             error: function(jqXHR, status, err) {
             //	toastr.error('Error!');

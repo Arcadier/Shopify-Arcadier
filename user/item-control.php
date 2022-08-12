@@ -143,8 +143,9 @@ if($isMerchant){
             //     'Value' => $userId )
             // ];
             $data = array(array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
-            $url =  $baseUrl . '/api/v2/plugins/'. $pack_id.'/custom-tables/map';
-            $category_map  =  callAPI("POST", $admin_token, $url, $data);
+            
+            $category_map  =  $arc->searchTable($pack_id, "map", $data);
+            error_log($category_map['Records'][0]['map'], 3, "tanoo_log.php");
 
         
            // echo 'category map ' . json_encode($category_map);
