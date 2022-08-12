@@ -19,6 +19,7 @@ if(!empty($UserInfo)){
     header('location:'.$_COOKIE['protocol'].'://'.$_COOKIE['marketplace']);
 }
 
+//error_log('IsMerchant: '.$isMerchant);
 if($isMerchant){
     if(isset($_COOKIE['marketplace']) && isset($_COOKIE['webapitoken']) && isset($_GET['user'])){
         
@@ -33,39 +34,27 @@ if($isMerchant){
                 'Operator'=> 'equal',
                 'Value'=> '1'
             ]
+        
         ];
-        
-        //get Merchant credentials
+        ///error_Log(json_encode($data_auth));
+        //error_Log(json_encode('Plugin ID: '.$plugin_id));
         $authListById = $arcadier->searchTable($plugin_id, 'auth', $data_auth);
-        
+        //error_log(json_encode($authListById));
         if(!empty($authListById['Records'])){
             
             $credentials = $authListById['Records'][0];
-
-            //get Shopify ProductTypes
             $shopify_categories = shopify_categories_api($credentials['access_token'], $credentials['shop'], null);
+            
+           // error_log(json_encode($shopify_categories));
 
             $count = count($shopify_categories);
-            
-            //get Arcadier Categories
+            // $mag_cat_arr1 = json_decode(json_encode($mag_cat_arrr), true);
+            // $mag_cat_arr2 = $mag_cat_arr1['items'];
+            // unset($mag_cat_arr2[0]); 
+            // unset($mag_cat_arr2[1]);
+            // $mag_cat_arr3 = array_values($mag_cat_arr2);
+
             $arcadier_categories = $arcadier->getCategories();
-
-            //get Shopify-Arcadier Category Map
-            $data1 = [
-                [
-                    'Name' => 'merchant_guid',
-                    'Operator' => 'equal',
-                    'Value' => $_GET['user'],
-                ],
-                [
-                    'Name' => 'shop',
-                    'Operator' => 'equal',
-                    'Value' => $credentials['shop'],
-                ],
-            ];
-
-            $map = $arcadier->searchTable($plugin_id, 'map', $data1);
-
 
             if($authListById['Records'][0]['auth_status'] == '1'){
                 $isMerchantAuth = 'Yes';
@@ -227,20 +216,20 @@ if($isMerchant){
 
 <body>
     <script>
-        function addLoader() {
-            $('body').append('<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
-        }
+    function addLoader() {
+        $('body').append('<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
+    }
 
-        function removeClass(div_id, time) {
-            $("#" + div_id).fadeOut(time, function() {
-                $("#" + div_id).remove();
-            });
-        }
+    function removeClass(div_id, time) {
+        $("#" + div_id).fadeOut(time, function() {
+            $("#" + div_id).remove();
+        });
+    }
 
-        function addLoader1() {
-            $('body').append('<div style="" id="loadingDiv1"><div class="loader">Loading...</div></div>');
-        }
-        addLoader1();
+    function addLoader1() {
+        $('body').append('<div style="" id="loadingDiv1"><div class="loader">Loading...</div></div>');
+    }
+    addLoader1();
     </script>
     <div id="wrapper">
         <div class="topbar">
@@ -331,93 +320,122 @@ if($isMerchant){
                             Arcadier Categories
                         </div>
 
-                        <!-- Display Shopify Product Types -->
                         <div class="col-6 p-0 mt-2">
                             <ul class="nav flex-column" role="tablist">
                                 <?php 
-                                    foreach($shopify_categories as $shopify_category){ 
-                                        if(1){
-                                            ?>
-                                            <a class="nav-link <?php if(!next($shopify_categories)){ echo active; } ?>"
-                                                data-toggle="tab" href="#a<?php 
-                                                //removes whitespaces and symbols, if any 
-                                                if(preg_match('/\s/',$shopify_category)){
-                                                    $shopify_category_nospace = preg_replace('/\s+/', '_', $shopify_category);
-                                                    $shopify_category_nospace = str_replace('&', 'and', $shopify_category_nospace);
-                                                    echo $shopify_category_nospace.'_category';
-                                                }
-                                                else{
-                                                    echo $shopify_category.'_category'; 
-                                                }
-                                                ?>">
-                                                <?php 
-                                                    echo $shopify_category; 
-                                                ?>
-                                            </a>
-                                        <?php 
-                                        }?>
+                        foreach($shopify_categories as $shopify_category){ 
+                            if(1){
+                                ?>
+                                <h6>
                                     <?php 
-                                }?>
+                                        echo $shopify_category; 
+                                    ?>
+                                </h6>
+                                <a class="nav-link <?php if(!next($shopify_categories)){ echo active; } ?>"
+                                    data-toggle="tab" href="#a<?php 
+                                        if(preg_match('/\s/',$shopify_category)){
+                                            $shopify_category_nospace = preg_replace('/\s+/', '_', $shopify_category);
+                                            $shopify_category_nospace = str_replace('&', 'and', $shopify_category_nospace);
+                                            echo $shopify_category_nospace.'_category';
+                                        }
+                                        else{
+                                            echo $shopify_category.'_category'; 
+                                        }
+                                    ?>">
+                                    <?php 
+                                        echo $shopify_category; 
+                                    ?>
+                                </a>
+                                <?php 
+                        }?>
+                                <?php 
+                }?>
                             </ul>
                         </div>
-
                         <div class="col-6 p-0 tab-content-box mt-2">
                             <div class="tab-content">
-                                <?php foreach($shopify_categories as $shopify_category){
-                                    //removes whitespaces and symbols, if any 
-                                    if(preg_match('/\s/',$shopify_category)){
-                                        $shopify_div_ids = preg_replace('/\s+/', '_', $shopify_category);
-                                        $shopify_div_ids = str_replace('&', 'and', $shopify_div_ids);
-                                        $shopify_div_ids = $shopify_div_ids.'_category';
-                                    }
-                                    else{
-                                        $shopify_div_ids = $shopify_category.'_category';
-                                    }
-                                    
-                                    $shopify_category_id = $shopify_category.'_category';
-                                    
-                                    if(1){?>
-                                        <div id="a<?php echo $shopify_div_ids ?>"
-                                            class="container tab-pane">
-                                            <form class="save_map_form">
-                                                <?php
-                                                if(!empty($arcadier_categories)){
-                                                    foreach($arcadier_categories['Records'] as $arcadier_category){
-                                                        ?>
-                                                        <div class="custom-control custom-checkbox mt-3 mb-3" id="divison<?php echo $shopify_div_ids; ?>">
-                                                            <input type="checkbox" <?php 
-                                                                if ($map['Records'][0]['merchant_guid'] == $_GET['user']) {
-                                                                    $map_arr_unserialize = unserialize($map['Records'][0]['map']);
-                                                                    $list = $map_arr_unserialize['list'];
-                                                                    foreach($list as $li){ 
-                                                                        if($li['shopify_category'] == $shopify_category_id){
-                                                                            foreach($li['arcadier_guid'] as $arcadier_id){
-                                                                                if($arcadier_category['ID'] == $arcadier_id){
-                                                                                    echo checked;
-                                                                                    break;
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                }?> 
-                                                                name="arc_category[]" class="arc_category" id="<?php echo $arcadier_category['ID'];?>" />
-                                                            <label class="" for=""><?php echo $arcadier_category['Name']; ?></label>
-                                                        </div>
-                                                    <?php   
-                                                    } 
+                                <?php foreach($shopify_categories as $shopify_category){ 
+		        
+                if(preg_match('/\s/',$shopify_category)){
+                    $shopify_div_ids = preg_replace('/\s+/', '_', $shopify_category);
+                    $shopify_div_ids = str_replace('&', 'and', $shopify_div_ids);
+                    $shopify_div_ids = $shopify_div_ids.'_category';
+                }
+                else{
+                    $shopify_div_ids = $shopify_category.'_category';
+                }
+                
+                $shopify_category_id = $shopify_category.'_category';
+                
+                
+		        if(1){
+                    ?>
+                                <div id="a<?php echo $shopify_div_ids ?>"
+                                    class="container tab-pane <?php echo active; ?>">
+                                    <form class="save_map_form">
+                                        <?php
+                                if(!empty($arcadier_categories)){
+                                    foreach($arcadier_categories['Records'] as $arcadier_category){
+                                ?>
+                                        <div class="custom-control custom-checkbox mt-3 mb-3"
+                                            id="divison<?php echo $shopify_div_ids; ?>">
+                                            <input type="checkbox" <?php $data1 = [
+                                            [
+                                                'Name' => 'merchant_guid',
+                                                'Operator' => 'equal',
+                                                'Value' => $_GET['user'],
+                                            ],
+                                            [
+                                                'Name' => 'shop',
+                                                'Operator' => 'equal',
+                                                'Value' => $credentials['shop'],
+                                            ],
+
+                                            
+                                        ];
+                                        $response = $arcadier->searchTable($plugin_id, 'map', $data1);
+                                        //error_log('Category Map: '.json_encode($response));
+                                        if ($response['Records'][0]['merchant_guid'] == $_GET['user']) {
+                                            $map_arr_unserialize = unserialize($response['Records'][0]['map']);
+                                            $list = $map_arr_unserialize['list'];
+                                            //error_log(json_encode($list));
+                                            foreach($list as $li){ 
+                                                if($li['shopify_category'] == $shopify_category_id){
+                                                    foreach($li['arcadier_guid'] as $arcadier_id){
+                                                        if($arcadier_category['ID'] == $arcadier_id['Arcadier_Category_ID']){
+                                                            echo checked;
+                                                        }
+                                                    }
                                                 }
-                                                ?>
-                                                <a id="save_map" onclick="save_mapp('<?php if(preg_match('/\s/',$shopify_category)){ echo $shopify_category_id.'>'.$shopify_div_ids; } else { echo $shopify_category_id; } ?>');"
-                                                style="margin-left: 25px;border: #0e77d4;box-sizing: border-box;background-color: #333547;border-radius: 6px;color: white;padding: 5px 10px;font-size: 14px; cursor: pointer;">Submit</a>
-                                            </form>
+                                            }
+                                        } ?> name="arc_category[]" class="arc_category"
+                                                id="<?php echo $arcadier_category['ID'];?>" />
+                                            <label class="" for=""><?php echo $arcadier_category['Name']; ?></label>
                                         </div>
-                                    <?php 
-                                    } 
+                                        <?php   
                                 } 
-			                    ?>
+                            }
+                        ?>
+
+                                        <a id="save_map"
+                                            onclick="save_mapp('<?php if(preg_match('/\s/',$shopify_category)){ echo $shopify_category_id.'>'.$shopify_div_ids; } else { echo $shopify_category_id; } ?>');"
+                                            style="margin-left: 25px;border: #0e77d4;box-sizing: border-box;background-color: #333547;border-radius: 6px;color: white;padding: 5px 10px;font-size: 14px; cursor: pointer;">Submit</a>
+
+                                    </form>
+                                </div>
+                                <?php 
+                } 
+            } 
+			?>
                             </div>
                         </div>
                     </div>
+
+
+                    <!-- <footer class="footer text-center">
+    © 2021.
+</footer> -->
+
                 </div>
             </div>
 
@@ -427,196 +445,195 @@ if($isMerchant){
             <script src="scripts/app.js"></script>
 
             <script>
-                var $j = jQuery.noConflict();
-                $(document).ready(function() {
-                    myDialog = $j("#dialog").dialog({
-                        // dialog settings:
-                        //autoOpen : false,
-                        // ... 
-                    });
-                    myDialog.dialog("close");
+            var $j = jQuery.noConflict();
+            $(document).ready(function() {
+                myDialog = $j("#dialog").dialog({
+                    // dialog settings:
+                    //autoOpen : false,
+                    // ... 
                 });
+                myDialog.dialog("close");
+            });
 
-                function ShowCustomDialog(dialogtype, dialogmessage) {
-                    ShowDialogBox(dialogtype, dialogmessage, 'Ok', '', 'GoToAssetList', null);
+            function ShowCustomDialog(dialogtype, dialogmessage) {
+                ShowDialogBox(dialogtype, dialogmessage, 'Ok', '', 'GoToAssetList', null);
+            }
+
+            function ShowDialogBox(title, content, btn1text, btn2text, functionText, parameterList) {
+                var btn1css;
+                var btn2css;
+
+                if (btn1text == '') {
+                    btn1css = "hidecss";
+                } else {
+                    btn1css = "showcss";
                 }
 
-                function ShowDialogBox(title, content, btn1text, btn2text, functionText, parameterList) {
-                    var btn1css;
-                    var btn2css;
-
-                    if (btn1text == '') {
-                        btn1css = "hidecss";
-                    } else {
-                        btn1css = "showcss";
-                    }
-
-                    if (btn2text == '') {
-                        btn2css = "hidecss";
-                    } else {
-                        btn2css = "showcss";
-                    }
-                    $("#lblMessage").html(content);
-
-                    $j("#dialog").dialog({
-                        resizable: false,
-                        title: title,
-                        modal: true,
-                        width: '400px',
-                        height: 'auto',
-                        bgiframe: false,
-                        hide: {
-                            effect: 'scale',
-                            duration: 400
-                        },
-                        buttons: [{
-                            text: btn1text,
-                            "class": btn1css,
-                            click: function() {
-                                myDialog.dialog("close");
-                            }
-                        }]
-                    });
+                if (btn2text == '') {
+                    btn2css = "hidecss";
+                } else {
+                    btn2css = "showcss";
                 }
+                $("#lblMessage").html(content);
 
-                function clear_form_elements(class_name) {
-                    jQuery("." + class_name).find(':input').each(function() {
-                        switch (this.type) {
-                            case 'password':
-                            case 'text':
-                            case 'textarea':
-                            case 'file':
-                            case 'select-one':
-                            case 'select-multiple':
-                            case 'date':
-                            case 'number':
-                            case 'tel':
-                            case 'email':
-                                jQuery(this).val('');
-                                break;
-                            case 'checkbox':
-                            case 'radio':
-                                this.checked = false;
-                                break;
+                $j("#dialog").dialog({
+                    resizable: false,
+                    title: title,
+                    modal: true,
+                    width: '400px',
+                    height: 'auto',
+                    bgiframe: false,
+                    hide: {
+                        effect: 'scale',
+                        duration: 400
+                    },
+                    buttons: [{
+                        text: btn1text,
+                        "class": btn1css,
+                        click: function() {
+                            myDialog.dialog("close");
                         }
-                    });
-                }
+                    }]
+                });
+            }
 
-                function addLoader() {
-                    $('body').append('<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
-                }
-
-                function removeClass(div_id, time) {
-                    $("#" + div_id).fadeOut(time, function() {
-                        $("#" + div_id).remove();
-                    });
-                }
-
-                function save_mapp(shopify_category_id) {
-
-                    var isMerchantAuth = '<?php echo  $isMerchantAuth; ?>';
-
-                    if (isMerchantAuth == 'Yes') {
-                        addLoader();
-                        // shopify_category_id = shopify_category_id;
-
-                        if (shopify_category_id.includes(">")) {
-                            shopify_category_name = shopify_category_id.split('>')[0];
-                            shopify_div = shopify_category_id.split('>')[1];
-                        } else {
-                            shopify_div = shopify_category_id;
-                            shopify_category_name = shopify_category_id;
-                        }
-
-                        var selected = [];
-                        $('#divison' + shopify_div + ' input:checked').each(function() {
-                            selected.push($(this).attr('id'));
-                        });
-                        var arcadier_guid = selected.join(",");
-                        console.log(arcadier_guid);
-                        var arc_user =
-                            '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
-
-                        var data = {
-                            shopify_category_id: shopify_category_name,
-                            arcadier_guid: arcadier_guid,
-                            cat_map: 'cat_map',
-                            arc_user: arc_user
-                        };
-                        console.log(data);
-                        $.ajax({
-                            type: "POST",
-                            url: "ajaxrequest.php",
-                            contentType: 'application/json',
-                            data: JSON.stringify(data),
-                            success: function(data) {
-                                removeClass('loadingDiv', 500);
-                                if (data == 'Mapped') {
-                                    ShowCustomDialog('Alert', 'Mapped Successfully');
-                                }
-                                if (data == 'UnMapped') {
-                                    ShowCustomDialog('Alert', 'UnMapped Successfully');
-                                } else {
-                                    console.log('Unable to Map');
-                                }
-                            }
-                        });
-                    } else {
-                        ShowCustomDialog('Alert', 'Please authenticate first in configuration.');
+            function clear_form_elements(class_name) {
+                jQuery("." + class_name).find(':input').each(function() {
+                    switch (this.type) {
+                        case 'password':
+                        case 'text':
+                        case 'textarea':
+                        case 'file':
+                        case 'select-one':
+                        case 'select-multiple':
+                        case 'date':
+                        case 'number':
+                        case 'tel':
+                        case 'email':
+                            jQuery(this).val('');
+                            break;
+                        case 'checkbox':
+                        case 'radio':
+                            this.checked = false;
+                            break;
                     }
-                }
+                });
+            }
 
-                function clearAll() {
-                    document.getElementById('usr').value = '';
-                    document.getElementById('pwd').value = '';
-                    document.getElementById('endpoint').value = '';
-                    document.getElementById('myDate').value = '';
-                }
+            function addLoader() {
+                $('body').append('<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
+            }
 
-                function butonPerform() {
-                    if (Math.floor(Math.random() * 10) > 5) {
-                        console.log(Math.floor(Math.random() * 10));
-                        $("#testSuccess").css('display', 'block');
-                        $("testFail").css('display', 'none');
-                        myFunction();
+            function removeClass(div_id, time) {
+                $("#" + div_id).fadeOut(time, function() {
+                    $("#" + div_id).remove();
+                });
+            }
+
+            function save_mapp(shopify_category_id) {
+
+                var isMerchantAuth = '<?php echo  $isMerchantAuth; ?>';
+
+                if (isMerchantAuth == 'Yes') {
+                    addLoader();
+                    // shopify_category_id = shopify_category_id;
+
+                    if (shopify_category_id.includes(">")) {
+                        shopify_category_name = shopify_category_id.split('>')[0];
+                        shopify_div = shopify_category_id.split('>')[1];
                     } else {
-                        console.log('Lesser Than 5');
-                        $("#testSuccess").css('display', 'none');
-                        $("testFail").css('display', 'block');
+                        shopify_div = shopify_category_id;
+                        shopify_category_name = shopify_category_id;
                     }
-                }
 
-                function myFunction() {
-                    const x = new Date();
-                    console.log(x);
-                    console.log(x.getDate(), x.getMonth(), x.getFullYear());
-                    document.getElementById("myDate").value = (x.getDate()).toString() + "-" + (x.getMonth() + 1)
-                        .toString() + '-' + (x.getFullYear()).toString();
-                }
-
-                $(document).ready(function() {
-                    var baseUrl = window.location.hostname;
-                    var token = getCookie('webapitoken');
-                    var user = $("#userGuid").val();
-                    var arc_user1 =
+                    var selected = [];
+                    $('#divison' + shopify_div + ' input:checked').each(function() {
+                        selected.push($(this).attr('id'));
+                    });
+                    var arcadier_guid = selected.join(",");
+                    console.log(arcadier_guid);
+                    var arc_user =
                         '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
-                    if (($('#merchantId') && $('#merchantId').length) && (user == arc_user1)) {
-                        removeClass('loadingDiv1', 500);
-                        return false;
-                    } else {
-                        window.location.replace('https://' + baseUrl);
-                    }
-                });
 
-                function getCookie(name) {
-                    var value = '; ' + document.cookie;
-                    var parts = value.split('; ' + name + '=');
-                    if (parts.length === 2) {
-                        return parts.pop().split(';').shift();
-                    }
+                    var data = {
+                        shopify_category_id: shopify_category_name,
+                        arcadier_guid: arcadier_guid,
+                        cat_map: 'cat_map',
+                        arc_user: arc_user
+                    };
+                    console.log(data);
+                    $.ajax({
+                        type: "POST",
+                        url: "ajaxrequest.php",
+                        contentType: 'application/json',
+                        data: JSON.stringify(data),
+                        success: function(data) {
+                            removeClass('loadingDiv', 500);
+                            if (data == 'Mapped') {
+                                ShowCustomDialog('Alert', 'Mapped Successfully');
+                            }
+                            if (data == 'UnMapped') {
+                                ShowCustomDialog('Alert', 'UnMapped Successfully');
+                            } else {
+                                console.log('Unable to Map');
+                            }
+                        }
+                    });
+                } else {
+                    ShowCustomDialog('Alert', 'Please authenticate first in configuration.');
                 }
+            }
+
+            function clearAll() {
+                document.getElementById('usr').value = '';
+                document.getElementById('pwd').value = '';
+                document.getElementById('endpoint').value = '';
+                document.getElementById('myDate').value = '';
+            }
+
+            function butonPerform() {
+                if (Math.floor(Math.random() * 10) > 5) {
+                    console.log(Math.floor(Math.random() * 10));
+                    $("#testSuccess").css('display', 'block');
+                    $("testFail").css('display', 'none');
+                    myFunction();
+                } else {
+                    console.log('Lesser Than 5');
+                    $("#testSuccess").css('display', 'none');
+                    $("testFail").css('display', 'block');
+                }
+            }
+
+            function myFunction() {
+                const x = new Date();
+                console.log(x);
+                console.log(x.getDate(), x.getMonth(), x.getFullYear());
+                document.getElementById("myDate").value = (x.getDate()).toString() + "-" + (x.getMonth() + 1)
+                    .toString() + '-' + (x.getFullYear()).toString();
+            }
+
+            $(document).ready(function() {
+                var baseUrl = window.location.hostname;
+                var token = getCookie('webapitoken');
+                var user = $("#userGuid").val();
+                var arc_user1 =
+                    '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
+                if (($('#merchantId') && $('#merchantId').length) && (user == arc_user1)) {
+                    removeClass('loadingDiv1', 500);
+                    return false;
+                } else {
+                    window.location.replace('https://' + baseUrl);
+                }
+            });
+
+            function getCookie(name) {
+                var value = '; ' + document.cookie;
+                var parts = value.split('; ' + name + '=');
+                if (parts.length === 2) {
+                    return parts.pop().split(';').shift();
+                }
+            }
             </script>
-        </div>
-    </div>
 </body>
+
 </html>

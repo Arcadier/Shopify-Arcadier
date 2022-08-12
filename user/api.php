@@ -673,6 +673,7 @@ class ApiSdk
         }
 
         $url         = $this->baseUrl . '/api/v2/plugins/' . $packageId . '/custom-tables/' . $tableName.'/?pageSize=100000';
+        error_log($url);
         $rowEntries = $this->callAPI("POST", $this->adminToken['access_token'], $url, $data);
         return $rowEntries;
     }

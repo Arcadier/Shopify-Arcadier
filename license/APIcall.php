@@ -1,5 +1,5 @@
 <?php
-function callAPI($method, $access_token, $url, $data = false) {
+function APIcall($method, $access_token, $url, $data = false) {
     $curl = curl_init();
     switch ($method) {
         case "POST":
@@ -37,25 +37,31 @@ function callAPI($method, $access_token, $url, $data = false) {
     return json_decode($result, true);
 }
 
-// function getMarketplaceBaseUrl() {
-//     $marketplace = $_COOKIE["marketplace"];
-//     $protocol = $_COOKIE["protocol"];
+function fetchMarketplaceBaseUrl() {
+    $marketplace = $_COOKIE["marketplace"];
+    $protocol = $_COOKIE["protocol"];
 
-//     $baseUrl = $protocol . '://' . $marketplace;
-//     return $baseUrl;
-// }
+    $baseUrl = $protocol . '://' . $marketplace;
+    return $baseUrl;
+}
+function fetchMarketplaceDomain() {
+    $marketplace = $_COOKIE["marketplace"];
+    
+    return $marketplace;
+}
 
-// function getPackageID() {
-//     $requestUri = "$_SERVER[REQUEST_URI]";
-//     preg_match('/([a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})/', $requestUri, $matches, 0);
-//     return $matches[0];
-// }
+function fetchPackageID() {
+    $requestUri = "$_SERVER[REQUEST_URI]";
+    preg_match('/([a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})/', $requestUri, $matches, 0);
+    return $matches[0];
+}
 
-// function getCustomFieldPrefix() {
-//     $requestUri = "$_SERVER[REQUEST_URI]";
-//     preg_match('/([a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})/', $requestUri, $matches, 0);
-//     $customFieldPrefix = str_replace('-', '', $matches[0]);
-//     return $customFieldPrefix;
-// }
+function fetchCustomFieldPrefix() {
+    $requestUri = "$_SERVER[REQUEST_URI]";
+    preg_match('/([a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})/', $requestUri, $matches, 0);
+    $customFieldPrefix = str_replace('-', '', $matches[0]);
+    return $customFieldPrefix;
+}
 
 ?>
+

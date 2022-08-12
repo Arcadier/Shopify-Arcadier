@@ -5,25 +5,36 @@ include 'shopify_functions.php';
 $arc = new ApiSdk();
 //shopify authentication
 
+$shop = "tanoo-joy2";
+$token = "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";
+$query = array(
+    "Content-type" => "application/json" // Tell Shopify that we're expecting a response in JSON format
+);
+
 $baseUrl = getMarketplaceBaseUrl();
 $admin_token = $arc->AdminToken();
 $customFieldPrefix = getCustomFieldPrefix();
 
 $userToken = $_COOKIE["webapitoken"];
 $url = $baseUrl . '/api/v2/users/'; 
-$result = json_decode(callAPI("GET", $userToken, $url, false));
-$userId = $result->ID;
+$result = callAPI("GET", $userToken, $url, false);
+$userId = $result['ID'];
 $packageId = getPackageID();
 
 $auth = array(array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
 $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
-$authDetails =  json_decode(callAPI("POST", null, $url, $auth));
+$authDetails =  callAPI("POST", $admin_token, $url, $auth);
 
-$shop = $authDetails->Records[0]->shop;
-$access_token= $authDetails->Records[0]->access_token;
+$shop_secret_key = $authDetails['Records'][0]['secret_key'];
+$shop_api_key = $authDetails['Records'][0]['api_key'];
+$shop = $authDetails['Records'][0]['shop'];
+$auth_id = $authDetails['Records'][0]['Id'];
+$access_token= $authDetails['Records'][0]['access_token'];
 
-//import Shopify Products
-$products = shopify_get_all_products_unstable($access_token, $shop, null, true);
+$products = shopify_get_all_products_unstable($access_token, $shop, null,true);//shopify_get_all_products($access_token, $shop);
+//$products_rest = shopify_products($access_token, $shop);
+
+//echo json_encode($products);
 
 $pack_id = getPackageID();
 $UserInfo = $arc->getUserInfo($_GET['user']);
@@ -50,7 +61,14 @@ if($isMerchant){
                 'Name'=> 'auth_status',
                 'Operator'=> 'equal',
                 'Value'=> "1"
-            ]
+            ],
+
+            [
+                'Name'=> 'access_token',
+                'Operator'=> 'like',
+                'Value'=> "shpua_"
+            ],
+
         ];
         
         $authListById=$arc->searchTable($pack_id, 'auth', $data_auth);
@@ -190,158 +208,158 @@ if($isMerchant){
     <script src="scripts/bootstrap.bundle.min.js"></script>
 
     <style>
-        .loader,
-        .loader:after {
-            border-radius: 50%;
-            width: 10em;
-            height: 10em;
+    .loader,
+    .loader:after {
+        border-radius: 50%;
+        width: 10em;
+        height: 10em;
+    }
+
+    .loader {
+        margin: auto;
+        font-size: 10px;
+        position: absolute;
+        right: 0;
+        left: 0;
+        top: 50%;
+        text-indent: -9999em;
+        border-top: 1.1em solid rgba(255, 255, 255, 0.2);
+        border-right: 1.1em solid rgba(255, 255, 255, 0.2);
+        border-bottom: 1.1em solid rgba(255, 255, 255, 0.2);
+        border-left: 1.1em solid #ffffff;
+        -webkit-transform: translateZ(0);
+        -ms-transform: translateZ(0);
+        transform: translateZ(0);
+        -webkit-animation: load8 1.1s infinite linear;
+        animation: load8 1.1s infinite linear;
+    }
+
+    @-webkit-keyframes load8 {
+        0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
         }
 
-        .loader {
-            margin: auto;
-            font-size: 10px;
-            position: absolute;
-            right: 0;
-            left: 0;
-            top: 50%;
-            text-indent: -9999em;
-            border-top: 1.1em solid rgba(255, 255, 255, 0.2);
-            border-right: 1.1em solid rgba(255, 255, 255, 0.2);
-            border-bottom: 1.1em solid rgba(255, 255, 255, 0.2);
-            border-left: 1.1em solid #ffffff;
-            -webkit-transform: translateZ(0);
-            -ms-transform: translateZ(0);
-            transform: translateZ(0);
-            -webkit-animation: load8 1.1s infinite linear;
-            animation: load8 1.1s infinite linear;
+        100% {
+            -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes load8 {
+        0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
         }
 
-        @-webkit-keyframes load8 {
-            0% {
-                -webkit-transform: rotate(0deg);
-                transform: rotate(0deg);
+        100% {
+            -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
+        }
+    }
+
+    #loadingDiv {
+        position: fixed;
+        top: 0;
+        z-index: 9999;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #0000006b;
+    }
+
+    button.ui-dialog-titlebar-close {
+        display: none;
+    }
+
+    span.ui-icon.ui-icon-alert {
+        display: none;
+    }
+
+    /* 
+            #wrapper {
+                width: unset;
             }
-
-            100% {
-                -webkit-transform: rotate(360deg);
-                transform: rotate(360deg);
+            .col-sm-3 {
+                flex: 0 0 25%;
+                max-width: 18%;
             }
-        }
+            */
+    input[type=checkbox],
+    input[type=radio] {
+        visibility: unset;
+    }
 
-        @keyframes load8 {
-            0% {
-                -webkit-transform: rotate(0deg);
-                transform: rotate(0deg);
-            }
+    /* .footer {
+                position:unset;
+                left:unset;
+            } */
+    #loadingDiv1 {
+        position: fixed;
+        top: 0;
+        z-index: 9999;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #2a3142;
+    }
 
-            100% {
-                -webkit-transform: rotate(360deg);
-                transform: rotate(360deg);
-            }
-        }
+    ul#side-menu li a img {
+        max-width: 16px;
+    }
 
-        #loadingDiv {
-            position: fixed;
-            top: 0;
-            z-index: 9999;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #0000006b;
-        }
+    #sidebar-menu {
+        padding-top: 50px;
+    }
 
-        button.ui-dialog-titlebar-close {
-            display: none;
-        }
+    .content-page .content {
+        margin-top: 20px;
+    }
 
-        span.ui-icon.ui-icon-alert {
-            display: none;
-        }
+    /* div.footer {
+                display: none;
+            } */
+    table.dataTable thead th,
+    table.dataTable thead td {
+        padding: 8px 10px;
+    }
 
-        /* 
-                #wrapper {
-                    width: unset;
-                }
-                .col-sm-3 {
-                    flex: 0 0 25%;
-                    max-width: 18%;
-                }
-                */
-        input[type=checkbox],
-        input[type=radio] {
-            visibility: unset;
-        }
+    .foot-plugin-footer .footer {
+        padding-bottom: 10px;
+        padding-top: 30px;
+    }
 
-        /* .footer {
-                    position:unset;
-                    left:unset;
-                } */
-        #loadingDiv1 {
-            position: fixed;
-            top: 0;
-            z-index: 9999;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #2a3142;
-        }
+    .foot-plugin-footer .footer .footer-navigation ul>li>a {
+        padding-right: 79px;
+    }
 
-        ul#side-menu li a img {
-            max-width: 16px;
-        }
+    .foot-plugin-footer ul.footer-social-media,
+    .foot-plugin-footer .footer-bottom {
+        display: none;
+    }
 
-        #sidebar-menu {
-            padding-top: 50px;
-        }
-
-        .content-page .content {
-            margin-top: 20px;
-        }
-
-        /* div.footer {
-                    display: none;
-                } */
-        table.dataTable thead th,
-        table.dataTable thead td {
-            padding: 8px 10px;
-        }
-
-        .foot-plugin-footer .footer {
-            padding-bottom: 10px;
-            padding-top: 30px;
-        }
-
-        .foot-plugin-footer .footer .footer-navigation ul>li>a {
-            padding-right: 79px;
-        }
-
-        .foot-plugin-footer ul.footer-social-media,
-        .foot-plugin-footer .footer-bottom {
-            display: none;
-        }
-
-        div#logTable_wrapper {
-            min-height: 410px;
-        }
+    div#logTable_wrapper {
+        min-height: 410px;
+    }
     </style>
 </head>
 
 <body>
     <script>
-        function addLoader() {
-            $('body').append('<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
-        }
+    function addLoader() {
+        $('body').append('<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
+    }
 
-        function removeClass(div_id, time) {
-            $("#" + div_id).fadeOut(time, function() {
-                $("#" + div_id).remove();
-            });
-        }
+    function removeClass(div_id, time) {
+        $("#" + div_id).fadeOut(time, function() {
+            $("#" + div_id).remove();
+        });
+    }
 
-        function addLoader1() {
-            $('body').append('<div style="" id="loadingDiv1"><div class="loader">Loading...</div></div>');
-        }
-        addLoader1();
+    function addLoader1() {
+        $('body').append('<div style="" id="loadingDiv1"><div class="loader">Loading...</div></div>');
+    }
+    addLoader1();
     </script>
     <div id="wrapper">
         <div class="topbar">
@@ -435,8 +453,7 @@ if($isMerchant){
                                             <th>Arcadier Synced</th>
                                             <th>Shopify Category</th>
                                             <th>Syncronise</th>
-
-                                            <th>Default Category</th>
+                                            <th>DefaultCategory</th>
                                             <th>Override Default Category</th>
                                             <th>Override Category</th>
                                             <th>Action</th>
@@ -547,46 +564,43 @@ if($isMerchant){
                                                 ?>
                                             </td>
                                             <td>
-                                                    <!-- Override Category checkbox -->
-                                                <div style="opacity: .6; background: #a5a5a5; pointer-events: none;">
-                                                    <div class="custom-control custom-checkbox" style="opacity:.6; background: #fff; pointer-events:none;">
-                                                        <?php 
-                                                            foreach($arcadier_mapped_category_lists as $arcadier_mapped_category_list1){
-                                                                $arc_cat_index = array_search($arcadier_mapped_category_list1['ID'],array_column($arc_cat_arr['Records'],"ID"));
-                                                                $default_cat = $arc_cat_arr['Records'][$arc_cat_index]["Name"];
-                                                            }
-                                                        ?>
-                                                        <input type="checkbox" class="sync_product1"
-                                                            name="override_default_category"
-                                                            id="override_default_category-<?php echo $mag_products['id']; ?>" />
-                                                        <label class="" for=""><span name="customSpan"></span></label>
-                                                    </div>
+                                                <!-- Override Category checkbox -->
+                                                <div class="custom-control custom-checkbox">
+                                                    <?php 
+                                                        foreach($arcadier_mapped_category_lists as $arcadier_mapped_category_list1){
+                                                            $arc_cat_index = array_search($arcadier_mapped_category_list1['ID'],array_column($arc_cat_arr['Records'],"ID"));
+                                                            $default_cat = $arc_cat_arr['Records'][$arc_cat_index]["Name"];
+                                                        }
+                                                    ?>
+                                                    <input type="checkbox" class="sync_product1"
+                                                        name="override_default_category"
+                                                        id="override_default_category-<?php echo $mag_products['id']; ?>" />
+                                                    <label class="" for=""><span name="customSpan"></span></label>
+
                                                 </div>
                                             </td>
                                             <td>
                                                 <!-- Override Category List -->
-                                                <div style="opacity: .6; background: #a5a5a5; pointer-events: none;">
+                                                <?php 
+                                                    foreach($arcadier_mapped_category_lists as $arcadier_mapped_category_list2){
+                                                        $arc_cat_index = array_search($arcadier_mapped_category_list2['ID'],array_column($arc_cat_arr['Records'],"ID"));
+                                                        $default_cat = $arc_cat_arr['Records'][$arc_cat_index]["Name"];
+                                                    }
+                                                ?>
+                                                <select
+                                                    id="override_default_category_select-<?php echo $mag_products['id']; ?>"
+                                                    name="override_default_category_select" class="chosen-select"
+                                                    data-placeholder="Select Arc Cat" multiple>
+                                                    <!--<option value="0">Select Arc Cat</option>-->
                                                     <?php 
-                                                        foreach($arcadier_mapped_category_lists as $arcadier_mapped_category_list2){
-                                                            $arc_cat_index = array_search($arcadier_mapped_category_list2['ID'],array_column($arc_cat_arr['Records'],"ID"));
-                                                            $default_cat = $arc_cat_arr['Records'][$arc_cat_index]["Name"];
-                                                        }
+                                                        foreach($arc_cat_arr['Records'] as $arc_cat_arr1){
+                                                            ?>
+                                                    <option value="<?php echo $arc_cat_arr1['ID']; ?>">
+                                                        <?php echo $arc_cat_arr1['Name']; ?></option>
+                                                    <?php 
+                                                        } 
                                                     ?>
-                                                    <select style="opacity:.6; background: #A5A5A5; pointer-events:none;"
-                                                        id="override_default_category_select-<?php echo $mag_products['id']; ?>"
-                                                        name="override_default_category_select" class="chosen-select"
-                                                        data-placeholder="Select Arc Cat" multiple>
-                                                        <!--<option value="0">Select Arc Cat</option>-->
-                                                        <?php 
-                                                            foreach($arc_cat_arr['Records'] as $arc_cat_arr1){
-                                                                ?>
-                                                        <option value="<?php echo $arc_cat_arr1['ID']; ?>">
-                                                            <?php echo $arc_cat_arr1['Name']; ?></option>
-                                                        <?php 
-                                                            } 
-                                                        ?>
-                                                    </select>
-                                                </div>
+                                                </select>
                                             </td>
                                             <td>
                                                 <!-- Sync Button -->

@@ -5,19 +5,16 @@
 // {
 
 function get_shopify_categories($productTypes, $category_array, $token, $shop){
-        
+        //error_log(json_encode($productTypes));
         $hasnextpage = $productTypes['data']['shop']['products']['pageInfo']['hasNextPage'];
         $productTypes = $productTypes['data']['shop']['products']['edges'];
         $temp = [];
-		$error_items = [];
 
         //extract category names
         foreach ($productTypes as $category){
-			if($category['node']['productType'] == "" || $category['node']['productType'] == null){
-				continue;
-			}
             if(in_array($category['node']['productType'], $temp) == false){
                 array_push($temp, $category['node']['productType']);
+                error_log(json_encode($temp));
             }
             if(!next($productTypes) && $hasnextpage == true) {
                 $cursor = $category['cursor'];
@@ -26,8 +23,7 @@ function get_shopify_categories($productTypes, $category_array, $token, $shop){
             }
         }
 
-		$category_array = array_unique($category_array);
-        return $category_array;
+        return array_unique($category_array);
 }
 
 function shopify_categories_api($token, $shop, $page) {
@@ -89,16 +85,11 @@ function shopify_categories_api($token, $shop, $page) {
 	$cats  = graphql($token, $shop, $query);   
 	$productTypes = json_decode($cats['body'], true);
 	$category_array = [];
+	//error_log(json_encode($query));
 
 	$category_array = get_shopify_categories($productTypes, $category_array, $token, $shop);
 
 	return array_unique($category_array);
-}
-
-function get_next_items($token, $shop, $last_cursor){
-	$next_items = shopify_get_all_products($token, $shop, $last_cursor, true);
-
-	return $next_items;
 }
 
 function shopify_get_all_products($token, $shop){
@@ -145,6 +136,7 @@ function shopify_get_all_products($token, $shop){
 							node {
 								originalSrc
 								altText	
+
 							}
 						}
 					}
@@ -154,6 +146,7 @@ function shopify_get_all_products($token, $shop){
 								price
 								id
 							}
+
 						}
 					}
 					
@@ -167,6 +160,7 @@ function shopify_get_all_products($token, $shop){
 	}');
 
 	$api_call  = graphql($token, $shop, $query);   
+	//error_log(json_encode($api_call['body']));
 	$products = json_decode($api_call['body'], true);
 	$productlist = $products['data']['products']['edges'];
 	
@@ -206,7 +200,7 @@ function shopify_get_all_products_unstable($token, $shop, $page, $all){
 	//get 10 items only
 	if(!isset($page) && $all == false){
 		$query = array("query" => '{
-			products(first:250) {
+			products(first:50) {
 				edges {
 					cursor
 					node {
@@ -223,6 +217,24 @@ function shopify_get_all_products_unstable($token, $shop, $page, $all){
 						tags
 						createdAt
 						updatedAt
+						images(first: 5) {
+							edges{
+								node {
+									originalSrc
+									altText	
+	
+								}
+							}
+						}
+						variants(first: 1) {
+							edges{
+								node {
+									price
+									id
+								}
+	
+							}
+						}
 					}
 				}
 				pageInfo{
@@ -236,7 +248,7 @@ function shopify_get_all_products_unstable($token, $shop, $page, $all){
 	if(!isset($page) && $all == true){
 		//error_log('Querying all items');
 		$query = array("query" => '{
-			products(first:250, after: null) {
+			products(first:50, after: null) {
 				edges {
 					cursor
 					node {
@@ -253,6 +265,24 @@ function shopify_get_all_products_unstable($token, $shop, $page, $all){
 						tags
 						createdAt
 						updatedAt
+						images(first: 5) {
+							edges{
+								node {
+									originalSrc
+									altText	
+	
+								}
+							}
+						}
+						variants(first: 1) {
+							edges{
+								node {
+									price
+									id
+								}
+	
+							}
+						}
 					}
 				}
 				pageInfo{
@@ -265,7 +295,7 @@ function shopify_get_all_products_unstable($token, $shop, $page, $all){
 	if($page != null && $all == true){
 		//error_log('Querying next 10 items');
 		$query = array("query" => '{
-			products(first:250, after: "'.$page.'") {
+			products(first:50, after: "'.$page.'") {
 				edges {
 					cursor
 					node {
@@ -282,6 +312,24 @@ function shopify_get_all_products_unstable($token, $shop, $page, $all){
 						tags
 						createdAt
 						updatedAt
+						images(first: 5) {
+							edges{
+								node {
+									originalSrc
+									altText	
+	
+								}
+							}
+						}
+						variants(first: 1) {
+							edges{
+								node {
+									price
+									id
+								}
+	
+							}
+						}
 					}
 				}
 				pageInfo{
@@ -309,6 +357,20 @@ function shopify_get_all_products_unstable($token, $shop, $page, $all){
 
 	return $productlist;
 }
+
+
+
+
+
+function escapeJsonString($value) { 
+    $escapers = array("\'");
+    $replacements = array("\\/");
+    $result = str_replace($escapers, $replacements, $value);
+    return $result;
+}
+
+
+
 
 function shopify_call($token, $shop, $api_endpoint, $query = array(), $method = 'GET', $request_headers = array()) {
     
