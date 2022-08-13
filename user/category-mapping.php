@@ -19,7 +19,6 @@ if(!empty($UserInfo)){
     header('location:'.$_COOKIE['protocol'].'://'.$_COOKIE['marketplace']);
 }
 
-//error_log('IsMerchant: '.$isMerchant);
 if($isMerchant){
     if(isset($_COOKIE['marketplace']) && isset($_COOKIE['webapitoken']) && isset($_GET['user'])){
         
@@ -34,27 +33,39 @@ if($isMerchant){
                 'Operator'=> 'equal',
                 'Value'=> '1'
             ]
-        
         ];
-        ///error_Log(json_encode($data_auth));
-        //error_Log(json_encode('Plugin ID: '.$plugin_id));
+        
+        //get Merchant credentials
         $authListById = $arcadier->searchTable($plugin_id, 'auth', $data_auth);
-        //error_log(json_encode($authListById));
+        
         if(!empty($authListById['Records'])){
             
             $credentials = $authListById['Records'][0];
+
+            //get Shopify ProductTypes
             $shopify_categories = shopify_categories_api($credentials['access_token'], $credentials['shop'], null);
-            
-           // error_log(json_encode($shopify_categories));
 
             $count = count($shopify_categories);
-            // $mag_cat_arr1 = json_decode(json_encode($mag_cat_arrr), true);
-            // $mag_cat_arr2 = $mag_cat_arr1['items'];
-            // unset($mag_cat_arr2[0]); 
-            // unset($mag_cat_arr2[1]);
-            // $mag_cat_arr3 = array_values($mag_cat_arr2);
-
+            
+            //get Arcadier Categories
             $arcadier_categories = $arcadier->getCategories();
+
+            //get Shopify-Arcadier Category Map
+            $data1 = [
+                [
+                    'Name' => 'merchant_guid',
+                    'Operator' => 'equal',
+                    'Value' => $_GET['user'],
+                ],
+                [
+                    'Name' => 'shop',
+                    'Operator' => 'equal',
+                    'Value' => $credentials['shop'],
+                ],
+            ];
+
+            $map = $arcadier->searchTable($plugin_id, 'map', $data1);
+
 
             if($authListById['Records'][0]['auth_status'] == '1'){
                 $isMerchantAuth = 'Yes';
@@ -320,122 +331,94 @@ if($isMerchant){
                             Arcadier Categories
                         </div>
 
+                        <!-- Display Shopify Product Types -->
                         <div class="col-6 p-0 mt-2">
                             <ul class="nav flex-column" role="tablist">
                                 <?php 
-                        foreach($shopify_categories as $shopify_category){ 
-                            if(1){
-                                ?>
-                                <h6>
-                                    <?php 
-                                        echo $shopify_category; 
-                                    ?>
-                                </h6>
+                                    foreach($shopify_categories as $shopify_category){ 
+                                        if(1){
+                                            ?>
                                 <a class="nav-link <?php if(!next($shopify_categories)){ echo active; } ?>"
                                     data-toggle="tab" href="#a<?php 
-                                        if(preg_match('/\s/',$shopify_category)){
-                                            $shopify_category_nospace = preg_replace('/\s+/', '_', $shopify_category);
-                                            $shopify_category_nospace = str_replace('&', 'and', $shopify_category_nospace);
-                                            echo $shopify_category_nospace.'_category';
-                                        }
-                                        else{
-                                            echo $shopify_category.'_category'; 
-                                        }
-                                    ?>">
+                                                //removes whitespaces and symbols, if any 
+                                                if(preg_match('/\s/',$shopify_category)){
+                                                    $shopify_category_nospace = preg_replace('/\s+/', '_', $shopify_category);
+                                                    $shopify_category_nospace = str_replace('&', 'and', $shopify_category_nospace);
+                                                    echo $shopify_category_nospace.'_category';
+                                                }
+                                                else{
+                                                    echo $shopify_category.'_category'; 
+                                                }
+                                                ?>">
                                     <?php 
-                                        echo $shopify_category; 
-                                    ?>
+                                                    echo $shopify_category; 
+                                                ?>
                                 </a>
                                 <?php 
-                        }?>
+                                        }?>
                                 <?php 
-                }?>
+                                }?>
                             </ul>
                         </div>
+
                         <div class="col-6 p-0 tab-content-box mt-2">
                             <div class="tab-content">
-                                <?php foreach($shopify_categories as $shopify_category){ 
-		        
-                if(preg_match('/\s/',$shopify_category)){
-                    $shopify_div_ids = preg_replace('/\s+/', '_', $shopify_category);
-                    $shopify_div_ids = str_replace('&', 'and', $shopify_div_ids);
-                    $shopify_div_ids = $shopify_div_ids.'_category';
-                }
-                else{
-                    $shopify_div_ids = $shopify_category.'_category';
-                }
-                
-                $shopify_category_id = $shopify_category.'_category';
-                
-                
-		        if(1){
-                    ?>
-                                <div id="a<?php echo $shopify_div_ids ?>"
-                                    class="container tab-pane <?php echo active; ?>">
+                                <?php foreach($shopify_categories as $shopify_category){
+                                    //removes whitespaces and symbols, if any 
+                                    if(preg_match('/\s/',$shopify_category)){
+                                        $shopify_div_ids = preg_replace('/\s+/', '_', $shopify_category);
+                                        $shopify_div_ids = str_replace('&', 'and', $shopify_div_ids);
+                                        $shopify_div_ids = $shopify_div_ids.'_category';
+                                    }
+                                    else{
+                                        $shopify_div_ids = $shopify_category.'_category';
+                                    }
+                                    
+                                    $shopify_category_id = $shopify_category.'_category';
+                                    
+                                    if(1){?>
+                                <div id="a<?php echo $shopify_div_ids ?>" class="container tab-pane">
                                     <form class="save_map_form">
                                         <?php
-                                if(!empty($arcadier_categories)){
-                                    foreach($arcadier_categories['Records'] as $arcadier_category){
-                                ?>
+                                                if(!empty($arcadier_categories)){
+                                                    foreach($arcadier_categories['Records'] as $arcadier_category){
+                                                        ?>
                                         <div class="custom-control custom-checkbox mt-3 mb-3"
                                             id="divison<?php echo $shopify_div_ids; ?>">
-                                            <input type="checkbox" <?php $data1 = [
-                                            [
-                                                'Name' => 'merchant_guid',
-                                                'Operator' => 'equal',
-                                                'Value' => $_GET['user'],
-                                            ],
-                                            [
-                                                'Name' => 'shop',
-                                                'Operator' => 'equal',
-                                                'Value' => $credentials['shop'],
-                                            ],
-
-                                            
-                                        ];
-                                        $response = $arcadier->searchTable($plugin_id, 'map', $data1);
-                                        //error_log('Category Map: '.json_encode($response));
-                                        if ($response['Records'][0]['merchant_guid'] == $_GET['user']) {
-                                            $map_arr_unserialize = unserialize($response['Records'][0]['map']);
-                                            $list = $map_arr_unserialize['list'];
-                                            //error_log(json_encode($list));
-                                            foreach($list as $li){ 
-                                                if($li['shopify_category'] == $shopify_category_id){
-                                                    foreach($li['arcadier_guid'] as $arcadier_id){
-                                                        if($arcadier_category['ID'] == $arcadier_id['Arcadier_Category_ID']){
-                                                            echo checked;
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        } ?> name="arc_category[]" class="arc_category"
+                                            <input type="checkbox" <?php 
+                                                                if ($map['Records'][0]['merchant_guid'] == $_GET['user']) {
+                                                                    $map_arr_unserialize = unserialize($map['Records'][0]['map']);
+                                                                    $list = $map_arr_unserialize['list'];
+                                                                    foreach($list as $li){ 
+                                                                        if($li['shopify_category'] == $shopify_category_id){
+                                                                            foreach($li['arcadier_guid'] as $arcadier_id){
+                                                                                if($arcadier_category['ID'] == $arcadier_id){
+                                                                                    echo checked;
+                                                                                    break;
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }?> name="arc_category[]" class="arc_category"
                                                 id="<?php echo $arcadier_category['ID'];?>" />
                                             <label class="" for=""><?php echo $arcadier_category['Name']; ?></label>
                                         </div>
                                         <?php   
-                                } 
-                            }
-                        ?>
-
+                                                    } 
+                                                }
+                                                ?>
                                         <a id="save_map"
                                             onclick="save_mapp('<?php if(preg_match('/\s/',$shopify_category)){ echo $shopify_category_id.'>'.$shopify_div_ids; } else { echo $shopify_category_id; } ?>');"
                                             style="margin-left: 25px;border: #0e77d4;box-sizing: border-box;background-color: #333547;border-radius: 6px;color: white;padding: 5px 10px;font-size: 14px; cursor: pointer;">Submit</a>
-
                                     </form>
                                 </div>
                                 <?php 
-                } 
-            } 
-			?>
+                                    } 
+                                } 
+			                    ?>
                             </div>
                         </div>
                     </div>
-
-
-                    <!-- <footer class="footer text-center">
-    © 2021.
-</footer> -->
-
                 </div>
             </div>
 
@@ -634,6 +617,8 @@ if($isMerchant){
                 }
             }
             </script>
+        </div>
+    </div>
 </body>
 
 </html>
