@@ -85,7 +85,7 @@ $shop = $shopify_store_name;
 $api_key = $shopify_key;
 
 
-$scopes = "read_orders,write_products";
+$scopes = "read_orders,write_products,write_orders";
 $redirect_uri =  $baseUrl . '/user/plugins/' . $packageId . '/shopify-token.php';   //?secret-key=' . $shopify_secret_key .'&api-key='. $api_key
 
 // Build install/approval URL to redirect to
