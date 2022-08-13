@@ -52,6 +52,20 @@ $total_created = 0;
 $total_unchanged = 0;
 $total_changed = 0;
 
+// get the custom field id to tag that the items are from shopify
+
+$url = $baseUrl . '/api/developer-packages/custom-fields?packageId=' . $packageId;
+$packageCustomFields = callAPI("GET", null, $url, false);
+
+$is_shopify_code = '';
+
+foreach ($packageCustomFields as $cf) {
+    if ($cf['Name'] == 'is_shopify_item' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+        $is_shopify_code = $cf['Code'];
+    }
+}
+
+
 
 //step 1. Get all shopify products
 $shopify_products = shopify_get_all_products($access_token, $shop);
@@ -181,8 +195,27 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
                 
                 ];
 
+
+                //update the item's custom field
+
+                $data = [
+                    'CustomFields' => [
+                        [
+                            'Code' =>  $is_shopify_code,
+                            'Values' => [ 1 ],
+                        ],
+                    ],
+                ];
+
+                $url = $baseUrl . '/api/v2/merchants/' . $userId . '/items/' . $result['ID'];
+                $result = callAPI("PUT", $admin_token, $url, $data);
+
+
                 $response = $arc->createRowEntry($packageId, 'synced_items', $sync_details);
                 $total_created++;
+
+
+
             }
             
 
