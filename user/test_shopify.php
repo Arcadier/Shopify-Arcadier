@@ -2,7 +2,7 @@
 require_once("shopify_functions.php");
 
 $shop = "codemafia";
-$token = "shpua_6acbed863bbabf8b4f56c0c3f900b710";
+$token = "shpua_0410c3639eafa4ad5254513893c93a8c";
 $query = array(
 "Content-type" => "application/json" // Tell Shopify that we're expecting a response in JSON format
 );
@@ -12,7 +12,8 @@ $query = array(
 
 //$//cats = shopify_categories($token, $shop);
 
-$products = shopify_get_all_products_paginated($token, $shop, null, true);
+$products = shopify_get_all_products($token, $shop);
+
 
 echo json_encode($products);
 // $mutation = array("query" => 'mutation {
