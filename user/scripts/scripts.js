@@ -3,7 +3,7 @@
     var packagePath = scriptSrc.replace('/scripts/scripts.js', '').trim();
     var re = /([a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})/i;
     var packageId = re.exec(scriptSrc.toLowerCase())[1];
-
+    const url = window.location.href.toLowerCase();
     $(document).ready(function(){
         var baseUrl = window.location.hostname;
         var token = getCookie('webapitoken');
@@ -23,6 +23,19 @@
         } 
     });
 
+    
+    function waitForElement(elementPath, callBack) {
+        window.setTimeout(function() {
+            if ($(elementPath).length) {
+                callBack(elementPath, $(elementPath));
+            } else {
+                waitForElement(elementPath, callBack);
+            }
+        }, 700);
+    }
+
+
+
     function getCookie(name){
         var value = '; ' + document.cookie;
         var parts = value.split('; ' + name + '=');
@@ -32,7 +45,7 @@
     }
 
     
-      function saveShopifyData()
+    function saveShopifyData()
   {
     // console.log(result);
     var apiUrl = packagePath + '/shopify_link_account.php';
@@ -58,6 +71,33 @@
                 5000);
            
         
+        },
+        error: function(jqXHR, status, err) {
+        //	toastr.error('Error!');
+        }
+      });
+    }
+    
+
+
+      function syncOrderShopify()
+  {
+    // console.log(result);
+    var apiUrl = packagePath + '/sync_orders.php';
+    var data = {
+        'invoice-id' : $('.invoice-id').text()
+
+    }
+      
+      $.ajax({
+        url: apiUrl,
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: function(result) {
+          result =  JSON.parse(result);
+            console.log(`result  ${result}`);
+
         },
         error: function(jqXHR, status, err) {
         //	toastr.error('Error!');
@@ -128,6 +168,14 @@
             saveShopifyData();
         })
 
+
+         if (url.indexOf("/user/checkout/success") >= 0) {
+            waitForElement(".invoice-id", function() {
+                
+                syncOrderShopify();
+                
+            });
+        }
 
 
     });
