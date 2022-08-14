@@ -65,7 +65,7 @@
                 1000);
             },
             error: function(jqXHR, status, err) {
-            //	toastr.error('Error!');
+            	toastr.error('There was a problem connecting to your Shopify store.');
             }
         });
     }

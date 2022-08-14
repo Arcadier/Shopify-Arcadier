@@ -21,6 +21,11 @@ $authDetails =  json_decode(callAPI("POST", null, $url, $auth));
 $shop = $authDetails->Records[0]->shop;
 $access_token= $authDetails->Records[0]->access_token;
 
+//import Shopify Product count
+$product_count = shopify_product_count($access_token, $shop);
+$product_import_speed = $product_count['count']/17;
+error_log("Import time: ".$product_import_speed." seconds.", 3, "tanoo_log.php");
+
 //import Shopify Products
 $products = shopify_get_all_products_unstable($access_token, $shop, null, true);
 
@@ -140,7 +145,7 @@ if($isMerchant){
             right: 0;
             left: 0;
             top: 50%;
-            text-indent: -9999em;
+            text-indent: -1em;
             border-top: 1.1em solid rgba(255, 255, 255, 0.2);
             border-right: 1.1em solid rgba(255, 255, 255, 0.2);
             border-bottom: 1.1em solid rgba(255, 255, 255, 0.2);
@@ -148,8 +153,8 @@ if($isMerchant){
             -webkit-transform: translateZ(0);
             -ms-transform: translateZ(0);
             transform: translateZ(0);
-            -webkit-animation: load8 1.1s infinite linear;
-            animation: load8 1.1s infinite linear;
+            -webkit-animation: load8 <?php echo $product_import_speed ?>s infinite;
+            animation: load8 <?php echo $product_import_speed ?>s infinite;
         }
 
         @-webkit-keyframes load8 {
@@ -194,15 +199,6 @@ if($isMerchant){
             display: none;
         }
 
-        /* 
-                #wrapper {
-                    width: unset;
-                }
-                .col-sm-3 {
-                    flex: 0 0 25%;
-                    max-width: 18%;
-                }
-                */
         input[type=checkbox],
         input[type=radio] {
             visibility: unset;
@@ -234,15 +230,12 @@ if($isMerchant){
             margin-top: 20px;
         }
 
-        /* div.footer {
-                    display: none;
-                } */
         table.dataTable thead th,
         table.dataTable thead td {
             padding: 8px 10px;
         }
 
-        .foot-plugin-footer .footer {
+        /* .foot-plugin-footer .footer {
             padding-bottom: 10px;
             padding-top: 30px;
         }
@@ -254,7 +247,17 @@ if($isMerchant){
         .foot-plugin-footer ul.footer-social-media,
         .foot-plugin-footer .footer-bottom {
             display: none;
+        } */
+
+        .foot-plugin-footer .footer {
+            padding: 0;
+            /* position: absolute; */
+            bottom: 0;
+            width: inherit;
+            /* margin: auto; */
+            padding-left: 240px;
         }
+
 
         div#logTable_wrapper {
             min-height: 410px;
@@ -264,10 +267,6 @@ if($isMerchant){
 
 <body>
     <script>
-        function addLoader() {
-            $('body').append('<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
-        }
-
         function removeClass(div_id, time) {
             $("#" + div_id).fadeOut(time, function() {
                 $("#" + div_id).remove();
@@ -275,7 +274,7 @@ if($isMerchant){
         }
 
         function addLoader1() {
-            $('body').append('<div style="" id="loadingDiv1"><div class="loader">Loading...</div></div>');
+            $('body').append('<div id="loadingDiv1"><div style="position: absolute; top: 45%;left: 45%;">Loading <?php echo $product_count['count'] ?> items in about <?php echo round($product_import_speed, 0); ?>s... </div><div class="loader"></div></div>');
         }
         addLoader1();
     </script>
@@ -522,388 +521,388 @@ if($isMerchant){
     <script src="scripts/waves.min.js"></script>
     <script src="scripts/app.js"></script>
     <script>
-    $(document).ready(function() {
-        $('input[type=checkbox]').click(function() {
-            if (!$(this).is(':checked')) {
-                $('#' + this.id).prop('checked', false);
-            }
-        });
-        $.noConflict();
-        $(".chosen-select").chosen({
-            width: "125px"
-        });
-
-        $.extend($.fn.dataTable.defaults, {
-            //searching: false,
-            ordering: false,
-            //lengthMenu:false,
-            //paging:false,
-            //info:false
-        });
-        //$('table.table').DataTable();
-
-        $('#logTable').DataTable({
-            "lengthMenu": [
-                [10, 25, 50, -1],
-                [10, 25, 50, "All"]
-            ]
-        });
-        myDialog = $("#dialog").dialog({
-            // dialog settings:
-            //autoOpen : false,
-            // ... 
-        });
-        myDialog.dialog("close");
-    });
-
-    function ShowCustomDialog(dialogtype, dialogmessage) {
-        ShowDialogBox(dialogtype, dialogmessage, 'Ok', '', 'GoToAssetList', null);
-    }
-
-    function ShowDialogBox(title, content, btn1text, btn2text, functionText, parameterList) {
-        var btn1css;
-        var btn2css;
-
-        if (btn1text == '') {
-            btn1css = "hidecss";
-        } else {
-            btn1css = "showcss";
-        }
-
-        if (btn2text == '') {
-            btn2css = "hidecss";
-        } else {
-            btn2css = "showcss";
-        }
-        $("#lblMessage").html(content);
-
-        $("#dialog").dialog({
-            resizable: false,
-            title: title,
-            modal: true,
-            width: '400px',
-            height: 'auto',
-            bgiframe: false,
-            hide: {
-                effect: 'scale',
-                duration: 400
-            },
-
-            buttons: [{
-                text: btn1text,
-                "class": btn1css,
-                click: function() {
-                    myDialog.dialog("close");
-
-                }
-            }]
-        });
-    }
-
-    function clear_form_elements(class_name) {
-        $("." + class_name).find(':input').each(function() {
-            switch (this.type) {
-                case 'password':
-                case 'text':
-                case 'textarea':
-                case 'file':
-                case 'select-one':
-                case 'select-multiple':
-                case 'date':
-                case 'number':
-                case 'tel':
-                case 'email':
-                    $(this).val('');
-                    break;
-                case 'checkbox':
-                case 'radio':
-                    this.checked = false;
-                    break;
-            }
-        });
-    }
-
-    function removeClass(div_id, time) {
-        $("#" + div_id).fadeOut(time, function() {
-            $("#" + div_id).remove();
-        });
-    }
-
-    function sync_shopify_product(id, name, shortId) {
-
-        console.log('syncing');
-
-        if ($('#sync_product-' + shortId).is(":checked")) {
-            console.log($(`#cat-${shortId}`).attr('image-src'));
-            data = {
-                id,
-                name,
-                'method': 'sync_one',
-                'category': $(`#cat-${shortId}`).attr('cat-id').split(','),
-                'images': $(`#cat-${shortId}`).attr('image-src'),
-                'price': $(`#cat-${shortId}`).attr('price'),
-                'qty': $(`#cat-${shortId}`).attr('qty')
-
-
-            };
-            // console.table(data);
-            $('body').append(
-                '<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
-
-            $.ajax({
-                type: "POST",
-                url: "shopify_single_sync.php",
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function(response) {
-                    removeClass('loadingDiv', 500);
-                    console.log(JSON.parse(response));
-                    response = JSON.parse(response);
-                    if (response.message == 1) {
-                        // $("tr#mag-" + id1 + " td:nth-child(4)").html("<b>Yes</b> at " +
-                        //     response.data.sync_date);
-                        var message = 'Sync successfully';
-                        ShowCustomDialog('Alert', message);
-                    } else {
-                        // response = JSON.parse(JSON.stringify(response));
-                        // var message1 = response.toString();
-                        // var message = "The following items did not have their categories mapped: " +
-                        //    message1 + ", and were not created.";
-                        // ShowCustomDialog('Alert', message);
-                    }
+        $(document).ready(function() {
+            $('input[type=checkbox]').click(function() {
+                if (!$(this).is(':checked')) {
+                    $('#' + this.id).prop('checked', false);
                 }
             });
-
-        } else {
-            alert('Please check Synchronize');
-        }
-    }
-
-
-    function sync_product(sku, name, id) {
-        var configRowByMerchantGuid_min_sync_limit = '<?php echo $configRowByMerchantGuid["min_sync_limit"]; ?>';
-        var configRowByMerchantGuid_min_sync_limit1 = parseInt(configRowByMerchantGuid_min_sync_limit);
-        var mag_product1_count = '<?php echo $mag_product1_count; ?>';
-        var mag_product1_count1 = parseInt(mag_product1_count);
-        console.log(configRowByMerchantGuid_min_sync_limit);
-        console.log(configRowByMerchantGuid_min_sync_limit1);
-        console.log(mag_product1_count);
-        console.log(mag_product1_count);
-
-        sku1 = sku;
-        name1 = name;
-        id1 = id;
-
-        if ($('#sync_product-' + id).is(":checked")) {
-            // if (mag_product1_count1 >= configRowByMerchantGuid_min_sync_limit1) {
-            var override_default_category_select = $('#override_default_category_select-' + id).val();
-            var arc_user = '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
-            if ($('#override_default_category-' + id).is(":checked")) {
-                if (override_default_category_select == null || override_default_category_select.length == '0') {
-                    alert("Please Select Override Category");
-                    return false;
-                }
-                data = {
-                    sku1: sku1,
-                    name1: name1,
-                    id1: id1,
-                    override_default_category_select: override_default_category_select,
-                    create_arc_item: 'create_arc_item',
-                    arc_user: arc_user
-                };
-            } else {
-                data = {
-                    sku1: sku1,
-                    name1: name1,
-                    id1: id1,
-                    create_arc_item: 'create_arc_item',
-                    arc_user: arc_user
-                };
-            }
-            $('body').append(
-                '<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
-
-            console.log(data);
-
-            $.ajax({
-                type: "POST",
-                url: "ajaxrequest.php",
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function(response) {
-                    removeClass('loadingDiv', 500);
-                    console.log(JSON.parse(response));
-                    response = JSON.parse(response);
-                    if (response.message == 1) {
-                        $("tr#mag-" + id1 + " td:nth-child(4)").html("<b>Yes</b> at " +
-                            response.data.sync_date);
-                        var message = 'Sync successfully';
-                        ShowCustomDialog('Alert', message);
-                    } else {
-                        response = JSON.parse(JSON.stringify(response));
-                        var message1 = response.toString();
-                        var message = "The following items did not have their categories mapped: " +
-                            message1 + ", and were not created.";
-                        ShowCustomDialog('Alert', message);
-                    }
-                }
+            $.noConflict();
+            $(".chosen-select").chosen({
+                width: "125px"
             });
 
-            // } else {
-            //    var message = 'Cannot sync, Please increase sync limit from configuration';
-            //    ShowCustomDialog('Alert', message);
-            // }
-        } else {
-            alert('Please check Synchronize');
-        }
-    }
+            $.extend($.fn.dataTable.defaults, {
+                //searching: false,
+                ordering: false,
+                //lengthMenu:false,
+                //paging:false,
+                //info:false
+            });
+            //$('table.table').DataTable();
 
-    const removeById = (arr, id1) => {
-        const requiredIndex = arr.findIndex(el => {
-            return el.id1 === String(id1);
+            $('#logTable').DataTable({
+                "lengthMenu": [
+                    [10, 25, 50, -1],
+                    [10, 25, 50, "All"]
+                ]
+            });
+            myDialog = $("#dialog").dialog({
+                // dialog settings:
+                //autoOpen : false,
+                // ... 
+            });
+            myDialog.dialog("close");
         });
-        if (requiredIndex === -1) {
-            return false;
-        };
-        return !!arr.splice(requiredIndex, 1);
-    };
 
-    const checkIdExists = (arr, id) => {
-        const requiredIndex1 = arr.findIndex(el => {
-            //return el.id === String(id);
-            return el.id === id;
-        });
-        if (requiredIndex1 === -1) {
-            return false;
-        } else {
-            return true;
+        function ShowCustomDialog(dialogtype, dialogmessage) {
+            ShowDialogBox(dialogtype, dialogmessage, 'Ok', '', 'GoToAssetList', null);
         }
-    };
 
-    $(document).ready(function() {
-        var baseUrl = window.location.hostname;
-        var token = getCookie('webapitoken');
-        var user = $("#userGuid").val();
-        var arc_user1 = '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
-        if (($('#merchantId') && $('#merchantId').length) && (user == arc_user1)) {
-            removeClass('loadingDiv1', 500);
-            return false;
-        } else {
-            window.location.replace('https://' + baseUrl);
-        }
-    });
+        function ShowDialogBox(title, content, btn1text, btn2text, functionText, parameterList) {
+            var btn1css;
+            var btn2css;
 
-    jQuery($ => {
-        //var checked_data = [];
-        var magento_products1 = '<?php echo json_encode($mag_product1['items']); ?>';
-        var magento_products = JSON.parse(magento_products1);
-        console.log(magento_products);
-
-        var checked_data = JSON.parse(localStorage.getItem('checked_data')) || [];
-        console.log("checked_data:");
-        console.log(checked_data);
-
-        $.each(checked_data, function(index, checked_dataByIndex) {
-            if (checkIdExists(magento_products, parseInt(checked_dataByIndex.id1))) {
-                console.log('yes');
+            if (btn1text == '') {
+                btn1css = "hidecss";
             } else {
-                console.log('no');
-                var cart = JSON.parse(localStorage.getItem('checked_data')) || [];
-                var idToDelete = parseInt(checked_dataByIndex.id1);
-                removeById(cart, idToDelete);
-                localStorage.removeItem("checked_data");
-                localStorage.setItem("checked_data", JSON.stringify(cart));
+                btn1css = "showcss";
             }
-        });
+
+            if (btn2text == '') {
+                btn2css = "hidecss";
+            } else {
+                btn2css = "showcss";
+            }
+            $("#lblMessage").html(content);
+
+            $("#dialog").dialog({
+                resizable: false,
+                title: title,
+                modal: true,
+                width: '400px',
+                height: 'auto',
+                bgiframe: false,
+                hide: {
+                    effect: 'scale',
+                    duration: 400
+                },
+
+                buttons: [{
+                    text: btn1text,
+                    "class": btn1css,
+                    click: function() {
+                        myDialog.dialog("close");
+
+                    }
+                }]
+            });
+        }
+
+        function clear_form_elements(class_name) {
+            $("." + class_name).find(':input').each(function() {
+                switch (this.type) {
+                    case 'password':
+                    case 'text':
+                    case 'textarea':
+                    case 'file':
+                    case 'select-one':
+                    case 'select-multiple':
+                    case 'date':
+                    case 'number':
+                    case 'tel':
+                    case 'email':
+                        $(this).val('');
+                        break;
+                    case 'checkbox':
+                    case 'radio':
+                        this.checked = false;
+                        break;
+                }
+            });
+        }
+
+        function removeClass(div_id, time) {
+            $("#" + div_id).fadeOut(time, function() {
+                $("#" + div_id).remove();
+            });
+        }
+
+        function sync_shopify_product(id, name, shortId) {
+
+            console.log('syncing');
+
+            if ($('#sync_product-' + shortId).is(":checked")) {
+                console.log($(`#cat-${shortId}`).attr('image-src'));
+                data = {
+                    id,
+                    name,
+                    'method': 'sync_one',
+                    'category': $(`#cat-${shortId}`).attr('cat-id').split(','),
+                    'images': $(`#cat-${shortId}`).attr('image-src'),
+                    'price': $(`#cat-${shortId}`).attr('price'),
+                    'qty': $(`#cat-${shortId}`).attr('qty')
 
 
-        var arr = JSON.parse(localStorage.getItem('checked')) || [];
-        console.log("arr1:" + arr);
-        arr.forEach((c, i) => $('.sync_product').eq(i).prop('checked', c));
+                };
+                // console.table(data);
+                $('body').append(
+                    '<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
 
-        //$(".sync_product").click((elem) => { 
-        $('.sync_product').change(function() {
-            console.log($(this).attr('data-id'));
-            var data_id = $(this).attr('data-id').split(",");
-
-            if ($('#' + $(this).attr('id')).is(":checked")) {
-                var cart = JSON.parse(localStorage.getItem('checked_data')) || [];
-                cart.push({
-                    sku1: data_id[0],
-                    name1: data_id[1],
-                    id1: data_id[2],
-                    create_arc_item_manual: 'create_arc_item_manual',
-                    arc_user: data_id[3]
+                $.ajax({
+                    type: "POST",
+                    url: "shopify_single_sync.php",
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        removeClass('loadingDiv', 500);
+                        console.log(JSON.parse(response));
+                        response = JSON.parse(response);
+                        if (response.message == 1) {
+                            // $("tr#mag-" + id1 + " td:nth-child(4)").html("<b>Yes</b> at " +
+                            //     response.data.sync_date);
+                            var message = 'Sync successfully';
+                            ShowCustomDialog('Alert', message);
+                        } else {
+                            // response = JSON.parse(JSON.stringify(response));
+                            // var message1 = response.toString();
+                            // var message = "The following items did not have their categories mapped: " +
+                            //    message1 + ", and were not created.";
+                            // ShowCustomDialog('Alert', message);
+                        }
+                    }
                 });
-                localStorage.setItem("checked_data", JSON.stringify(cart));
-
-
-
 
             } else {
-                var cart = JSON.parse(localStorage.getItem('checked_data')) || [];
-                var idToDelete = data_id[2];
-                removeById(cart, idToDelete);
-                localStorage.removeItem("checked_data");
-                localStorage.setItem("checked_data", JSON.stringify(cart));
-
-
-
+                alert('Please check Synchronize');
             }
+        }
 
-            var checked_data1 = JSON.parse(localStorage.getItem('checked_data')) || [];
-            console.log("checked_data1:");
-            console.log(checked_data1);
 
-            var arc_user2 =
-                '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
-            var data = {
-                create_arc_item_all_slow: 'create_arc_item_all_slow',
-                arc_user: arc_user2,
-                checked_data: checked_data1
+        function sync_product(sku, name, id) {
+            var configRowByMerchantGuid_min_sync_limit = '<?php echo $configRowByMerchantGuid["min_sync_limit"]; ?>';
+            var configRowByMerchantGuid_min_sync_limit1 = parseInt(configRowByMerchantGuid_min_sync_limit);
+            var mag_product1_count = '<?php echo $mag_product1_count; ?>';
+            var mag_product1_count1 = parseInt(mag_product1_count);
+            console.log(configRowByMerchantGuid_min_sync_limit);
+            console.log(configRowByMerchantGuid_min_sync_limit1);
+            console.log(mag_product1_count);
+            console.log(mag_product1_count);
+
+            sku1 = sku;
+            name1 = name;
+            id1 = id;
+
+            if ($('#sync_product-' + id).is(":checked")) {
+                // if (mag_product1_count1 >= configRowByMerchantGuid_min_sync_limit1) {
+                var override_default_category_select = $('#override_default_category_select-' + id).val();
+                var arc_user = '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
+                if ($('#override_default_category-' + id).is(":checked")) {
+                    if (override_default_category_select == null || override_default_category_select.length == '0') {
+                        alert("Please Select Override Category");
+                        return false;
+                    }
+                    data = {
+                        sku1: sku1,
+                        name1: name1,
+                        id1: id1,
+                        override_default_category_select: override_default_category_select,
+                        create_arc_item: 'create_arc_item',
+                        arc_user: arc_user
+                    };
+                } else {
+                    data = {
+                        sku1: sku1,
+                        name1: name1,
+                        id1: id1,
+                        create_arc_item: 'create_arc_item',
+                        arc_user: arc_user
+                    };
+                }
+                $('body').append(
+                    '<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
+
+                console.log(data);
+
+                $.ajax({
+                    type: "POST",
+                    url: "ajaxrequest.php",
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        removeClass('loadingDiv', 500);
+                        console.log(JSON.parse(response));
+                        response = JSON.parse(response);
+                        if (response.message == 1) {
+                            $("tr#mag-" + id1 + " td:nth-child(4)").html("<b>Yes</b> at " +
+                                response.data.sync_date);
+                            var message = 'Sync successfully';
+                            ShowCustomDialog('Alert', message);
+                        } else {
+                            response = JSON.parse(JSON.stringify(response));
+                            var message1 = response.toString();
+                            var message = "The following items did not have their categories mapped: " +
+                                message1 + ", and were not created.";
+                            ShowCustomDialog('Alert', message);
+                        }
+                    }
+                });
+
+                // } else {
+                //    var message = 'Cannot sync, Please increase sync limit from configuration';
+                //    ShowCustomDialog('Alert', message);
+                // }
+            } else {
+                alert('Please check Synchronize');
+            }
+        }
+
+        const removeById = (arr, id1) => {
+            const requiredIndex = arr.findIndex(el => {
+                return el.id1 === String(id1);
+            });
+            if (requiredIndex === -1) {
+                return false;
             };
-            $.ajax({
-                type: "POST",
-                url: "ajaxrequest.php",
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function(response) {
-                    console.log(response);
+            return !!arr.splice(requiredIndex, 1);
+        };
 
+        const checkIdExists = (arr, id) => {
+            const requiredIndex1 = arr.findIndex(el => {
+                //return el.id === String(id);
+                return el.id === id;
+            });
+            if (requiredIndex1 === -1) {
+                return false;
+            } else {
+                return true;
+            }
+        };
+
+        $(document).ready(function() {
+            var baseUrl = window.location.hostname;
+            var token = getCookie('webapitoken');
+            var user = $("#userGuid").val();
+            var arc_user1 = '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
+            if (($('#merchantId') && $('#merchantId').length) && (user == arc_user1)) {
+                removeClass('loadingDiv1', 500);
+                return false;
+            } else {
+                window.location.replace('https://' + baseUrl);
+            }
+        });
+
+        jQuery($ => {
+            //var checked_data = [];
+            var magento_products1 = '<?php echo json_encode($mag_product1['items']); ?>';
+            var magento_products = JSON.parse(magento_products1);
+            console.log(magento_products);
+
+            var checked_data = JSON.parse(localStorage.getItem('checked_data')) || [];
+            console.log("checked_data:");
+            console.log(checked_data);
+
+            $.each(checked_data, function(index, checked_dataByIndex) {
+                if (checkIdExists(magento_products, parseInt(checked_dataByIndex.id1))) {
+                    console.log('yes');
+                } else {
+                    console.log('no');
+                    var cart = JSON.parse(localStorage.getItem('checked_data')) || [];
+                    var idToDelete = parseInt(checked_dataByIndex.id1);
+                    removeById(cart, idToDelete);
+                    localStorage.removeItem("checked_data");
+                    localStorage.setItem("checked_data", JSON.stringify(cart));
                 }
             });
 
-            var arr = $('.sync_product').map((i, el) => el.checked).get();
-            console.log(arr);
-            localStorage.setItem("checked", JSON.stringify(arr));
+
+            var arr = JSON.parse(localStorage.getItem('checked')) || [];
+            console.log("arr1:" + arr);
+            arr.forEach((c, i) => $('.sync_product').eq(i).prop('checked', c));
+
+            //$(".sync_product").click((elem) => { 
+            $('.sync_product').change(function() {
+                console.log($(this).attr('data-id'));
+                var data_id = $(this).attr('data-id').split(",");
+
+                if ($('#' + $(this).attr('id')).is(":checked")) {
+                    var cart = JSON.parse(localStorage.getItem('checked_data')) || [];
+                    cart.push({
+                        sku1: data_id[0],
+                        name1: data_id[1],
+                        id1: data_id[2],
+                        create_arc_item_manual: 'create_arc_item_manual',
+                        arc_user: data_id[3]
+                    });
+                    localStorage.setItem("checked_data", JSON.stringify(cart));
+
+
+
+
+                } else {
+                    var cart = JSON.parse(localStorage.getItem('checked_data')) || [];
+                    var idToDelete = data_id[2];
+                    removeById(cart, idToDelete);
+                    localStorage.removeItem("checked_data");
+                    localStorage.setItem("checked_data", JSON.stringify(cart));
+
+
+
+                }
+
+                var checked_data1 = JSON.parse(localStorage.getItem('checked_data')) || [];
+                console.log("checked_data1:");
+                console.log(checked_data1);
+
+                var arc_user2 =
+                    '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
+                var data = {
+                    create_arc_item_all_slow: 'create_arc_item_all_slow',
+                    arc_user: arc_user2,
+                    checked_data: checked_data1
+                };
+                $.ajax({
+                    type: "POST",
+                    url: "ajaxrequest.php",
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        console.log(response);
+
+                    }
+                });
+
+                var arr = $('.sync_product').map((i, el) => el.checked).get();
+                console.log(arr);
+                localStorage.setItem("checked", JSON.stringify(arr));
+            });
+            var arr1 = JSON.parse(localStorage.getItem('sync_product1')) || [];
+            console.log("arr11:" + arr1);
+            arr1.forEach((c, i) => $('.sync_product1').eq(i).prop('checked', c));
+
+            $(".sync_product1").click((elem) => {
+                var arr1 = $('.sync_product1').map((i, el) => el.checked).get();
+                console.log("arr22:" + arr1);
+                localStorage.setItem("sync_product1", JSON.stringify(arr1));
+            });
+
+            var create_arc_item_slowRowByMerchantGuid =
+                '<?php  if(!empty($create_arc_item_slowRowByMerchantGuid)){ echo json_encode(unserialize($create_arc_item_slowRowByMerchantGuid['checked_data'])); }  ?>';
+            var create_arc_item_slowRowByMerchantGuid1 = JSON.parse(
+                create_arc_item_slowRowByMerchantGuid);
+            console.log('create_arc_item_slowRowByMerchantGuid:');
+            console.log(create_arc_item_slowRowByMerchantGuid);
+            console.log(create_arc_item_slowRowByMerchantGuid1);
+
         });
-        var arr1 = JSON.parse(localStorage.getItem('sync_product1')) || [];
-        console.log("arr11:" + arr1);
-        arr1.forEach((c, i) => $('.sync_product1').eq(i).prop('checked', c));
 
-        $(".sync_product1").click((elem) => {
-            var arr1 = $('.sync_product1').map((i, el) => el.checked).get();
-            console.log("arr22:" + arr1);
-            localStorage.setItem("sync_product1", JSON.stringify(arr1));
-        });
-
-        var create_arc_item_slowRowByMerchantGuid =
-            '<?php  if(!empty($create_arc_item_slowRowByMerchantGuid)){ echo json_encode(unserialize($create_arc_item_slowRowByMerchantGuid['checked_data'])); }  ?>';
-        var create_arc_item_slowRowByMerchantGuid1 = JSON.parse(
-            create_arc_item_slowRowByMerchantGuid);
-        console.log('create_arc_item_slowRowByMerchantGuid:');
-        console.log(create_arc_item_slowRowByMerchantGuid);
-        console.log(create_arc_item_slowRowByMerchantGuid1);
-
-    });
-
-    function getCookie(name) {
-        var value = '; ' + document.cookie;
-        var parts = value.split('; ' + name + '=');
-        if (parts.length === 2) {
-            return parts.pop().split(';').shift();
+        function getCookie(name) {
+            var value = '; ' + document.cookie;
+            var parts = value.split('; ' + name + '=');
+            if (parts.length === 2) {
+                return parts.pop().split(';').shift();
+            }
         }
-    }
     </script>
 </body>
 

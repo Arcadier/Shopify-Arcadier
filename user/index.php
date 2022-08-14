@@ -3,8 +3,6 @@ include 'callAPI.php';
 include 'magento_functions.php';
 include 'api.php';
 
-
-
 $arc = new ApiSdk();
 $mag = new MagSdk();
 $pack_id = getPackageID();
@@ -13,28 +11,22 @@ $isMerchant = false;
 
 
 //retrieve auth details
-
 $baseUrl = getMarketplaceBaseUrl();
 $admin_token = $arc->AdminToken();
 $customFieldPrefix = getCustomFieldPrefix();
 
 $userToken = $_COOKIE["webapitoken"];
 $url = $baseUrl . '/api/v2/users/'; 
-$result = callAPI("GET", $userToken, $url, false);
-$userId = $result['ID'];
+$result = json_decode(callAPI("GET", $userToken, $url, false));
+$userId = $result->ID;
 $packageId = getPackageID();
 
 $auth = array(array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
 $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
-$authDetails =  callAPI("POST", $admin_token, $url, $auth);
-
-// $shop_secret_key = $authDetails['Records'][0]['secret_key'];
-// $shop_api_key = $authDetails['Records'][0]['api_key'];
-$shop = $authDetails['Records'][0]['shop'];
-$auth_id = $authDetails['Records'][0]['Id'];
-
-
-
+$authDetails =  json_decode(callAPI("POST", null, $url, $auth));
+// error_log(json_encode($authDetails), 3, "tanoo_log.php");
+$shop = $authDetails->Records[0]->shop;
+$access_token= $authDetails->Records[0]->access_token;
 
 if(!empty($UserInfo)){
 foreach($UserInfo['Roles'] as $UserInfoRoles){
@@ -240,16 +232,13 @@ if($isMerchant){
             margin-top: 20px;
         }
 
-        .foot-plugin-footer .content-page .content {
-            margin-bottom: 30px;
-        }
-
         .foot-plugin-footer .footer {
             padding: 0;
-        }
-
-        .foot-plugin-footer ul.footer-social-media {
-            display: none;
+            position: absolute;
+            bottom: 0;
+            width: inherit;
+            /* margin: auto; */
+            padding-left: 240px;
         }
 
         /* div.footer {
@@ -403,59 +392,21 @@ if($isMerchant){
                             </div>
                         </div>
 
-
-                        <div class="col-12 mb-2">
-                            <div class="row">
-                                <div class="col-12 col-md-12 p-2">
-                                    <div class="mb-2 ">
-                                        <span class="font-weight-bolder ">Mode</span>
-                                    </div>
-                                    <div class="col-12 bg-white p-3 rounded shadow">
-                                        <div class="row pl-2">
-                                            <div class="col-12 col-md-8 mb-3 bg-light p-2 rounded">
-                                                <div class="row w-100">
-                                                    <div class="col-1">
-                                                        <div class="custom-control custom-radio text-center mt-3">
-                                                            <input type="radio" class="custom-control-input" id="ma"
-                                                                name="mode" value="0" checked
-                                                                <?php //if(!empty($configRowByMerchantGuid['mode'])){if($configRowByMerchantGuid['mode'] == '0'){echo 'checked';} }?>>
-                                                            <label class="custom-control-label" for="ma"></label>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-2">
-                                                        <div class="mb-2">
-                                                            <span class="font-weight-bolder">Items:</span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-4">
-                                                        <div class="mb-2">
-                                                            <span class="font-weight-bolder">Shopify -> Arcadier</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                         <div class="row">
                             <div class="col-12 col-md-12 p-2">
-                                <div class="mb-2">
-                                    <span class="font-weight-bolder ">Shopify Store Name</span>
-                                </div>
-                                <div class="row mt-3" auth-id=<?php echo $auth_id; ?>>
+                                <div class="row mt-3">
                                     <div class="col-3 mt-2">
-                                        <label for="pwd">Store name: </label>
+                                        <label for="pwd" style="width: 107px;">Shopify Store name: </label>
                                     </div>
                                     <div class="col-8 pr-5 mt-2">
                                         <input type="text" class="form-control" id="store-name" placeholder="your-store.myshopify.com"
-                                            value="<?php if(!empty($shop)) { echo $shop; } else { return; } ?>" style="width: 113.5%;">
+                                            value="<?php if(!empty($shop)) { echo $shop; } else { echo ''; } ?>" style="width: 113.5%; margin-bottom: 10px;">
                                     </div>
                                 </div>
                                 <div class="col-5 pr-5 mt-2">
                                     <button class="btn btn-info" type="submit" id="shopify-connect">Connect</button>
                                 </div>
+                                <div class="pr-5 mt-2"> Connection to <?php if(!empty($shop)) { echo $shop.'.myshopify.com established.'; } else { echo 'any shop not found.'; } ?></div>
                             </div>
                         </div>
                     </div>

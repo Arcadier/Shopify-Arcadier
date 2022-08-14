@@ -2,7 +2,6 @@
 include 'shopify_functions.php';
 include_once 'api.php';
 
-$logging = true;
 $arcadier = new ApiSdk();
 $plugin_id = getPackageID();
 $UserInfo = $arcadier->getUserInfo($_GET['user']);
@@ -115,118 +114,118 @@ if($isMerchant){
     <script src="scripts/bootstrap.bundle.min.js"></script>
 
     <style>
-    .loader,
-    .loader:after {
-        border-radius: 50%;
-        width: 10em;
-        height: 10em;
-    }
-
-    .loader {
-        margin: auto;
-        font-size: 10px;
-        position: absolute;
-        right: 0;
-        left: 0;
-        top: 50%;
-        text-indent: -9999em;
-        border-top: 1.1em solid rgba(255, 255, 255, 0.2);
-        border-right: 1.1em solid rgba(255, 255, 255, 0.2);
-        border-bottom: 1.1em solid rgba(255, 255, 255, 0.2);
-        border-left: 1.1em solid #ffffff;
-        -webkit-transform: translateZ(0);
-        -ms-transform: translateZ(0);
-        transform: translateZ(0);
-        -webkit-animation: load8 1.1s infinite linear;
-        animation: load8 1.1s infinite linear;
-    }
-
-    @-webkit-keyframes load8 {
-        0% {
-            -webkit-transform: rotate(0deg);
-            transform: rotate(0deg);
+        .loader,
+        .loader:after {
+            border-radius: 50%;
+            width: 10em;
+            height: 10em;
         }
 
-        100% {
-            -webkit-transform: rotate(360deg);
-            transform: rotate(360deg);
+        .loader {
+            margin: auto;
+            font-size: 10px;
+            position: absolute;
+            right: 0;
+            left: 0;
+            top: 50%;
+            text-indent: -9999em;
+            border-top: 1.1em solid rgba(255, 255, 255, 0.2);
+            border-right: 1.1em solid rgba(255, 255, 255, 0.2);
+            border-bottom: 1.1em solid rgba(255, 255, 255, 0.2);
+            border-left: 1.1em solid #ffffff;
+            -webkit-transform: translateZ(0);
+            -ms-transform: translateZ(0);
+            transform: translateZ(0);
+            -webkit-animation: load8 1.1s infinite linear;
+            animation: load8 1.1s infinite linear;
         }
-    }
 
-    @keyframes load8 {
-        0% {
-            -webkit-transform: rotate(0deg);
-            transform: rotate(0deg);
+        @-webkit-keyframes load8 {
+            0% {
+                -webkit-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
         }
 
-        100% {
-            -webkit-transform: rotate(360deg);
-            transform: rotate(360deg);
+        @keyframes load8 {
+            0% {
+                -webkit-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
         }
-    }
 
-    #loadingDiv {
-        position: fixed;
-        top: 0;
-        z-index: 9999;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: #0000006b;
-    }
+        #loadingDiv {
+            position: fixed;
+            top: 0;
+            z-index: 9999;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0000006b;
+        }
 
-    button.ui-dialog-titlebar-close {
-        display: none;
-    }
+        button.ui-dialog-titlebar-close {
+            display: none;
+        }
 
-    span.ui-icon.ui-icon-alert {
-        display: none;
-    }
+        span.ui-icon.ui-icon-alert {
+            display: none;
+        }
 
-    input[type=checkbox],
-    input[type=radio] {
-        visibility: unset;
-    }
+        input[type=checkbox],
+        input[type=radio] {
+            visibility: unset;
+        }
 
-    #loadingDiv1 {
-        position: fixed;
-        top: 0;
-        z-index: 9999;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: #2a3142;
-    }
+        #loadingDiv1 {
+            position: fixed;
+            top: 0;
+            z-index: 9999;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #2a3142;
+        }
 
-    ul#side-menu li a img {
-        max-width: 16px;
-    }
+        ul#side-menu li a img {
+            max-width: 16px;
+        }
 
-    #sidebar-menu {
-        padding-top: 50px;
-    }
+        #sidebar-menu {
+            padding-top: 50px;
+        }
 
-    .content-page .content {
-        padding: 0 15px 10px 30px;
-        margin-top: 20px;
-    }
+        .content-page .content {
+            padding: 0 15px 10px 30px;
+            margin-top: 20px;
+        }
 
-    .foot-plugin-footer .content-page .content {
-        margin-bottom: 30px;
-    }
+        .foot-plugin-footer .content-page .content {
+            margin-bottom: 30px;
+        }
 
-    .foot-plugin-footer .footer {
-        padding: 0;
-        position: absolute;
-        bottom: 0;
-        width: inherit;
-        /* margin: auto; */
-        padding-left: 240px;
-    }
+        .foot-plugin-footer .footer {
+            padding: 0;
+            position: absolute;
+            bottom: 0;
+            width: inherit;
+            /* margin: auto; */
+            padding-left: 240px;
+        }
 
-    .nav-link:active{
-        background-color: white;
-    }
+        .nav-link:active{
+            background-color: white;
+        }
     </style>
 </head>
 
@@ -459,33 +458,6 @@ if($isMerchant){
                     });
                 }
 
-                function clear_form_elements(class_name) {
-                    jQuery("." + class_name).find(':input').each(function() {
-                        switch (this.type) {
-                            case 'password':
-                            case 'text':
-                            case 'textarea':
-                            case 'file':
-                            case 'select-one':
-                            case 'select-multiple':
-                            case 'date':
-                            case 'number':
-                            case 'tel':
-                            case 'email':
-                                jQuery(this).val('');
-                                break;
-                            case 'checkbox':
-                            case 'radio':
-                                this.checked = false;
-                                break;
-                        }
-                    });
-                }
-
-                function addLoader() {
-                    $('body').append('<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
-                }
-
                 function removeClass(div_id, time) {
                     $("#" + div_id).fadeOut(time, function() {
                         $("#" + div_id).remove();
@@ -498,7 +470,6 @@ if($isMerchant){
 
                     if (isMerchantAuth == 'Yes') {
                         addLoader();
-                        // shopify_category_id = shopify_category_id;
 
                         if (shopify_category_id.includes(">")) {
                             shopify_category_name = shopify_category_id.split('>')[0];
@@ -532,12 +503,13 @@ if($isMerchant){
                             success: function(data) {
                                 removeClass('loadingDiv', 500);
                                 if (data == 'Mapped') {
-                                    ShowCustomDialog('Alert', 'Mapped Successfully');
+                                    ShowCustomDialog('Success', 'Map Saved');
                                 }
-                                if (data == 'UnMapped') {
-                                    ShowCustomDialog('Alert', 'UnMapped Successfully');
-                                } else {
-                                    console.log('Unable to Map');
+                                else if (data == 'UnMapped') {
+                                    ShowCustomDialog('Alert', 'There was a problem saving your mapping. Please contact marketplace admin.');
+                                } 
+                                else {
+                                    ShowCustomDialog('Alert', 'There was a problem saving your mapping. Please contact marketplace admin.');
                                 }
                             }
                         });
@@ -546,40 +518,11 @@ if($isMerchant){
                     }
                 }
 
-                function clearAll() {
-                    document.getElementById('usr').value = '';
-                    document.getElementById('pwd').value = '';
-                    document.getElementById('endpoint').value = '';
-                    document.getElementById('myDate').value = '';
-                }
-
-                function butonPerform() {
-                    if (Math.floor(Math.random() * 10) > 5) {
-                        console.log(Math.floor(Math.random() * 10));
-                        $("#testSuccess").css('display', 'block');
-                        $("testFail").css('display', 'none');
-                        myFunction();
-                    } else {
-                        console.log('Lesser Than 5');
-                        $("#testSuccess").css('display', 'none');
-                        $("testFail").css('display', 'block');
-                    }
-                }
-
-                function myFunction() {
-                    const x = new Date();
-                    console.log(x);
-                    console.log(x.getDate(), x.getMonth(), x.getFullYear());
-                    document.getElementById("myDate").value = (x.getDate()).toString() + "-" + (x.getMonth() + 1)
-                        .toString() + '-' + (x.getFullYear()).toString();
-                }
-
                 $(document).ready(function() {
                     var baseUrl = window.location.hostname;
                     var token = getCookie('webapitoken');
                     var user = $("#userGuid").val();
-                    var arc_user1 =
-                        '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
+                    var arc_user1 = '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
                     if (($('#merchantId') && $('#merchantId').length) && (user == arc_user1)) {
                         removeClass('loadingDiv1', 500);
                         return false;
