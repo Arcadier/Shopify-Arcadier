@@ -217,10 +217,15 @@ if($isMerchant){
 
     .foot-plugin-footer .footer {
         padding: 0;
+        position: absolute;
+        bottom: 0;
+        width: inherit;
+        /* margin: auto; */
+        padding-left: 240px;
     }
 
-    .foot-plugin-footer ul.footer-social-media {
-        display: none;
+    .nav-link:active{
+        background-color: white;
     }
     </style>
 </head>
@@ -243,34 +248,6 @@ if($isMerchant){
         addLoader1();
     </script>
     <div id="wrapper">
-        <div class="topbar">
-            <!-- LOGO -->
-            <div class="topbar-left">
-                <a href="index" class="logo">
-                </a>
-            </div>
-
-            <nav class="navbar-custom">
-                <ul class="navbar-right d-flex list-inline float-right mb-0">
-                    <li class="dropdown notification-list d-none d-md-block"></li>
-                    <!-- full screen -->
-                    <li class="dropdown notification-list d-none d-md-block">
-                        <a class="nav-link waves-effect" href="#" id="btn-fullscreen">
-                            <i class="mdi mdi-fullscreen noti-icon"></i>
-                        </a>
-                    </li>
-
-
-                </ul>
-                <ul class="list-inline menu-left mb-0">
-                    <li class="float-left">
-                        <button class="button-menu-mobile open-left waves-effect">
-                            <i class="mdi mdi-menu"></i>
-                        </button>
-                    </li>
-                </ul>
-            </nav>
-        </div>
         <div class="left side-menu">
             <div class="slimscroll-menu" id="remove-scroll">
                 <!--- Sidemenu -->
@@ -332,13 +309,13 @@ if($isMerchant){
                         </div>
 
                         <!-- Display Shopify Product Types -->
-                        <div class="col-6 p-0 mt-2">
+                        <div style="overflow: auto;" class="col-6 p-0 mt-2">
                             <ul class="nav flex-column" role="tablist">
                                 <?php 
                                     foreach($shopify_categories as $shopify_category){ 
                                         if(1){
                                             ?>
-                                            <a class="nav-link mt-3 mb-3 <?php if(!next($shopify_categories)){ echo active; } ?>"
+                                            <a style="margin-left: 7px;" class="nav-link mt-3 mb-3 <?php if(!next($shopify_categories)){ echo active; } ?>"
                                                 data-toggle="tab" href="#a<?php 
                                                 //removes whitespaces and symbols, if any 
                                                 if(preg_match('/\s/',$shopify_category)){
@@ -362,7 +339,7 @@ if($isMerchant){
                         </div>
 
                         <div class="col-6 p-0 tab-content-box mt-2">
-                            <div class="tab-content">
+                            <div class="tab-content" style="height: inherit;">
                                 <?php foreach($shopify_categories as $shopify_category){
                                     //removes whitespaces and symbols, if any 
                                     if(preg_match('/\s/',$shopify_category)){
@@ -377,8 +354,7 @@ if($isMerchant){
                                     $shopify_category_id = $shopify_category.'_category';
                                     
                                     if(1){?>
-                                        <div id="a<?php echo $shopify_div_ids ?>"
-                                            class="container tab-pane">
+                                        <div id="a<?php echo $shopify_div_ids ?>" class="container tab-pane">
                                             <div class="font-weight-bolder mt-3 mb-3"><?php echo "Shopify product type ".$shopify_category." goes to which category?"; ?></div>
                                             <form class="save_map_form">
                                                 <?php
@@ -408,9 +384,11 @@ if($isMerchant){
                                                     } 
                                                 }
                                                 ?>
-                                                <div class="mt-3 mb-3" style="font-weight: 500;">Submit your mapping choice for each Shopify category:</div>
-                                                <a id="save_map" onclick="save_mapp('<?php if(preg_match('/\s/',$shopify_category)){ echo $shopify_category_id.'>'.$shopify_div_ids; } else { echo $shopify_category_id; } ?>');"
-                                                style="margin-left: 25px;border: #0e77d4;box-sizing: border-box;background-color: #333547;border-radius: 6px;color: white;padding: 5px 10px;font-size: 14px; cursor: pointer;">Submit</a>
+                                                <div style="position: absolute;bottom:20px;">
+                                                    <div class="mt-3 mb-3" style="font-weight: 500;">Submit your mapping choice for each Shopify category:</div>
+                                                    <a id="save_map" onclick="save_mapp('<?php if(preg_match('/\s/',$shopify_category)){ echo $shopify_category_id.'>'.$shopify_div_ids; } else { echo $shopify_category_id; } ?>');"
+                                                    style="border: #0e77d4;box-sizing: border-box;background-color: #333547;border-radius: 6px;color: white;padding: 5px 10px;font-size: 14px; cursor: pointer;">Submit Mapping for <?php echo $shopify_category ?></a>
+                                                </div>
                                             </form>
                                         </div>
                                     <?php 
