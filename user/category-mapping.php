@@ -324,11 +324,11 @@ if($isMerchant){
                     </div>
 
                     <div class="row category h-100">
-                        <div class="col-6 font-weight-bolder">
+                        <div class="col-6 font-weight-bolder" style="font-size: 20px; text-align: center;">
                             Shopify Product Types
                         </div>
-                        <div class="col-6 font-weight-bolder">
-                            Arcadier Categories
+                        <div class="col-6 font-weight-bolder" style="font-size: 20px; text-align: center;">
+                            Map to Arcadier Categories
                         </div>
 
                         <!-- Display Shopify Product Types -->
@@ -338,7 +338,7 @@ if($isMerchant){
                                     foreach($shopify_categories as $shopify_category){ 
                                         if(1){
                                             ?>
-                                            <a class="nav-link <?php if(!next($shopify_categories)){ echo active; } ?>"
+                                            <a class="nav-link mt-3 mb-3 <?php if(!next($shopify_categories)){ echo active; } ?>"
                                                 data-toggle="tab" href="#a<?php 
                                                 //removes whitespaces and symbols, if any 
                                                 if(preg_match('/\s/',$shopify_category)){
@@ -379,6 +379,7 @@ if($isMerchant){
                                     if(1){?>
                                         <div id="a<?php echo $shopify_div_ids ?>"
                                             class="container tab-pane">
+                                            <div class="font-weight-bolder mt-3 mb-3"><?php echo "Shopify product type ".$shopify_category." goes to which category?"; ?></div>
                                             <form class="save_map_form">
                                                 <?php
                                                 if(!empty($arcadier_categories)){
@@ -407,6 +408,7 @@ if($isMerchant){
                                                     } 
                                                 }
                                                 ?>
+                                                <div class="mt-3 mb-3" style="font-weight: 500;">Submit your mapping choice for each Shopify category:</div>
                                                 <a id="save_map" onclick="save_mapp('<?php if(preg_match('/\s/',$shopify_category)){ echo $shopify_category_id.'>'.$shopify_div_ids; } else { echo $shopify_category_id; } ?>');"
                                                 style="margin-left: 25px;border: #0e77d4;box-sizing: border-box;background-color: #333547;border-radius: 6px;color: white;padding: 5px 10px;font-size: 14px; cursor: pointer;">Submit</a>
                                             </form>

@@ -108,26 +108,23 @@ if($isMerchant){
     <title>Wireframe Designs - BootStrap</title>
     <meta content="Admin Dashboard" name="description" />
     <meta content="Themesbrand" name="author" />
-    <!--<link rel="stylesheet" href="public/plugins/chartist/css/chartist.min.css">-->
     <link rel="shortcut icon" href="images/favicon.ico">
+
+    <!-- css -->
     <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css">
     <link href="css/metismenu.min.css" rel="stylesheet" type="text/css">
     <link href="css/icons.css" rel="stylesheet" type="text/css">
     <link href="css/style.css" rel="stylesheet" type="text/css">
-
-
-    <script src="scripts/jquery.min.js"></script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" integrity="sha512-vKMx8UnXk60zUwyUnUPM3HbQo8QfmNx7+ltw8Pm5zLusl1XIfwcxo8DbWCqMGKaWeNxWA8yrx5v3SaVpMvR3CA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" integrity="sha512-VEd+nq25CkR676O+pLBnDW09R7VQX9Mdiij052gVCp5yVH3jGtH70Ho/UUv4mJDsEdTvqRCFZg0NKGiojGnUCw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.css" />
-
-
-
-    <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
-
-    <script src="https://code.jquery.com/ui/1.11.1/jquery-ui.min.js"></script>
-
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/black-tie/jquery-ui.css" />
+
+    <!-- js -->
+    <script src="scripts/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.11.1/jquery-ui.min.js"></script>
     <script src="scripts/bootstrap.bundle.min.js"></script>
 
     <style>

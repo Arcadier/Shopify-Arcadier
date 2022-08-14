@@ -303,6 +303,11 @@ if(isset($_COOKIE['m_domain']) && isset($_COOKIE['auth']) && isset($_COOKIE['mag
 
     .foot-plugin-footer .footer {
         padding: 0;
+        position: absolute;
+        bottom: 0;
+        width: inherit;
+        /* margin: auto; */
+        padding-left: 240px;
     }
 
     .foot-plugin-footer ul.footer-social-media {

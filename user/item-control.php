@@ -371,7 +371,6 @@ if($isMerchant){
                                             <th>Arcadier Synced</th>
                                             <th>Shopify Category</th>
                                             <th>Syncronise</th>
-
                                             <th>Default Category</th>
                                             <th>Override Default Category</th>
                                             <th>Override Category</th>
