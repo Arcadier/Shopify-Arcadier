@@ -101,12 +101,11 @@ foreach($result['Orders'] as $order) {
         
                 ];    
                 error_log(json_encode($data));
-                //echo json_encode(['data' => $data]);
+            
                 
                 $url =  $baseUrl . '/api/v2/users/'. $userId .'/carts/' . $cartItemId;
                 $updateOrders =  callAPI("PUT", $userToken, $url, $data); 
-                //echo json_encode(['URL' =>  $updateOrders]);  
-
+                
                 //search the item details on the synced_items custom table
 
                 $syncItems = array(array('Name' => 'arc_item_guid', "Operator" => "equal",'Value' => $itemId));
@@ -125,7 +124,7 @@ foreach($result['Orders'] as $order) {
 
                  $api_endpoint = "/admin/api/2022-04/orders.json";
 
-                //part where you will send the orders, but this is for items only
+                //part where you will send the orders, but this is for 1 item only
                 $query = array('order' =>array('line_items' => array(array('variant_id' => $variant_id,'quantity' => 1)),
                 
                 "financial_status"=> "pending"),  
