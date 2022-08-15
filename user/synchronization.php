@@ -207,8 +207,7 @@ if(isset($_COOKIE['marketplace']) && isset($_COOKIE['webapitoken']) && isset($_G
             $arc_cat_arr = $arc->getCategories();
             
             
-            
-            
+        
             $data11 = [
                 [
                 'Name'=> 'merchant_guid',
@@ -718,7 +717,7 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
                                     foreach($all_events['Records'] as $event){
                                     ?>
                                         <tr>
-                                            <td><?php echo date_format(date_create($event['node']['CreatedDateTime']),"d/m/Y H:i"); ?>
+                                            <td><?php echo date('d/m/Y H:i', $event['CreatedDateTime']); ?>
                                             </td>
 
                                             <td><?php echo $event['sync_type'] ?></td>
