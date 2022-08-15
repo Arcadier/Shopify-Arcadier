@@ -16,7 +16,7 @@
 	error_log("Data object: ".json_encode($data));
 	$url = 'https://arcadier-shopify.herokuapp.com/shopify_link_account?shop='.$shop.'&merchant_guid='.$content['merchant_guid'].'&marketplace='.$content['marketplace'].'&pluginID='.$content['pluginID'];
 
-	$response = callAPI("GET", null, $url, false);
+	$response = getInstallURL("GET", null, $url, false);
 
 	echo $response;
 	

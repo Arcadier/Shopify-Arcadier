@@ -52,6 +52,20 @@ $total_created = 0;
 $total_unchanged = 0;
 $total_changed = 0;
 
+// get the custom field id to tag that the items are from shopify
+
+$url = $baseUrl . '/api/developer-packages/custom-fields?packageId=' . $packageId;
+$packageCustomFields = callAPI("GET", null, $url, false);
+
+$is_shopify_code = '';
+
+foreach ($packageCustomFields as $cf) {
+    if ($cf['Name'] == 'is_shopify_item' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+        $is_shopify_code = $cf['Code'];
+    }
+}
+
+
 
 //step 1. Get all shopify products
 $shopify_products = shopify_get_all_products($access_token, $shop);
@@ -80,7 +94,7 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
 
     //Load arcadier categories
             $arcadier_categories = $arc->getCategories(1000, 1);
-            error_log('Arcadier Categories: '.json_encode($arcadier_categories));
+          //  error_log('Arcadier Categories: '.json_encode($arcadier_categories));
             $arcadier_categories = $arcadier_categories['Records'];
 
             //Load Category Map
@@ -156,7 +170,7 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
             $url =  $baseUrl . '/api/v2/merchants/' . $userId . '/items';
             $result =  callAPI("POST", $admin_token, $url, $item_details);
             $result1 = json_encode(['err' => $result]);
-            error_log($result1);
+          //  error_log($result1);
             //echo $result1;
             //echo 'item added';
 
@@ -177,12 +191,32 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
                 "product_id" => $product_id,
                 "synced_date" => time(),
                 "merchant_guid" => $userId,
-                'arc_item_guid' => $result['ID']
+                'arc_item_guid' => $result['ID'],
+                'variant_id' => $product['node']['variants']['edges'][0]['node']['id']
                 
                 ];
 
+
+                //update the item's custom field
+
+                $data = [
+                    'CustomFields' => [
+                        [
+                            'Code' =>  $is_shopify_code,
+                            'Values' => [ 1 ],
+                        ],
+                    ],
+                ];
+
+                $url = $baseUrl . '/api/v2/merchants/' . $userId . '/items/' . $result['ID'];
+                $result = callAPI("PUT", $admin_token, $url, $data);
+
+
                 $response = $arc->createRowEntry($packageId, 'synced_items', $sync_details);
                 $total_created++;
+
+
+
             }
             
 
@@ -199,7 +233,7 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
 
 
         $arcadier_categories = $arc->getCategories(1000, 1);
-        error_log('Arcadier Categories: '.json_encode($arcadier_categories));
+      //  error_log('Arcadier Categories: '.json_encode($arcadier_categories));
         $arcadier_categories = $arcadier_categories['Records'];
 
         //Load Category Map
@@ -330,4 +364,4 @@ $count_details = [
 
 $create_event = $arc->createRowEntry($packageId, 'sync_events', $count_details);;
 echo json_encode('done syncing');
-error_log('bulk sync has been run ');
+error_log('bulk sync all has been run ');
