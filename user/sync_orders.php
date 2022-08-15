@@ -27,8 +27,6 @@ $auth_id = $authDetails['Records'][0]['Id'];
 $access_token= $authDetails['Records'][0]['access_token'];
 
 
-
-
 $url = $baseUrl . '/api/v2/users/'; 
 $result = callAPI("GET", $admin_token, $url, false);
 $admin_id = $result['ID'];
@@ -55,7 +53,6 @@ foreach ($packageCustomFields as $cf) {
         $order_sync_to_shopify_code = $cf['Code'];
     }
 }
-
 
 //loop through each orders, assuming there are multiple merchants / invoice , since this is bespoke
 
@@ -110,128 +107,40 @@ foreach($result['Orders'] as $order) {
                 $updateOrders =  callAPI("PUT", $userToken, $url, $data); 
                 //echo json_encode(['URL' =>  $updateOrders]);  
 
-
-
                 //search the item details on the synced_items custom table
 
-                $syncItems = array(array('Name' => 'product_id', "Operator" => "equal",'Value' => $itemId), array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
+                $syncItems = array(array('Name' => 'arc_item_guid', "Operator" => "equal",'Value' => $itemId));
                 $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/synced_items';
                 $isItemSyncResult =  callAPI("POST", $admin_token, $url, $syncItems);
 
+               // echo json_encode($syncItems);
+                
+
+                echo json_encode($isItemSyncResult);
+                
+
+                $variant_id = ltrim($isItemSyncResult['Records'][0]['variant_id'],"gid://shopify/ProductVariant/");                
+                
+                echo json_encode($variant_id);
 
                  $api_endpoint = "/admin/api/2022-04/orders.json";
 
-
-                $arrOrder= [
-                "order" =>[
-                    "email"                    => "foo@example.com",
-                    "fulfillment_status"       => "fulfilled",
-                    "send_receipt"             => false,
-                    "send_fulfillment_receipt" => false,
-                   'line_items' => 
-                    array (
-                    0 => 
-                    array (
-                        'variant_id' => 43568896246012,
-                        'quantity' => 1,
-                    ),
-                    ),
-                    
-                    "financial_status"=> "pending"
-                ]
-             ];
-
-            // shopify_call($token, $shop, $api_endpoint, $query = array(), $method = 'GET', $request_headers = array());   
-            $query = array('order' =>array('line_items' => array(array('variant_id' => 43568896246012,'quantity' => 1)),"financial_status"=> "pending"));
-            $orders = shopify_call($access_token, $shop, "/admin/orders.json", json_encode($query), 'POST',array("Content-Type: application/json"));
-            echo json_encode( $orders);
-
+                //part where you will send the orders, but this is for items only
+                $query = array('order' =>array('line_items' => array(array('variant_id' => $variant_id,'quantity' => 1)),
+                
+                "financial_status"=> "pending"),  
+                'customer' => 
+                        array (
+                        'first_name' => $order['ConsumerDetail']['FirstName'],
+                        'last_name' => $order['ConsumerDetail']['LastName'],
+                        'email' => $order['ConsumerDetail']['Email'],
+                        )
+                );
             
-        
-            //   $createorder=  array (
-            //     'order' => 
-            //     array (
-            //         'line_items' => 
-            //         array (
-            //         0 => 
-            //         array (
-            //             'variant_id' => 43568896246012,
-            //             'quantity' => 1,
-            //         ),
-            //         ),
-            //         'customer' => 
-            //         array (
-            //         'first_name' => 'Paul',
-            //         'last_name' => 'Norman',
-            //         'email' => 'paul.norman@example.com',
-            //         ),
-            //         'billing_address' => 
-            //         array (
-            //         'first_name' => 'John',
-            //         'last_name' => 'Smith',
-            //         'address1' => '123 Fake Street',
-            //         'phone' => '555-555-5555',
-            //         'city' => 'Fakecity',
-            //         'province' => 'Ontario',
-            //         'country' => 'Canada',
-            //         'zip' => 'K2P 1L4',
-            //         ),
-            //         'shipping_address' => 
-            //         array (
-            //         'first_name' => 'Jane',
-            //         'last_name' => 'Smith',
-            //         'address1' => '123 Fake Street',
-            //         'phone' => '777-777-7777',
-            //         'city' => 'Fakecity',
-            //         'province' => 'Ontario',
-            //         'country' => 'Canada',
-            //         'zip' => 'K2P 1L4',
-            //         ),
-            //         'email' => 'jane@example.com',
-            //         'transactions' => 
-            //         array (
-            //         0 => 
-            //         array (
-            //             'kind' => 'authorization',
-            //             'status' => 'success',
-            //             'amount' => 50,
-            //         ),
-            //         ),
-            //         'financial_status' => 'partially_paid',
-            //     ),
-            //     );
-
-                // $order_array = [
-                //     'order' => [
-                //         'email' => "foo@example.com",
-                //         'line_items' => [
-                //            [ 'variant_id' => 43568896246012,
-                //             'quantity' => 1
-                //            ]
-                //         ]
-                //     ]
-                // ];
-                
-               
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                
+            
+                $orders = shopify_call($access_token, $shop, "/admin/orders.json", json_encode($query), 'POST',array("Content-Type: application/json"));
+          
+            
             }   
 
         }
