@@ -35,12 +35,8 @@ function callAPI($method, $access_token, $url, $data = false) {
     $result = curl_exec($curl);
     
     curl_close($curl);
-    if(is_string($result)){
-        return $result;
-    }
-    else{
-        return json_decode($result, true);
-    }
+    
+    return json_decode($result, true);
     
 }
 
