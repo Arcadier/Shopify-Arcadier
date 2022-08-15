@@ -10,24 +10,25 @@ $customFieldPrefix = getCustomFieldPrefix();
 
 $userToken = $_COOKIE["webapitoken"];
 $url = $baseUrl . '/api/v2/users/'; 
-$result = json_decode(callAPI("GET", $userToken, $url, false));
-$userId = $result->ID;
+$result = callAPI("GET", $userToken, $url, false);
+$userId = $result['ID'];
 $packageId = getPackageID();
 
 $auth = array(array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
 $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
-$authDetails =  json_decode(callAPI("POST", null, $url, $auth));
+$authDetails =  callAPI("POST", null, $url, $auth);
 
-$shop = $authDetails->Records[0]->shop;
-$access_token= $authDetails->Records[0]->access_token;
+$shop = $authDetails['Records'][0]['shop'];
+$access_token= $authDetails['Records'][0]['access_token'];
 
 //import Shopify Product count
 $product_count = shopify_product_count($access_token, $shop);
 $product_import_speed = $product_count['count']/17;
-error_log("Import time: ".$product_import_speed." seconds.", 3, "tanoo_log.php");
+//error_log("Import time: ".$product_import_speed." seconds.", 3, "tanoo_log.php");
 
 //import Shopify Products
 $products = shopify_get_all_products_unstable($access_token, $shop, null, true);
+//error_log($products, 3, "tanoo_log.php");
 
 $pack_id = $packageId;
 $UserInfo = $arc->getUserInfo($_GET['user']);

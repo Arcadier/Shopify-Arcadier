@@ -634,7 +634,7 @@ class ApiSdk
 
     public function getCustomTable($packageId, $tableName, $token)
     {
-        $url         = $this->baseUrl . '/api/v2/plugins/' . $packageId . '/custom-tables/' . $tableName;
+        $url         = $this->baseUrl . '/api/v2/plugins/' . $packageId . '/custom-tables/' . $tableName .'?pagesize=1000&sort=-createddatetime';
         $customTable = $this->callAPI("GET", $token, $url, null);
         return $customTable;
     }
@@ -673,6 +673,7 @@ class ApiSdk
         }
 
         $url         = $this->baseUrl . '/api/v2/plugins/' . $packageId . '/custom-tables/' . $tableName.'/?pageSize=100000';
+        error_log($url);
         $rowEntries = $this->callAPI("POST", $this->adminToken['access_token'], $url, $data);
         return $rowEntries;
     }
