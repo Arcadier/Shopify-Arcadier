@@ -138,6 +138,19 @@ foreach($result['Orders'] as $order) {
             
             
                 $orders = shopify_call($access_token, $shop, "/admin/orders.json", json_encode($query), 'POST',array("Content-Type: application/json"));
+
+                $count_details = [
+
+                    'sync_type' => 'Successful Check out',
+                    'sync_trigger' => 'Order Creation',
+                    'total_changed' => '-',
+                    'total_unchanged' => '-',
+                    'total_created' => 1,
+                    'status' => 'Sync successful'
+                ];
+
+
+                $create_event = $arc->createRowEntry($packageId, 'sync_events', $count_details);
           
             
             }   

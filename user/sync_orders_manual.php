@@ -117,11 +117,11 @@ foreach($result['Orders'] as $order) {
 
                 // echo json_encode($syncItems);
                     
-                    echo json_encode($isItemSyncResult);
+                   // echo json_encode($isItemSyncResult);
                     
                     $variant_id = ltrim($isItemSyncResult['Records'][0]['variant_id'],"gid://shopify/ProductVariant/");                
                     
-                    echo json_encode($variant_id);
+                    //echo json_encode($variant_id);
 
                     $api_endpoint = "/admin/api/2022-04/orders.json";
 
@@ -138,7 +138,21 @@ foreach($result['Orders'] as $order) {
                     );
                 
                     $orders = shopify_call($access_token, $shop, "/admin/orders.json", json_encode($query), 'POST',array("Content-Type: application/json"));
-            
+
+
+
+                     $count_details = [
+
+                        'sync_type' => 'Manual (Orders)',
+                        'sync_trigger' => 'Order Creation',
+                        'total_changed' => '-',
+                        'total_unchanged' => '-',
+                        'total_created' => 1,
+                        'status' => 'Sync successful'
+                    ];
+
+
+                    $create_event = $arc->createRowEntry($packageId, 'sync_events', $count_details);
                 
                 }   
 
