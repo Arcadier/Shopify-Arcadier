@@ -317,9 +317,9 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
             $product['node']['totalInventory'] != $item_details['StockQuantity'] ? ($changed++). ($field_changed[]='Total Inventory')  : $unchanged++;
               
             
-            echo 'total changed ' . $changed;
-            echo 'total unchanged ' . $unchanged;
-            echo json_encode($field_changed);
+           // echo 'total changed ' . $changed;
+           // echo 'total unchanged ' . $unchanged;
+           // echo json_encode($field_changed);
 
             $changed !== 0 ?  $total_changed++ : $total_unchanged++;
 

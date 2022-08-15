@@ -30,7 +30,7 @@ $packageId = getPackageID();
 
 $allmerchants =  $arc->getCustomTable($packageId, "auth", $admin_token);
 
-echo json_encode($allmerchants);
+//echo json_encode($allmerchants);
 
 foreach($allmerchants['Records'] as $merchant) {
 
@@ -336,9 +336,9 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
             $product['node']['totalInventory'] != $item_details['StockQuantity'] ? ($changed++). ($field_changed[]='Total Inventory')  : $unchanged++;
               
             
-            echo 'total changed ' . $changed;
-            echo 'total unchanged ' . $unchanged;
-            echo json_encode($field_changed);
+           // echo 'total changed ' . $changed;
+           // echo 'total unchanged ' . $unchanged;
+           // echo json_encode($field_changed);
 
             $changed !== 0 ?  $total_changed++ : $total_unchanged++;
 
@@ -362,6 +362,6 @@ $count_details = [
 ];
 
 
-$create_event = $arc->createRowEntry($packageId, 'sync_events', $count_details);;
+$create_event = $arc->createRowEntry($packageId, 'sync_events', $count_details);
 echo json_encode('done syncing');
 error_log('bulk sync all has been run ');
