@@ -69,11 +69,12 @@ foreach($result['Orders'] as $order) {
     if ($isOrderSyncResult['TotalRecords'] == 0) {
 
     //loop through each cart item details, assuming there are multiple different items on the cart, or some items in the cart are not from shopify
-
+    $all_items = [];
     foreach($order['CartItemDetails'] as $cartItem) {
         
         $cartItemId =  $cartItem['ID'];
         $itemId =  $cartItem['ItemDetail']['ID'];
+        $quantity = $cartItem['Quantity'];
 
         //check the details of the item using the item id to check if the item is from shopify
 
@@ -121,18 +122,35 @@ foreach($result['Orders'] as $order) {
 
                // echo json_encode($syncItems);
                 
-
+                
                 echo json_encode($isItemSyncResult);
                 
 
                 $variant_id = ltrim($isItemSyncResult['Records'][0]['variant_id'],"gid://shopify/ProductVariant/");                
                 
-                echo json_encode($variant_id);
 
-                 $api_endpoint = "/admin/api/2022-04/orders.json";
+                $all_items[] = array('variant_id' => $variant_id,'quantity' => $quantity);
+
+               // echo json_encode($variant_id);
+            
+            }   
+
+        }
+        
+    } 
+
+
+
+    }else {
+
+        echo json_encode('This order has been sync');
+
+    }
+
+     $api_endpoint = "/admin/api/2022-04/orders.json";
 
                 //part where you will send the orders, but this is for 1 item only
-                $query = array('order' =>array('line_items' => array(array('variant_id' => $variant_id,'quantity' => 1)),
+                $query = array('order' =>array('line_items' => $all_items,
                 
                 "financial_status"=> "pending"),  
                 'customer' => 
@@ -142,8 +160,7 @@ foreach($result['Orders'] as $order) {
                         'email' => $order['ConsumerDetail']['Email'],
                         )
                 );
-            
-            
+        
                 $orders = shopify_call($access_token, $shop, "/admin/orders.json", json_encode($query), 'POST',array("Content-Type: application/json"));
 
                 $count_details = [
@@ -170,24 +187,8 @@ foreach($result['Orders'] as $order) {
                 ];
                 
                 $response = $arc->createRowEntry($packageId, 'synced_orders', $sync_details);
-            
-            }   
 
-        }
-        
-    }           
-
-    }else {
-
-        echo json_encode('This order has been sync');
-
-    }
 }
 
 
-
-
-
-
-  
 ?>

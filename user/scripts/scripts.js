@@ -42,7 +42,7 @@
         if (url.indexOf("/user/checkout/success") >= 0) {
             waitForElement(".invoice-id", function() {
                 
-                syncOrderShopify();
+                //syncOrderShopify();
                 
             });
          }

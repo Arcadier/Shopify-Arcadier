@@ -76,11 +76,12 @@ foreach($result['Orders'] as $order) {
     if ($isOrderSyncResult['TotalRecords'] == 0) {    
     
         //loop through each cart item details, assuming there are multiple different items on the cart, or some items in the cart are not from shopify
-
+         $all_items = [];
         foreach($order['CartItemDetails'] as $cartItem) {
             
             $cartItemId =  $cartItem['ID'];
             $itemId =  $cartItem['ItemDetail']['ID'];
+            $quantity = $cartItem['Quantity'];
 
             //check the details of the item using the item id to check if the item is from shopify
 
@@ -98,26 +99,7 @@ foreach($result['Orders'] as $order) {
                 }
 
                 if ($is_shopify_item == "1") {
-                    //update the cart's custom field
-
-                    // $data = [
-                    //     'CustomFields' => [
-                    //         [
-                    //             'Code'=> $order_sync_to_shopify_code,
-                    //             'Values' => [
-                    //                 1
-                    //             ]
-                    
-                    //         ]
-
-                    //     ]   
-            
-                    // ];    
-                    // error_log(json_encode($data));
-                
-                    
-                    // $url =  $baseUrl . '/api/v2/users/'. $userId .'/carts/' . $cartItemId;
-                    // $updateOrders =  callAPI("PUT", $userToken, $url, $data); 
+                  
                     
                     //search the item details on the synced_items custom table
 
@@ -129,14 +111,25 @@ foreach($result['Orders'] as $order) {
                     
                    // echo json_encode($isItemSyncResult);
                     
-                    $variant_id = ltrim($isItemSyncResult['Records'][0]['variant_id'],"gid://shopify/ProductVariant/");                
+                    $variant_id = ltrim($isItemSyncResult['Records'][0]['variant_id'],"gid://shopify/ProductVariant/");     
+
+
+                    $all_items[] = array('variant_id' => $variant_id,'quantity' => $quantity);           
                     
                     //echo json_encode($variant_id);
 
-                    $api_endpoint = "/admin/api/2022-04/orders.json";
+                   
+                
+                }   
+
+            }
+            
+         }   
+
+                 $api_endpoint = "/admin/api/2022-04/orders.json";
 
                     //part where you will send the orders, but this is for 1 item only
-                    $query = array('order' =>array('line_items' => array(array('variant_id' => $variant_id,'quantity' => 1)),
+                    $query = array('order' =>array('line_items' => $all_items,
                     
                     "financial_status"=> "pending"),  
                     'customer' => 
@@ -163,13 +156,9 @@ foreach($result['Orders'] as $order) {
 
 
                     $create_event = $arc->createRowEntry($packageId, 'sync_events', $count_details);
-                
-                }   
 
-            }
-            
-         }   
 
+        
           //register the event on synced_orders custom table
 
                 $sync_details = [
