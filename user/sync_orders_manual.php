@@ -7,7 +7,7 @@ $arc = new ApiSdk();
 //get shopify credentials
 $contentBodyJson = file_get_contents('php://input');
 $content = json_decode($contentBodyJson, true);
-$userId = $content['userId'];
+///$userId = $content['userId'];
 $invoice_id = $content['invoice-id'];
 $order_id = $content['order-id'];
 
@@ -41,7 +41,7 @@ $userId = $result['ID'];
 
 $url = $baseUrl . '/api/v2/admins/' . $admin_id . '/transactions/' . $invoice_id; 
 $result = callAPI("GET", $admin_token, $url, false);
-error_log('admin ' . json_encode($result));
+//error_log('admin ' . json_encode($result));
 
 //query for cart item custom field
 $url = $baseUrl . '/api/developer-packages/custom-fields?packageId=' . $packageId;
@@ -62,10 +62,20 @@ foreach($result['Orders'] as $order) {
 
     $orderId = $order['ID'];
 
-
     if ($order_id == $orderId) {
 
-    //loop through each cart item details, assuming there are multiple different items on the cart, or some items in the cart are not from shopify
+            //check if the order has already been synced
+            $syncOrders = array(array('Name' => 'order_id', "Operator" => "equal",'Value' => $orderId), array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
+            $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/synced_orders';
+            $isOrderSyncResult =  callAPI("POST", $admin_token, $url, $syncOrders);
+
+            error_log(json_encode($isOrderSyncResult));
+            
+
+
+    if ($isOrderSyncResult['TotalRecords'] == 0) {    
+    
+        //loop through each cart item details, assuming there are multiple different items on the cart, or some items in the cart are not from shopify
 
         foreach($order['CartItemDetails'] as $cartItem) {
             
@@ -159,6 +169,24 @@ foreach($result['Orders'] as $order) {
             }
             
          }   
+
+          //register the event on synced_orders custom table
+
+                $sync_details = [
+
+                "order_id" => $orderId,
+                "merchant_guid" => $userId,
+                
+                ];
+                
+            $response = $arc->createRowEntry($packageId, 'synced_orders', $sync_details);
+
+            echo json_encode('success');
+
+    }else {
+         echo json_encode('This order has been sync');
+    }
+        
     }        
 
 }

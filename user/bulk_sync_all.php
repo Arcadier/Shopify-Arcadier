@@ -23,9 +23,6 @@ $packageId = getPackageID();
 
 // Query user authentication 
 
-
-
-
 // get all the merchants in custom table
 
 $allmerchants =  $arc->getCustomTable($packageId, "auth", $admin_token);
@@ -360,7 +357,6 @@ $count_details = [
     'total_created' => $total_created,
     'status' => 'Sync successful'
 ];
-
 
 $create_event = $arc->createRowEntry($packageId, 'sync_events', $count_details);
 echo json_encode('done syncing');

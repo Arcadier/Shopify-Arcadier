@@ -162,10 +162,15 @@
             contentType: 'application/json',
             data: JSON.stringify(data),
             success: function(result) {
-           // result =  JSON.parse(result);
-             //   console.log(`result  ${result}`);
+           result =  JSON.parse(result);
+                console.log(`result  ${result}`);
+                
+                if (result == 'success') {
+                     toastr.success(`Synced order Number: ${orderId}`);
+                } else {
+                    toastr.error(`This order has already been synced`);
 
-             toastr.success(`Synced order Number: ${orderId}`);
+                }
 
             },
             error: function(jqXHR, status, err) {

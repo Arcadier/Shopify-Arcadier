@@ -60,7 +60,14 @@ foreach ($packageCustomFields as $cf) {
 foreach($result['Orders'] as $order) {
 
     $orderId = $order['ID'];
-   
+    $syncOrders = array(array('Name' => 'order_id', "Operator" => "equal",'Value' => $orderId), array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
+    $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/synced_orders';
+    $isOrderSyncResult =  callAPI("POST", $admin_token, $url, $syncOrders);
+
+    
+        
+    if ($isOrderSyncResult['TotalRecords'] == 0) {
+
     //loop through each cart item details, assuming there are multiple different items on the cart, or some items in the cart are not from shopify
 
     foreach($order['CartItemDetails'] as $cartItem) {
@@ -151,7 +158,18 @@ foreach($result['Orders'] as $order) {
 
 
                 $create_event = $arc->createRowEntry($packageId, 'sync_events', $count_details);
-          
+
+
+                //register the event on synced_orders custom table
+
+                  $sync_details = [
+
+                    "order_id" => $orderId,
+                    "merchant_guid" => $userId,
+                    
+                ];
+                
+                $response = $arc->createRowEntry($packageId, 'synced_orders', $sync_details);
             
             }   
 
@@ -159,8 +177,12 @@ foreach($result['Orders'] as $order) {
         
     }           
 
-}
+    }else {
 
+        echo json_encode('This order has been sync');
+
+    }
+}
 
 
 
