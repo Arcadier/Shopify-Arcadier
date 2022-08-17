@@ -438,15 +438,15 @@ function shopify_get_variants($token, $shop, $product_id){
 		}
    	}}");
 
-$variants = graphql($token, $shop, $query);	
+	$variants = graphql($token, $shop, $query);	
 
-$variants = $variants['body'];
+	$variants = $variants['body'];
 
-$variants_list =  json_decode($variants,true);
+	$variants_list =  json_decode($variants,true);
 
-$variants_list = $variants_list['data']['product']['variants']['edges'];
+	$variants_list = $variants_list['data']['product']['variants']['edges'];
 
-return json_encode($variants_list);
+	return json_encode($variants_list);
 
 }
 
@@ -462,21 +462,17 @@ function shopify_get_images($token, $shop, $product_id){
 		}
    	}}");
 
-$variants = graphql($token, $shop, $query);	
+	$variants = graphql($token, $shop, $query);	
 
-$variants = $variants['body'];
+	$variants = $variants['body'];
 
-$variants_list =  json_decode($variants,true);
+	$variants_list =  json_decode($variants,true);
 
-$variants_list = $variants_list['data']['product']['images']['edges'];
+	$variants_list = $variants_list['data']['product']['images']['edges'];
 
-return json_encode($variants_list);
+	return json_encode($variants_list);
 
 }
-
-
-
-
 
 function shopify_add_tag($token, $shop, $product_id, $tags) {
 
@@ -484,7 +480,6 @@ function shopify_add_tag($token, $shop, $product_id, $tags) {
 	error_log('prod-id' . $product_id);
 	error_log('tags '. $tags);
 
-	
 
 	$mutation = array('query' => "mutation {
 	tagsAdd(
@@ -536,6 +531,84 @@ function shopify_remove_tag($token, $shop, $product_id, $tag){
 
 	return $tagsRemove;
 }
+
+
+// mutation customerCreate($input: ) {
+//   customerCreate(input: $input) {
+//     customer {
+//       # Customer fields
+//     }
+//     userErrors {
+//       field
+//       message
+//     }
+//   }
+// }
+
+function createCustomer($token, $shop, $first_name, $last_name, $email){
+	
+	$mutation = array('query' => "mutation  {
+      customerCreate(
+        input: {
+          firstName: \"$first_name\",
+          lastName: \"$last_name\",
+          email: \"$email\"
+        
+            }
+      ) {
+        customer {
+          id
+          firstName
+          lastName
+          email
+        }
+		
+
+        userErrors {
+          field
+          message
+        }
+        customer {
+          id
+          
+        }
+      }
+    }
+    
+    ");
+
+
+	//output
+	// "body":"{\"data\":{\"customerCreate\":
+	// {\"customer\":{\"id\":\"gid:\\\/\\\/shopify\\\/Customer\\\/6405413601532\",
+	// \"firstName\":\"dave\",\"lastName\":\"smith\",\"email\":\"someone@gmail.com\"}
+
+	error_log('mutation '. json_encode($mutation));
+
+    $customerCreate = graphql($token, $shop, $mutation);
+
+	$customerCreate  = $customerCreate['body'];
+
+	$customer =  json_decode($customerCreate,true);
+
+	$customer_details = $customer['data']['customerCreate']['customer']['id'];
+
+	error_log('customer ' . json_encode($customerCreate));
+	error_log('customer ' . $customer_details);
+
+
+
+	return $customer_details; //return the ID
+
+	
+
+}
+
+
+
+
+
+
 
 function shopify_get_product_tags($token, $shop, $product_id) {
 	$tags = array("query" => '{
