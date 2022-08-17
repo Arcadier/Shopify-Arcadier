@@ -414,6 +414,59 @@ function shopify_categories($token, $shop) {
 	return $categories;
 }
 
+
+function shopify_get_variants($token, $shop, $product_id){
+	$query = array('query' => "{ product ( id: \"$product_id\"){
+      	variants(first: 1) {
+			edges{
+				node {
+					price
+					id
+				}
+			}
+		}
+   	}}");
+
+$variants = graphql($token, $shop, $query);	
+
+$variants = $variants['body'];
+
+$variants_list =  json_decode($variants,true);
+
+$variants_list = $variants_list['data']['product']['variants']['edges'];
+
+return json_encode($variants_list);
+
+}
+
+function shopify_get_images($token, $shop, $product_id){
+	$query = array('query' => "{ product ( id: \"$product_id\"){
+      	images(first: 5) {
+			edges{
+				node {
+					originalSrc
+					altText	
+				}
+			}
+		}
+   	}}");
+
+$variants = graphql($token, $shop, $query);	
+
+$variants = $variants['body'];
+
+$variants_list =  json_decode($variants,true);
+
+$variants_list = $variants_list['data']['product']['images']['edges'];
+
+return json_encode($variants_list);
+
+}
+
+
+
+
+
 function shopify_add_tag($token, $shop, $product_id, $tags) {
 
 	error_log('shop ' . $shop);
