@@ -199,16 +199,11 @@ foreach($result['Orders'] as $order) {
                     ),  
                    
                     );
-
-     
                     error_log('query '.  json_encode($query));
 
-                    
                     $orders = shopify_call($access_token, $shop, "/admin/orders.json", json_encode($query), 'POST',array("Content-Type: application/json"));
 
                     error_log('orders ' .  json_encode($orders));
-
-                    
 
                      $count_details = [
 

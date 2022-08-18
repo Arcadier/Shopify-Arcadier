@@ -664,20 +664,31 @@ if($isMerchant){
                 data: JSON.stringify(data),
                 success: function(response) {
                     removeClass('loadingDiv', 500);
-                    console.log(JSON.parse(response));
-                    response = JSON.parse(response);
-                    if (response.message == 1) {
-                        // $("tr#mag-" + id1 + " td:nth-child(4)").html("<b>Yes</b> at " +
-                        //     response.data.sync_date);
+                    // console.log(JSON.parse(response));
+                    // response = JSON.parse(response);
+                    var result = JSON.parse(response);
+                    console.log(`result  ${result}`);
+                    if (result == 'success') {
                         var message = 'Sync successfully';
                         ShowCustomDialog('Alert', message);
+                        // toastr.success(`Synced order Number: ${orderId}`);
                     } else {
-                        // response = JSON.parse(JSON.stringify(response));
-                        // var message1 = response.toString();
-                        // var message = "The following items did not have their categories mapped: " +
-                        //    message1 + ", and were not created.";
-                        // ShowCustomDialog('Alert', message);
+                        var message = result;
+                        ShowCustomDialog('Alert', message);
+
                     }
+
+                    //if (response.message == 1) {
+                    // $("tr#mag-" + id1 + " td:nth-child(4)").html("<b>Yes</b> at " +
+                    //     response.data.sync_date);
+
+                    // } else {
+                    // response = JSON.parse(JSON.stringify(response));
+                    // var message1 = response.toString();
+                    // var message = "The following items did not have their categories mapped: " +
+                    //    message1 + ", and were not created.";
+                    // ShowCustomDialog('Alert', message);
+                    // }
                 }
             });
 

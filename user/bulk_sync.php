@@ -122,8 +122,6 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
                     
             }
 
-
-
             $item_details = array(
                 'SKU' =>  'sku',
                 'Name' =>  $product['node']['title'],

@@ -425,7 +425,6 @@ function shopify_categories($token, $shop) {
 	return $categories;
 }
 
-
 function shopify_get_variants($token, $shop, $product_id){
 	$query = array('query' => "{ product ( id: \"$product_id\"){
       	variants(first: 1) {
@@ -446,7 +445,7 @@ function shopify_get_variants($token, $shop, $product_id){
 
 	$variants_list = $variants_list['data']['product']['variants']['edges'];
 
-	return json_encode($variants_list);
+	return $variants_list;
 
 }
 
@@ -470,7 +469,7 @@ function shopify_get_images($token, $shop, $product_id){
 
 	$variants_list = $variants_list['data']['product']['images']['edges'];
 
-	return json_encode($variants_list);
+	return $variants_list;
 
 }
 
@@ -532,19 +531,6 @@ function shopify_remove_tag($token, $shop, $product_id, $tag){
 	return $tagsRemove;
 }
 
-
-// mutation customerCreate($input: ) {
-//   customerCreate(input: $input) {
-//     customer {
-//       # Customer fields
-//     }
-//     userErrors {
-//       field
-//       message
-//     }
-//   }
-// }
-
 function createCustomer($token, $shop, $first_name, $last_name, $email){
 	
 	$mutation = array('query' => "mutation  {
@@ -603,12 +589,6 @@ function createCustomer($token, $shop, $first_name, $last_name, $email){
 	
 
 }
-
-
-
-
-
-
 
 function shopify_get_product_tags($token, $shop, $product_id) {
 	$tags = array("query" => '{

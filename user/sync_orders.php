@@ -125,7 +125,6 @@ foreach($result['Orders'] as $order) {
                 
                 echo json_encode($isItemSyncResult);
                 
-
                 $variant_id = ltrim($isItemSyncResult['Records'][0]['variant_id'],"gid://shopify/ProductVariant/");                
                 
 
