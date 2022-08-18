@@ -1,6 +1,5 @@
 <?php
 
-
 include 'callAPI.php';
 require 'api.php';
 require_once("shopify_functions.php");
