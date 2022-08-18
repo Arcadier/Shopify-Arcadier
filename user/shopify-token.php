@@ -5,7 +5,7 @@
 	$content = json_decode($contentBodyJson, true);
 
 	$shop = str_replace('.myshopify.com', '', $content['shop']);
-	error_log(json_encode($shop));
+	//error_log(json_encode($shop));
 
 	$data = [
 		'marketplace'=> $content['marketplace'],
@@ -13,7 +13,7 @@
 		'merchant_guid' => $content['merchant_guid'],
 		'pluginID' => $content['pluginID']
 	];
-	error_log("Data object: ".json_encode($data));
+	//error_log("Data object: ".json_encode($data));
 	$url = 'https://arcadier-shopify.herokuapp.com/shopify_link_account?shop='.$shop.'&merchant_guid='.$content['merchant_guid'].'&marketplace='.$content['marketplace'].'&pluginID='.$content['pluginID'];
 
 	$response = getInstallURL("GET", null, $url, false);

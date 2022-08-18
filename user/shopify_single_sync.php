@@ -70,7 +70,7 @@ $variant_id = $variant[0]['node']['id'];
 $image =  $images[0]['node']['originalSrc'];
 
 
-error_log(json_encode($variant));
+//error_log(json_encode($variant));
 
 $item_details = array(
       'SKU' =>  'sku',
@@ -115,7 +115,7 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
 
       if ($result['ID']){
 
-                error_log($result['ID']);
+                //error_log($result['ID']);
                 //after syncing the product on arcadier, update the tags on shopify to 'synced'
 
                 shopify_add_tag($access_token, $shop, $product_id, "synced");

@@ -88,7 +88,7 @@ foreach($result['Orders'] as $order) {
             $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/synced_orders';
             $isOrderSyncResult =  callAPI("POST", $admin_token, $url, $syncOrders);
 
-            error_log(json_encode($isOrderSyncResult));
+            //error_log(json_encode($isOrderSyncResult));
             
 
     if ($isOrderSyncResult['TotalRecords'] == 0) {    
@@ -208,11 +208,11 @@ foreach($result['Orders'] as $order) {
                     ),  
                    
                     );
-                    error_log('query '.  json_encode($query));
+                    //error_log('query '.  json_encode($query));
 
                     $orders = shopify_call($access_token, $shop, "/admin/orders.json", json_encode($query), 'POST',array("Content-Type: application/json"));
 
-                    error_log('orders ' .  json_encode($orders));
+                    //error_log('orders ' .  json_encode($orders));
 
                      $count_details = [
 
@@ -253,6 +253,6 @@ foreach($result['Orders'] as $order) {
 } //invoice loop
 }
 
-error_log('bulk order sync has been run');
+//error_log('bulk order sync has been run');
 
 ?>

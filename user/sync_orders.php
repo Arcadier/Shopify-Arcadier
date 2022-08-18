@@ -40,7 +40,7 @@ $userId = $result['ID'];
 
 $url = $baseUrl . '/api/v2/admins/' . $admin_id . '/transactions/' . $invoice_id; 
 $result = callAPI("GET", $admin_token, $url, false);
-error_log('admin ' . json_encode($result));
+//error_log('admin ' . json_encode($result));
 
 //query for cart item custom field
 $url = $baseUrl . '/api/developer-packages/custom-fields?packageId=' . $packageId;
@@ -108,7 +108,7 @@ foreach($result['Orders'] as $order) {
                     ]   
         
                 ];    
-                error_log(json_encode($data));
+                //error_log(json_encode($data));
             
                 
                 $url =  $baseUrl . '/api/v2/users/'. $userId .'/carts/' . $cartItemId;

@@ -42,7 +42,8 @@ if($isMerchant){
             $credentials = $authListById['Records'][0];
 
             //get Shopify ProductTypes
-            $shopify_categories = shopify_categories_api($credentials['access_token'], $credentials['shop'], null);
+            $shopify_categories = shopify_categories($credentials['access_token'], $credentials['shop']);
+            //error_log("Category List: ".json_encode($shopify_categories));
 
             $count = count($shopify_categories);
             
