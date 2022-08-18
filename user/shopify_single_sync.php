@@ -157,13 +157,13 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
 
           echo json_encode('success');
 
-    }else {
-        
-        echo json_encode('This item has been updated');
+}else {
+    
+    echo json_encode('This item has been updated');
 
-        $url =  $baseUrl . '/api/v2/merchants/'. $userId.'/items/' . $isItemSyncResult['Records'][0]['arc_item_guid'];
-        $updateItem =  callAPI("PUT", $admin_token, $url, $item_details); 
-    }
+    $url =  $baseUrl . '/api/v2/merchants/'. $userId.'/items/' . $isItemSyncResult['Records'][0]['arc_item_guid'];
+    $updateItem =  callAPI("PUT", $admin_token, $url, $item_details); 
+}
 
 
 

@@ -459,25 +459,24 @@ if($isMerchant){
                                                 ?></td>
                                             <td>
                                                 <!-- Override Category checkbox -->
-                                                <div style="opacity: .6; background: #a5a5a5; pointer-events: none;">
-                                                    <div class="custom-control custom-checkbox"
-                                                        style="opacity:.6; background: #fff; pointer-events:none;">
+                                                <div>
+                                                    <div class="custom-control custom-checkbox">
                                                         <?php 
-                                                            foreach($arcadier_mapped_category_lists as $arcadier_mapped_category_list1){
-                                                                $arc_cat_index = array_search($arcadier_mapped_category_list1['ID'],array_column($arc_cat_arr['Records'],"ID"));
-                                                                $default_cat = $arc_cat_arr['Records'][$arc_cat_index]["Name"];
-                                                            }
+                                                            // foreach($arcadier_mapped_category_lists as $arcadier_mapped_category_list1){
+                                                            //     $arc_cat_index = array_search($arcadier_mapped_category_list1['ID'],array_column($arc_cat_arr['Records'],"ID"));
+                                                            //     $default_cat = $arc_cat_arr['Records'][$arc_cat_index]["Name"];
+                                                            // }
                                                         ?>
                                                         <input type="checkbox" class="sync_product1"
                                                             name="override_default_category"
-                                                            id="override_default_category-<?php echo $mag_products['id']; ?>" />
+                                                            id="override_default_category-<?php echo ltrim($shopify_products['node']['id'],"gid://shopify/Product/") ?>" />
                                                         <label class="" for=""><span name="customSpan"></span></label>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td>
                                                 <!-- Override Category List -->
-                                                <div style="opacity: .6; background: #a5a5a5; pointer-events: none;">
+                                                <div>
                                                     <?php 
                                                         foreach($arcadier_mapped_category_lists as $arcadier_mapped_category_list2){
                                                             $arc_cat_index = array_search($arcadier_mapped_category_list2['ID'],array_column($arc_cat_arr['Records'],"ID"));
@@ -485,17 +484,16 @@ if($isMerchant){
                                                         }
                                                     ?>
                                                     <select
-                                                        style="opacity:.6; background: #A5A5A5; pointer-events:none;"
-                                                        id="override_default_category_select-<?php echo $mag_products['id']; ?>"
+                                                        
+                                                        id="override_default_category_select-<?php echo ltrim($shopify_products['node']['id'],"gid://shopify/Product/"); ?>"
                                                         name="override_default_category_select" class="chosen-select"
                                                         data-placeholder="Select Arcadier Category" multiple>
                                                         <?php 
-                                                            foreach($arc_cat_arr['Records'] as $arc_cat_arr1){
+                                                            foreach($arcadier_categories as $arcadier_cat){
                                                                 ?>
-                                                        <option value="<?php echo $arc_cat_arr1['ID']; ?>">
-                                                            <?php echo $arc_cat_arr1['Name']; ?></option>
-                                                        <?php 
-                                                        } 
+                                                                <option value="<?php echo $arcadier_cat['ID']; ?>"><?php echo $arcadier_cat['Name']; ?></option>
+                                                                <?php 
+                                                            } 
                                                         ?>
                                                     </select>
                                                 </div>
@@ -641,21 +639,50 @@ if($isMerchant){
         console.log('syncing');
 
         if ($('#sync_product-' + shortId).is(":checked")) {
+            var category_names = [];
+            var category;
+            var override_category_array = [];
+            if($(`#override_default_category-${shortId}`).is(":checked")){
+
+                //loop through override choices, which are the Arcadier category names
+                $("#override_default_category_select_" + shortId + "_chosen > div.chosen-drop > ul.chosen-results > li").each(function(index, element){
+                    if($(element).attr("class") == "result-selected"){
+                        category_names.push($(element).context.innerHTML);
+                    }
+                });
+                console.log("Category Names: ", category_names);
+                
+                $(category_names).each(function(index1, element1){ //for each category name
+                    //get Arcadier all category ids
+                    var category_ids = <?php echo json_encode($arcadier_categories); ?>;
+
+                    
+                    $(category_ids).each(function(index, element){ //for all category IDs
+                        if(element.Name == element1){  //if chosen category names are found, pull their ID
+                            override_category_array.push(element.ID);
+                            console.log(override_category_array);
+                        }
+                    });
+                });
+                
+                category = override_category_array;
+            }
+            else{
+                category = $(`#cat-${shortId}`).attr('cat-id').split(',');
+            }
+            console.log("Override Category: ", category);
             console.log($(`#cat-${shortId}`).attr('image-src'));
             data = {
                 id,
                 name,
                 'method': 'sync_one',
-                'category': $(`#cat-${shortId}`).attr('cat-id').split(','),
+                'category': category,
                 'images': $(`#cat-${shortId}`).attr('image-src'),
                 'price': $(`#cat-${shortId}`).attr('price'),
                 'qty': $(`#cat-${shortId}`).attr('qty')
-
-
             };
             // console.table(data);
-            $('body').append(
-                '<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
+            $('body').append('<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
 
             $.ajax({
                 type: "POST",
