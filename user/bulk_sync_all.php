@@ -337,7 +337,7 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
            // echo 'total unchanged ' . $unchanged;
            // echo json_encode($field_changed);
 
-            $changed !== 0 ?  $total_changed++ : $total_unchanged++;
+            $changed !== 0 ?  $total_changed++ : $total_unchanged;
 
 
             $response = $arc->editRowEntry($packageId, 'synced_items', $synced_item_id, $sync_details);

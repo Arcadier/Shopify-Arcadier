@@ -21,7 +21,7 @@ $packageId = getPackageID();
 
 // Query user authentication 
 
-$auth = array(array('Name' => 'merchant_guid', "Operator" => "in",'Value' => $userId), array('Name' => 'access_token', "Operator" => "like",'Value' => 'shpua_'));
+$auth = array(array('Name' => 'merchant_guid', "Operator" => "in",'Value' => $userId));
 $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
 $authDetails =  callAPI("POST", $admin_token, $url, $auth);
 

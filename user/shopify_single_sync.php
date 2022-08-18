@@ -36,9 +36,6 @@ foreach ($packageCustomFields as $cf) {
     }
 }
 
-
-
-
 //error_log('auth ' . json_encode($authDetails));
 
 // $shop_secret_key = $authDetails['Records'][0]['secret_key'];
@@ -67,7 +64,6 @@ foreach($categories as $category) {
 
 $variant =  shopify_get_variants($access_token, $shop, $product_id);
 $images = shopify_get_images($access_token, $shop, $product_id);
-
 
 $price = $variant[0]['node']['price'];
 $variant_id = $variant[0]['node']['id'];
@@ -154,7 +150,7 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
 
                 $response = $arc->createRowEntry($packageId, 'synced_items', $sync_details);
                 //add counter to the total created 
-                $total_created++;
+                //$total_created++;
 
                             
             }
