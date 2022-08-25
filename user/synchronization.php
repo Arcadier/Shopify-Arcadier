@@ -942,25 +942,25 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
 
                                             <div class="custom-control custom-checkbox">
                                                 <input type="checkbox" class="custom-control-input" id="m_orders"
-                                                    name="m_orders">
+                                                    name="m_orders" checked="checked" disabled>
                                                 <label class="custom-control-label" for="m_orders">Orders</label>
                                             </div>
 
                                             <div class="custom-control custom-checkbox">
                                                 <input type="checkbox" class="custom-control-input" id="m_quantity"
-                                                    name="m_quantity">
+                                                    name="m_quantity" checked="checked" disabled>
                                                 <label class="custom-control-label" for="m_quantity">Quantity</label>
                                             </div>
 
                                             <div class="custom-control custom-checkbox">
                                                 <input type="checkbox" class="custom-control-input" id="m_details"
-                                                    name="m_details">
+                                                    name="m_details" checked="checked" disabled>
                                                 <label class="custom-control-label" for="m_details">Details</label>
                                             </div>
 
                                             <div class="custom-control custom-checkbox">
                                                 <input type="checkbox" class="custom-control-input" id="m_prices"
-                                                    name="m_prices">
+                                                    name="m_prices" checked="checked" disabled>
                                                 <label class="custom-control-label" for="m_prices">Prices</label>
                                             </div>
 
@@ -982,8 +982,7 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
                                         <div class="col-3">
                                             <div class="custom-control custom-checkbox">
                                                 <input type="checkbox" class="custom-control-input" id="e_orders"
-                                                    name="e_orders"
-                                                    <?php if(!empty($e_orders)){if($e_orders == 1){echo 'checked';}}?>>
+                                                    name="e_orders" checked="checked" disabled>
                                                 <label class="custom-control-label" for="e_orders">Orders</label>
                                             </div>
 
@@ -999,34 +998,31 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
 
                                             <div class="custom-control custom-checkbox">
                                                 <input type="checkbox" class="custom-control-input" id="e_quantity"
-                                                    name="e_quantity"
-                                                    <?php if(!empty($e_quantity)){if($e_quantity == 1){echo 'checked';}}?>>
+                                                    name="e_quantity" checked="checked" disabled>
                                                 <label class="custom-control-label" for="e_quantity">Quantity</label>
                                             </div>
 
                                             <div class="custom-control custom-checkbox">
                                                 <input type="checkbox" class="custom-control-input" id="e_details"
-                                                    name="e_details"
-                                                    <?php if(!empty($e_details)){if($e_details == 1){echo 'checked';}}?>>
+                                                    name="e_details" checked="checked" disabled>
                                                 <label class="custom-control-label" for="e_details">Details</label>
                                             </div>
 
 
                                             <div class="custom-control custom-checkbox">
                                                 <input type="checkbox" class="custom-control-input" id="e_prices"
-                                                    name="e_prices"
-                                                    <?php if(!empty($e_prices)){if($e_prices == 1){echo 'checked';}}?>>
+                                                    name="e_prices" checked="checked" disabled>
                                                 <label class="custom-control-label" for="e_prices">Prices</label>
                                             </div>
                                         </div>
-                                        <div class="col-9">
+                                        <!-- <div class="col-9">
                                             <div id="event_url" style="overflow-x: scroll;"><?php echo $event_url; ?>
                                             </div>
                                             <div>
                                                 <button class="btn btn-primary mt-5"
                                                     onclick="sync_product_event();">Generate Now</button>
                                             </div>
-                                        </div>
+                                        </div> -->
 
                                     </div>
                                 </div>
@@ -1057,26 +1053,22 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
                                         <div class="col-6">
                                             <div class="custom-control custom-checkbox">
                                                 <input type="checkbox" class="custom-control-input" id="f_orders"
-                                                    name="f_orders"
-                                                    <?php if(!empty($f_orders)){if($f_orders == 1){echo 'checked';}}?>>
+                                                    name="f_orders" checked="checked" disabled>
                                                 <label class="custom-control-label" for="f_orders">Orders</label>
                                             </div>
                                             <div class="custom-control custom-checkbox">
                                                 <input type="checkbox" class="custom-control-input" id="f_quantity"
-                                                    name="f_quantity"
-                                                    <?php if(!empty($f_quantity)){if($f_quantity == 1){echo 'checked';}}?>>
+                                                    name="f_quantity" checked="checked" disabled>
                                                 <label class="custom-control-label" for="f_quantity">Quantity</label>
                                             </div>
                                             <div class="custom-control custom-checkbox">
                                                 <input type="checkbox" class="custom-control-input" id="f_details"
-                                                    name="f_details"
-                                                    <?php if(!empty($f_details)){if($f_details == 1){echo 'checked';}}?>>
+                                                    name="f_details" checked="checked" disabled>
                                                 <label class="custom-control-label" for="f_details">Details</label>
                                             </div>
                                             <div class="custom-control custom-checkbox">
                                                 <input type="checkbox" class="custom-control-input" id="f_prices"
-                                                    name="f_prices"
-                                                    <?php if(!empty($f_prices)){if($f_prices == 1){echo 'checked';}}?>>
+                                                    name="f_prices" checked="checked" disabled>
                                                 <label class="custom-control-label" for="f_prices">Prices</label>
                                             </div>
                                         </div>
@@ -1107,26 +1099,22 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
                                         <div class="col-6">
                                             <div class="custom-control custom-checkbox">
                                                 <input type="checkbox" class="custom-control-input" id="s_orders"
-                                                    name="s_orders"
-                                                    <?php if(!empty($s_orders)){if($s_orders == 1){echo 'checked';}}?>>
+                                                    name="s_orders" checked="checked" disabled>
                                                 <label class="custom-control-label" for="s_orders">Orders</label>
                                             </div>
                                             <div class="custom-control custom-checkbox">
                                                 <input type="checkbox" class="custom-control-input" id="s_quantity"
-                                                    name="s_quantity"
-                                                    <?php if(!empty($s_quantity)){if($s_quantity == 1){echo 'checked';}}?>>
+                                                    name="s_quantity" checked="checked" disabled>
                                                 <label class="custom-control-label" for="s_quantity">Quantity</label>
                                             </div>
                                             <div class="custom-control custom-checkbox">
                                                 <input type="checkbox" class="custom-control-input" id="s_details"
-                                                    name="s_details"
-                                                    <?php if(!empty($s_details)){if($s_details == 1){echo 'checked';}}?>>
+                                                    name="s_details" checked="checked" disabled>
                                                 <label class="custom-control-label" for="s_details">Details</label>
                                             </div>
                                             <div class="custom-control custom-checkbox">
                                                 <input type="checkbox" class="custom-control-input" id="s_prices"
-                                                    name="s_prices"
-                                                    <?php if(!empty($s_prices)){if($s_prices == 1){echo 'checked';}}?>>
+                                                    name="s_prices" checked="checked" disabled>
                                                 <label class="custom-control-label" for="s_prices">Prices</label>
                                             </div>
                                         </div>
@@ -1140,7 +1128,7 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
 															<option value="1" <?php //if(!empty($s_schedule)){if($s_schedule == 1){echo 'selected';}}?> >Every 15 Minutes</option>-->
                                                 <option value="2"
                                                     <?php //if(!empty($s_schedule)){if($s_schedule == 2){echo 'selected';}}?>>
-                                                    Every 1 hour</option>
+                                                    Once a day</option>
                                                 <!--<option value="3" <?php //if(!empty($s_schedule)){if($s_schedule == 3){echo 'selected';}}?> >Every 12 Noon</option>-->
 
 

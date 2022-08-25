@@ -40,7 +40,7 @@ $userId = $result['ID'];
 
 $url = $baseUrl . '/api/v2/admins/' . $admin_id . '/transactions/' . $invoice_id; 
 $result = callAPI("GET", $admin_token, $url, false);
-error_log('admin ' . json_encode($result));
+//error_log('admin ' . json_encode($result));
 
 //query for cart item custom field
 $url = $baseUrl . '/api/developer-packages/custom-fields?packageId=' . $packageId;
@@ -60,13 +60,21 @@ foreach ($packageCustomFields as $cf) {
 foreach($result['Orders'] as $order) {
 
     $orderId = $order['ID'];
-   
-    //loop through each cart item details, assuming there are multiple different items on the cart, or some items in the cart are not from shopify
+    $syncOrders = array(array('Name' => 'order_id', "Operator" => "equal",'Value' => $orderId), array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
+    $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/synced_orders';
+    $isOrderSyncResult =  callAPI("POST", $admin_token, $url, $syncOrders);
 
+    
+        
+    if ($isOrderSyncResult['TotalRecords'] == 0) {
+
+    //loop through each cart item details, assuming there are multiple different items on the cart, or some items in the cart are not from shopify
+    $all_items = [];
     foreach($order['CartItemDetails'] as $cartItem) {
         
         $cartItemId =  $cartItem['ID'];
         $itemId =  $cartItem['ItemDetail']['ID'];
+        $quantity = $cartItem['Quantity'];
 
         //check the details of the item using the item id to check if the item is from shopify
 
@@ -100,7 +108,7 @@ foreach($result['Orders'] as $order) {
                     ]   
         
                 ];    
-                error_log(json_encode($data));
+                //error_log(json_encode($data));
             
                 
                 $url =  $baseUrl . '/api/v2/users/'. $userId .'/carts/' . $cartItemId;
@@ -114,18 +122,34 @@ foreach($result['Orders'] as $order) {
 
                // echo json_encode($syncItems);
                 
-
+                
                 echo json_encode($isItemSyncResult);
                 
-
                 $variant_id = ltrim($isItemSyncResult['Records'][0]['variant_id'],"gid://shopify/ProductVariant/");                
                 
-                echo json_encode($variant_id);
 
-                 $api_endpoint = "/admin/api/2022-04/orders.json";
+                $all_items[] = array('variant_id' => $variant_id,'quantity' => $quantity);
+
+               // echo json_encode($variant_id);
+            
+            }   
+
+        }
+        
+    } 
+
+
+
+    }else {
+
+        echo json_encode('This order has been sync');
+
+    }
+
+     $api_endpoint = "/admin/api/2022-04/orders.json";
 
                 //part where you will send the orders, but this is for 1 item only
-                $query = array('order' =>array('line_items' => array(array('variant_id' => $variant_id,'quantity' => 1)),
+                $query = array('order' =>array('line_items' => $all_items,
                 
                 "financial_status"=> "pending"),  
                 'customer' => 
@@ -135,24 +159,35 @@ foreach($result['Orders'] as $order) {
                         'email' => $order['ConsumerDetail']['Email'],
                         )
                 );
-            
-            
-                $orders = shopify_call($access_token, $shop, "/admin/orders.json", json_encode($query), 'POST',array("Content-Type: application/json"));
-          
-            
-            }   
-
-        }
         
-    }           
+                $orders = shopify_call($access_token, $shop, "/admin/orders.json", json_encode($query), 'POST',array("Content-Type: application/json"));
+
+                $count_details = [
+
+                    'sync_type' => 'Successful Check out',
+                    'sync_trigger' => 'Order Creation',
+                    'total_changed' => '-',
+                    'total_unchanged' => '-',
+                    'total_created' => 1,
+                    'status' => 'Sync successful'
+                ];
+
+
+                $create_event = $arc->createRowEntry($packageId, 'sync_events', $count_details);
+
+
+                //register the event on synced_orders custom table
+
+                  $sync_details = [
+
+                    "order_id" => $orderId,
+                    "merchant_guid" => $userId,
+                    
+                ];
+                
+                $response = $arc->createRowEntry($packageId, 'synced_orders', $sync_details);
 
 }
 
 
-
-
-
-
-
-  
 ?>

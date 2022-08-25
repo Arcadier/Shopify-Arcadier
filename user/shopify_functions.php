@@ -5,7 +5,7 @@
 // {
 
 function get_shopify_categories($productTypes, $category_array, $token, $shop){
-        
+		//error_log(json_encode($productTypes));
         $hasnextpage = $productTypes['data']['shop']['products']['pageInfo']['hasNextPage'];
         $productTypes = $productTypes['data']['shop']['products']['edges'];
         $temp = [];
@@ -13,17 +13,27 @@ function get_shopify_categories($productTypes, $category_array, $token, $shop){
 
         //extract category names
         foreach ($productTypes as $category){
+			//if product has no producttype, skip
 			if($category['node']['productType'] == "" || $category['node']['productType'] == null){
 				continue;
 			}
+
+			//if producttype hasnt been added to the list yet, add it
             if(in_array($category['node']['productType'], $temp) == false){
                 array_push($temp, $category['node']['productType']);
             }
+
+			//if reached the last item in the iteration page and there's more, call for the next 10 items
             if(!next($productTypes) && $hasnextpage == true) {
                 $cursor = $category['cursor'];
                 $category_array = array_merge($temp, $category_array);
                 $category_array = array_merge(shopify_categories_api($token, $shop, $cursor), $category_array);
             }
+
+			//if reached the last item in the iteration and there's no more products to call, send back the current list
+			elseif(!next($productTypes) && $hasnextpage == false){
+				$category_array = array_merge($temp, $category_array);
+			}
         }
 
 		$category_array = array_unique($category_array);
@@ -88,10 +98,11 @@ function shopify_categories_api($token, $shop, $page) {
 
 	$cats  = graphql($token, $shop, $query);   
 	$productTypes = json_decode($cats['body'], true);
+	//error_log(json_encode($productTypes));
 	$category_array = [];
 
 	$category_array = get_shopify_categories($productTypes, $category_array, $token, $shop);
-
+	//error_log("Category Array: ".json_encode($category_array));
 	return array_unique($category_array);
 }
 
@@ -397,7 +408,7 @@ function shopify_products($token, $shop){
 }
 
 function shopify_categories($token, $shop) {
-	$query = array("query" => '{ shop { productTypes(first:100){
+	$query = array("query" => '{ shop { productTypes(first:250){
       edges {
         node
       }
@@ -410,17 +421,68 @@ function shopify_categories($token, $shop) {
 	$cats_list =  json_decode($cats,true);
 
 	$categories = $cats_list['data']['shop']['productTypes']['edges'];
+	$category_list = [];
+	foreach($categories as $category){
+		array_push($category_list, $category['node']);
+	}
 
-	return $categories;
+	return array_unique($category_list);
+}
+
+function shopify_get_variants($token, $shop, $product_id){
+	$query = array('query' => "{ product ( id: \"$product_id\"){
+      	variants(first: 1) {
+			edges{
+				node {
+					price
+					id
+				}
+			}
+		}
+   	}}");
+
+	$variants = graphql($token, $shop, $query);	
+
+	$variants = $variants['body'];
+
+	$variants_list =  json_decode($variants,true);
+
+	$variants_list = $variants_list['data']['product']['variants']['edges'];
+
+	return $variants_list;
+
+}
+
+function shopify_get_images($token, $shop, $product_id){
+	$query = array('query' => "{ product ( id: \"$product_id\"){
+      	images(first: 5) {
+			edges{
+				node {
+					originalSrc
+					altText	
+				}
+			}
+		}
+   	}}");
+
+	$variants = graphql($token, $shop, $query);	
+
+	$variants = $variants['body'];
+
+	$variants_list =  json_decode($variants,true);
+
+	$variants_list = $variants_list['data']['product']['images']['edges'];
+
+	return $variants_list;
+
 }
 
 function shopify_add_tag($token, $shop, $product_id, $tags) {
 
-	error_log('shop ' . $shop);
-	error_log('prod-id' . $product_id);
-	error_log('tags '. $tags);
+	// error_log('shop ' . $shop);
+	// error_log('prod-id' . $product_id);
+	// error_log('tags '. $tags);
 
-	
 
 	$mutation = array('query' => "mutation {
 	tagsAdd(
@@ -441,10 +503,10 @@ function shopify_add_tag($token, $shop, $product_id, $tags) {
     
     ");
 
-	error_log('mutation '. json_encode($mutation));
+	//error_log('mutation '. json_encode($mutation));
 
     $tagsCreate = graphql($token, $shop, $mutation);
-	error_log('tags create ' .json_encode($tagsCreate));
+	//error_log('tags create ' .json_encode($tagsCreate));
 	return $tagsCreate;
 }
 
@@ -471,6 +533,65 @@ function shopify_remove_tag($token, $shop, $product_id, $tag){
 	$tagsRemove = graphql($token, $shop, $mutation);
 
 	return $tagsRemove;
+}
+
+function createCustomer($token, $shop, $first_name, $last_name, $email){
+	
+	$mutation = array('query' => "mutation  {
+      customerCreate(
+        input: {
+          firstName: \"$first_name\",
+          lastName: \"$last_name\",
+          email: \"$email\"
+        
+            }
+      ) {
+        customer {
+          id
+          firstName
+          lastName
+          email
+        }
+		
+
+        userErrors {
+          field
+          message
+        }
+        customer {
+          id
+          
+        }
+      }
+    }
+    
+    ");
+
+
+	//output
+	// "body":"{\"data\":{\"customerCreate\":
+	// {\"customer\":{\"id\":\"gid:\\\/\\\/shopify\\\/Customer\\\/6405413601532\",
+	// \"firstName\":\"dave\",\"lastName\":\"smith\",\"email\":\"someone@gmail.com\"}
+
+	//error_log('mutation '. json_encode($mutation));
+
+    $customerCreate = graphql($token, $shop, $mutation);
+
+	$customerCreate  = $customerCreate['body'];
+
+	$customer =  json_decode($customerCreate,true);
+
+	$customer_details = $customer['data']['customerCreate']['customer']['id'];
+
+	//error_log('customer ' . json_encode($customerCreate));
+	//error_log('customer ' . $customer_details);
+
+
+
+	return $customer_details; //return the ID
+
+	
+
 }
 
 function shopify_get_product_tags($token, $shop, $product_id) {

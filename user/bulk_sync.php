@@ -21,7 +21,7 @@ $packageId = getPackageID();
 
 // Query user authentication 
 
-$auth = array(array('Name' => 'merchant_guid', "Operator" => "in",'Value' => $userId), array('Name' => 'access_token', "Operator" => "like",'Value' => 'shpua_'));
+$auth = array(array('Name' => 'merchant_guid', "Operator" => "in",'Value' => $userId));
 $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
 $authDetails =  callAPI("POST", $admin_token, $url, $auth);
 
@@ -121,8 +121,6 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
                     $all_categories[] = array("ID" => $category);
                     
             }
-
-
 
             $item_details = array(
                 'SKU' =>  'sku',
@@ -317,9 +315,9 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
             $product['node']['totalInventory'] != $item_details['StockQuantity'] ? ($changed++). ($field_changed[]='Total Inventory')  : $unchanged++;
               
             
-            echo 'total changed ' . $changed;
-            echo 'total unchanged ' . $unchanged;
-            echo json_encode($field_changed);
+           // echo 'total changed ' . $changed;
+           // echo 'total unchanged ' . $unchanged;
+           // echo json_encode($field_changed);
 
             $changed !== 0 ?  $total_changed++ : $total_unchanged++;
 

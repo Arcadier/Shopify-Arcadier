@@ -41,8 +41,7 @@
 
         if (url.indexOf("/user/checkout/success") >= 0) {
             waitForElement(".invoice-id", function() {
-                
-                syncOrderShopify();
+                //syncOrderShopify();
                 
             });
          }
@@ -53,14 +52,22 @@
         if (url.indexOf("/user/manage/orders") >= 0) {
          
             //append new header for sync
+            $('.order-list-tit-sec ').append('<div class="order-status-sec">Shopify Sync</div>');
+
+
             waitForElement(".refund-icon", function ()
             {
                 
-                $('.order-list-tit-sec ').append('<div class="order-status-sec">Shopify Sync</div>');
+                $("#order-list .order-un-read-box:not(.loadedstatus)").each(function ()
+                {
              
-                $('#order-list .order-un-read-box').append(`<div class="order-status-sec">
+                $(this).append(`<div class="order-status-sec">
                 <button class="form-control shop-sync">Sync Order</button>
                 </div>`);
+                    
+                $(this).addClass("loadedstatus");
+                     
+                })
              
             })
 
@@ -74,6 +81,28 @@
                 syncOrderShopifyManual(orderId, invoiceId)
 
             })
+
+
+             window.onscroll = function (ev){
+              waitForElement(".refund-icon", function ()
+                {
+                
+               // $('.order-list-tit-sec ').append('<div class="order-status-sec">Shopify Sync</div>');
+
+
+                $("#order-list .order-un-read-box:not(.loadedstatus)").each(function ()
+                {
+             
+                $(this).append(`<div class="order-status-sec">
+                <button class="form-control shop-sync">Sync Order</button>
+                </div>`);
+                    
+                $(this).addClass("loadedstatus");
+                     
+                })
+             
+            })
+            };
 
               
         }
@@ -164,6 +193,13 @@
             success: function(result) {
             result =  JSON.parse(result);
                 console.log(`result  ${result}`);
+                
+                if (result == 'success') {
+                     toastr.success(`Synced order Number: ${orderId}`);
+                } else {
+                    toastr.error(`This order has already been synced`);
+
+                }
 
             },
             error: function(jqXHR, status, err) {

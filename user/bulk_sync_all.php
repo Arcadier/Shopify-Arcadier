@@ -1,6 +1,5 @@
 <?php
 
-
 include 'callAPI.php';
 require 'api.php';
 require_once("shopify_functions.php");
@@ -23,14 +22,11 @@ $packageId = getPackageID();
 
 // Query user authentication 
 
-
-
-
 // get all the merchants in custom table
 
 $allmerchants =  $arc->getCustomTable($packageId, "auth", $admin_token);
 
-echo json_encode($allmerchants);
+//echo json_encode($allmerchants);
 
 foreach($allmerchants['Records'] as $merchant) {
 
@@ -336,11 +332,11 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
             $product['node']['totalInventory'] != $item_details['StockQuantity'] ? ($changed++). ($field_changed[]='Total Inventory')  : $unchanged++;
               
             
-            echo 'total changed ' . $changed;
-            echo 'total unchanged ' . $unchanged;
-            echo json_encode($field_changed);
+           // echo 'total changed ' . $changed;
+           // echo 'total unchanged ' . $unchanged;
+           // echo json_encode($field_changed);
 
-            $changed !== 0 ?  $total_changed++ : $total_unchanged++;
+            $changed !== 0 ?  $total_changed++ : $total_unchanged;
 
 
             $response = $arc->editRowEntry($packageId, 'synced_items', $synced_item_id, $sync_details);
@@ -361,7 +357,6 @@ $count_details = [
     'status' => 'Sync successful'
 ];
 
-
-$create_event = $arc->createRowEntry($packageId, 'sync_events', $count_details);;
+$create_event = $arc->createRowEntry($packageId, 'sync_events', $count_details);
 echo json_encode('done syncing');
 error_log('bulk sync all has been run ');

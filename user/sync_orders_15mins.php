@@ -17,21 +17,28 @@ $customFieldPrefix = getCustomFieldPrefix();
 $packageId = getPackageID();
 // Query to get marketplace id
 
+$allmerchants =  $arc->getCustomTable($packageId, "auth", $admin_token);
 
-$userToken = $_COOKIE["webapitoken"];
-$url = $baseUrl . '/api/v2/users/'; 
-$result = callAPI("GET", $userToken, $url, false);
-$userId = $result['ID'];
 
-$auth = array(array('Name' => 'merchant_guid', "Operator" => "in",'Value' => $userId));
-$url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
-$authDetails =  callAPI("POST", $admin_token, $url, $auth);
+foreach($allmerchants['Records'] as $merchant) {
 
-$shop_secret_key = $authDetails['Records'][0]['secret_key'];
-$shop_api_key = $authDetails['Records'][0]['api_key'];
-$shop = $authDetails['Records'][0]['shop'];
-$auth_id = $authDetails['Records'][0]['Id'];
-$access_token= $authDetails['Records'][0]['access_token'];
+  $userId = $merchant['merchant_guid'];
+
+
+// $userToken = $_COOKIE["webapitoken"];
+// $url = $baseUrl . '/api/v2/users/'; 
+// $result = callAPI("GET", $userToken, $url, false);
+// $userId = $result['ID'];
+
+// $auth = array(array('Name' => 'merchant_guid', "Operator" => "in",'Value' => $userId));
+// $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
+// $authDetails =  callAPI("POST", $admin_token, $url, $auth);
+
+$shop_secret_key = $merchant['secret_key'];
+$shop_api_key = $merchant['api_key'];
+$shop = $merchant['shop'];
+$auth_id = $merchant['Id'];
+$access_token= $merchant['access_token'];
 
 
 $url = $baseUrl . '/api/v2/users/'; 
@@ -65,13 +72,16 @@ foreach ($packageCustomFields as $cf) {
 }
 
 //loop through each orders, assuming there are multiple merchants / invoice , since this is bespoke
+$url = $baseUrl . '/api/v2/merchants/' . $userId. '/transactions?pageSize=1000'; 
+$all_invoice = callAPI("GET", $admin_token, $url, false);
 
+foreach($all_invoice['Records'] as $result) {
 
 foreach($result['Orders'] as $order) {
 
     $orderId = $order['ID'];
 
-    if ($order_id == $orderId) {
+   // if ($order_id == $orderId) {
 
             //check if the order has already been synced
             $syncOrders = array(array('Name' => 'order_id', "Operator" => "equal",'Value' => $orderId), array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
@@ -80,7 +90,6 @@ foreach($result['Orders'] as $order) {
 
             //error_log(json_encode($isOrderSyncResult));
             
-
 
     if ($isOrderSyncResult['TotalRecords'] == 0) {    
 
@@ -207,7 +216,7 @@ foreach($result['Orders'] as $order) {
 
                      $count_details = [
 
-                        'sync_type' => 'Manual (Orders)',
+                        'sync_type' => 'Scheduled (every 15 minutes)',
                         'sync_trigger' => 'Order Creation',
                         'total_changed' => '-',
                         'total_unchanged' => '-',
@@ -233,19 +242,17 @@ foreach($result['Orders'] as $order) {
 
             echo json_encode('success');
 
-    }else {
+    }
+    
+    else {
          echo json_encode('This order has been sync');
     }
         
-    }        
-
+      //  }        
+    } //orders loop
+} //invoice loop
 }
 
+//error_log('bulk order sync has been run');
 
-
-
-
-
-
-  
 ?>
