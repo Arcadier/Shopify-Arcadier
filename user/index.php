@@ -429,145 +429,112 @@ if($isMerchant){
 
     <script>
     var $j = jQuery.noConflict();
-    $(document).ready(function() {
+        $(document).ready(function() {
 
-        var min_sync_limit1 =
-            '<?php if(!empty($configRowByMerchantGuid["min_sync_limit"])){echo $configRowByMerchantGuid["min_sync_limit"]; } ?>';
-        $("#min_sync_limit").val(min_sync_limit1);
+            var min_sync_limit1 =
+                '<?php if(!empty($configRowByMerchantGuid["min_sync_limit"])){echo $configRowByMerchantGuid["min_sync_limit"]; } ?>';
+            $("#min_sync_limit").val(min_sync_limit1);
 
-        myDialog = $j("#dialog").dialog({
-            // dialog settings:
-            //autoOpen : false,
-            //
-        });
-        myDialog.dialog("close");
+            myDialog = $j("#dialog").dialog({
+                // dialog settings:
+                //autoOpen : false,
+                //
+            });
+            myDialog.dialog("close");
 
-        $("#min_sync_limit").on("keyup", function(e) {
-            e.preventDefault();
-            //addLoader();
-            var min_sync_limit = $("#min_sync_limit").val();
-            var Id =
-                '<?php if(!empty($configRowByMerchantGuid["Id"])){echo $configRowByMerchantGuid["Id"]; } ?>';
-            var merchant_guid =
-                '<?php if(!empty($configRowByMerchantGuid["merchant_guid"])){ echo $configRowByMerchantGuid["merchant_guid"]; }?>';
+            $("#min_sync_limit").on("keyup", function(e) {
+                e.preventDefault();
+                //addLoader();
+                var min_sync_limit = $("#min_sync_limit").val();
+                var Id =
+                    '<?php if(!empty($configRowByMerchantGuid["Id"])){echo $configRowByMerchantGuid["Id"]; } ?>';
+                var merchant_guid =
+                    '<?php if(!empty($configRowByMerchantGuid["merchant_guid"])){ echo $configRowByMerchantGuid["merchant_guid"]; }?>';
 
-            var data = {
-                min_sync_limit: min_sync_limit,
-                Id: Id,
-                merchant_guid: merchant_guid
-            };
-            $.ajax({
-                async: false,
-                url: 'ajaxrequest.php',
-                type: "POST",
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function(data) {
-                    //removeClass('loadingDiv',500);
+                var data = {
+                    min_sync_limit: min_sync_limit,
+                    Id: Id,
+                    merchant_guid: merchant_guid
+                };
+                $.ajax({
+                    async: false,
+                    url: 'ajaxrequest.php',
+                    type: "POST",
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(data) {
+                        //removeClass('loadingDiv',500);
 
-                    console.log(data);
-                    if (data == 'min_sync_limit') {
+                        console.log(data);
+                        if (data == 'min_sync_limit') {
 
-                        $("#min_sync_limit_alert").css('display', 'inline');
-                        $("#min_sync_limit_alert").text(
-                            'Sync Limit saved Successfully');
+                            $("#min_sync_limit_alert").css('display', 'inline');
+                            $("#min_sync_limit_alert").text(
+                                'Sync Limit saved Successfully');
 
-                        //ShowCustomDialog('Alert','Sync Limit saved Successfully');
-                    } else {
-                        $("#min_sync_limit_alert").css('display', 'inline');
-                        $("#min_sync_limit_alert").text(data);
+                            //ShowCustomDialog('Alert','Sync Limit saved Successfully');
+                        } else {
+                            $("#min_sync_limit_alert").css('display', 'inline');
+                            $("#min_sync_limit_alert").text(data);
 
-                        //ShowCustomDialog('Alert',data);
+                            //ShowCustomDialog('Alert',data);
+                        }
+
+                        setTimeout(function() {
+                            $("#min_sync_limit_alert").css('display', 'none');
+                        }, 7000);
+
                     }
-
-                    setTimeout(function() {
-                        $("#min_sync_limit_alert").css('display', 'none');
-                    }, 7000);
-
-                }
+                });
             });
         });
 
 
-    
+        
 
-    function ShowCustomDialog(dialogtype, dialogmessage) {
-        ShowDialogBox(dialogtype, dialogmessage, 'Ok', '', 'GoToAssetList', null);
-    }
-
-    function ShowDialogBox(title, content, btn1text, btn2text, functionText, parameterList) {
-        var btn1css;
-        var btn2css;
-
-        if (btn1text == '') {
-            btn1css = "hidecss";
-        } else {
-            btn1css = "showcss";
+        function ShowCustomDialog(dialogtype, dialogmessage) {
+            ShowDialogBox(dialogtype, dialogmessage, 'Ok', '', 'GoToAssetList', null);
         }
 
-        if (btn2text == '') {
-            btn2css = "hidecss";
-        } else {
-            btn2css = "showcss";
-        }
-        $("#lblMessage").html(content);
+        function ShowDialogBox(title, content, btn1text, btn2text, functionText, parameterList) {
+            var btn1css;
+            var btn2css;
 
-        $j("#dialog").dialog({
-            resizable: false,
-            title: title,
-            modal: true,
-            width: '400px',
-            height: 'auto',
-            bgiframe: false,
-            hide: {
-                effect: 'scale',
-                duration: 400
-            },
-
-            buttons: [{
-                text: btn1text,
-                "class": btn1css,
-                click: function() {
-                    myDialog.dialog("close");
-                }
-            }]
-        });
-    }
-
-        $(document).ready(function() {
-
-
-                    $('#usr').val(obj.row1['username']);
-                    $('#pwd').val(obj.row1['password']);
-                    $('#domain').val(obj.row1['domain']);
-
-                    var timestamp = obj.row1['ModifiedDateTime'];
-                    var myDate = timestamp_to_datetime(timestamp, 5, 30);
-
-                    $('#myDate').val(myDate);
-
-                    var message = 'Connection Established';
-                    ShowCustomDialog('Alert', message);
-                } else {
-                    $("#connectSuccess").css('display', 'none');
-                    $("#connectFail").css('display', 'block');
-                    $("#testSuccess").css('display', 'none');
-                    $("#testFail").css('display', 'block');
-
-                    var message = obj.message;
-                    ShowCustomDialog('Alert', message);
-                }
+            if (btn1text == '') {
+                btn1css = "hidecss";
+            } else {
+                btn1css = "showcss";
             }
-        });
-    };
 
-    function myFunction() {
-        const x = new Date();
-        console.log(x);
-        console.log(x.getDate(), x.getMonth(), x.getFullYear());
-        document.getElementById("myDate").value = (x.getDate()).toString() + "-" + (x.getMonth() + 1).toString() +
-            '-' + (x.getFullYear()).toString();
-    };
+            if (btn2text == '') {
+                btn2css = "hidecss";
+            } else {
+                btn2css = "showcss";
+            }
+            $("#lblMessage").html(content);
+
+            $j("#dialog").dialog({
+                resizable: false,
+                title: title,
+                modal: true,
+                width: '400px',
+                height: 'auto',
+                bgiframe: false,
+                hide: {
+                    effect: 'scale',
+                    duration: 400
+                },
+
+                buttons: [{
+                    text: btn1text,
+                    "class": btn1css,
+                    click: function() {
+                        myDialog.dialog("close");
+                    }
+                }]
+            });
+        }
+
 
     $(document).ready(function() {
 
