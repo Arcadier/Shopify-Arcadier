@@ -44,6 +44,7 @@ $shop = $authDetails['Records'][0]['shop'];
 $auth_id = $authDetails['Records'][0]['Id'];
 $access_token= $authDetails['Records'][0]['access_token'];
 
+
 $product_id =  $content['id'];
 $product_name = $content['name'];
 $categories =  $content['category'];
