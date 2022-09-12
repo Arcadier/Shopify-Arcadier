@@ -190,14 +190,14 @@ foreach($result['Orders'] as $order) {
                  $api_endpoint = "/admin/api/2022-04/orders.json";
 
                     //part where you will send the orders, but this is for 1 item only
-                    $query = array('order' => array('line_items' => $all_items,
-                    
-                    "financial_status"=> "pending",
-                     "customer" => array(
-                            "id" => (int)$customer_id
-                          )
-                    ),  
-                   
+                    $query = array(
+                        'order' => array('line_items' => $all_items,
+                                        "financial_status"=> "pending",
+                                        "customer" => array(
+                                            "id" => (int)$customer_id
+                                        ),
+                                        "tags" => "Arcadier"
+                                    ),
                     );
                     //error_log('query '.  json_encode($query));
 
