@@ -32,7 +32,14 @@
     });
 
     //fix footer's wonky look
-    $(document).ready(function(){
+    $(document).ready(function ()
+    {
+        if (url.indexOf("/merchants/dashboard") >= 0) {
+            $('.sidebar-nav').append('<li><a href="https://aedamarketplace.sandbox.arcadier.io/user/plugins/184a0de9-efd4-47c0-8af7-a24cfdcf38d7/index.php?user=130ce73e-2d29-426c-9505-780cc941cfa4">Shopify</a></li>');
+        }
+        
+
+        
         if(window.location.href.indexOf(packageId) > -1){
             var footer_wrapper = document.querySelector(".footer-wrapper");
             footer_wrapper.style.width = "auto";
@@ -49,7 +56,7 @@
 
         //merchant order list
 
-        if (url.indexOf("/user/manage/orders") >= 0) {
+        if (url.indexOf("/merchants/order/history") >= 0) {
          
             //append new header for sync
             $('.order-list-tit-sec ').append('<div class="order-status-sec">Shopify Sync</div>');
@@ -71,14 +78,51 @@
              
             })
 
+            //api template
+            $('.order-data1 thead tr').append('<th class="order-status-sec">Shopify Sync</th>')
+
+            waitForElement(".order-data1", function ()
+            {
+                $('.order-data1 tbody tr:not(.loadedstatus)').each(function ()
+                {
+                     $(this).append(`<td class="order-status-sec">
+                    <button class="form-control shop-sync">Sync Order</button>
+                    </td>`);
+                    
+                    $(this).addClass("loadedstatus");
+                })
+            })
+
+            
+
             //get order details via order id https://{{your-marketplace}}.arcadier.io/api/v2/users/{{merchantID}}/orders/{{orderID}} ---? 
             //this endpoint do not get cf for cartitems, reference invoice id instead then validate the order id
 
-            $('body').on('click', '.shop-sync', function () {
-                const invoiceId = $(this).parents('.order-un-read-box').find('.invoice-number').text();
-                const orderId = $(this).parents('.order-un-read-box').attr('data-order-guid');
+            $('body').on('click', '.shop-sync', function ()
+            {
                 
-                syncOrderShopifyManual(orderId, invoiceId)
+
+                var orderList = REDUX_DATA.orderReducer.history.Records;
+
+                    
+                    //var records = orderList.Orders.filter(x => x.PurchaseOrderNo == "PO125");
+
+                
+
+                const res = orderList.filter(x =>
+                    x.Orders.some(y => y.PurchaseOrderNo == $(this).parents('.loadedstatus').find('td:first a').text())
+                    
+                    
+                );
+                console.table(res);
+                console.log(res[0].InvoiceNo)
+                console.log(res[0].Orders[0].ID)
+
+
+                // const invoiceId = $(this).parents('.order-un-read-box').find('.invoice-number').text();
+                // const orderId = $(this).parents('.order-un-read-box').attr('data-order-guid');
+                
+                syncOrderShopifyManual(res[0].Orders[0].ID, res[0].InvoiceNo)
 
             })
 
