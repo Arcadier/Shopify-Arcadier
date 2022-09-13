@@ -175,16 +175,47 @@ foreach($result['Orders'] as $order) {
                 }
             }   
 
+            //get latest payment status
+            $latest = 0;
+            foreach($order['Statuses'] as $key => $status){
+                $timestamp = (int)date("U",strtotime($status['CreatedDateTime']));
+                if($timestamp > $latest && $status['Type'] == 'Payment'){
+                    $latest = $timestamp;
+                    $latest_key = $key;
+                }
+            }
+
+            $latest_payment_status = $order['Statuses'][$latest_key]['Name'];
+
+            //get latest fulfilment status
+            $latest = 0;
+            foreach($order['Statuses'] as $key => $status){
+                $timestamp = (int)date("U",strtotime($status['CreatedDateTime']));
+                if($timestamp > $latest && $status['Type'] == 'Fulfilment'){
+                    $latest = $timestamp;
+                    $latest_key = $key;
+                }
+            }
+
+            $latest_fulfilment_status = $order['Statuses'][$latest_key]['Name'];
+
+            $order_statuses = status_mapping($latest_fulfilment_status, $latest_payment_status);
+            $payment_status = $order_statuses['payment_status'];
+            $fulfilment_status = $order_statuses['fulfilment_status'];
+
+
             $api_endpoint = "/admin/api/2022-04/orders.json";
 
             //part where you will send the orders, but this is for 1 item only
             $query = array(
                 'order' => array('line_items' => $all_items,
-                                "financial_status"=> "pending",
+                                "financial_status"=> $payment_status,
+                                "fulfillment_status"=> $fulfilment_status,
                                 "customer" => array(
                                     "id" => (int)$customer_id
                                 ),
-                                "tags" => "Arcadier"
+                                "tags" => "Arcadier",
+                                "note" => $baseUrl
                             ),
             );
             //error_log('query '.  json_encode($query));
@@ -223,5 +254,34 @@ foreach($result['Orders'] as $order) {
             echo json_encode('This order has been sync');
         }
     }        
+}
+
+function status_mapping($fulfilment, $payment){
+
+    $payment_status_map = [
+        "Waiting For Payment" => "pending",
+        "Payment Requested" => "pending",
+        "Pending" => "pending",
+        "Acknowledged" => "pending",
+        "Fully Paid" => "paid",
+        "Paid" => "paid",
+        "Failed" => "voided",
+        "Refunded" => "refunded",
+        "Acknowledged" => "pending"
+    ];
+
+    $fulfilment_status_map = [
+        "Delivered" => "fulfilled",
+        "Acknowledged" => null,
+        "Collected" => "fulfilled",
+        "Ready For Consumer Collection" => "partial"
+    ];
+
+    $response = [
+        "payment_status" => $payment_status_map[$payment],
+        "fulfilment_status" => $fulfilment_status_map[$fulfilment]
+    ];
+
+    return $response;
 }
 ?>
