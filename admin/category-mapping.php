@@ -508,7 +508,7 @@ if(isset($_COOKIE['m_domain']) && isset($_COOKIE['auth']) && isset($_COOKIE['mag
 		if(empty($mag_cat_arr33333['children'])){
 			?>
                                 <div id="a<?php echo $mag_cat_arr33333['id']; ?>"
-                                    class="container tab-pane <?php if($mag_cat_arr33333['id'] == 4){echo active;} ?>">
+                                    class="container tab-pane category-div <?php if($mag_cat_arr33333['id'] == 4){echo active;} ?> ">
                                     <form class="save_map_form">
                                         <!--<div class="" style="margin-left: 24px; padding-top:15px;">
                     <input type="checkbox" onclick="select_all()"  id="select_all"/>
