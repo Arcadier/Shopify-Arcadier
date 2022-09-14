@@ -215,7 +215,31 @@ foreach($result['Orders'] as $order) {
                                     "id" => (int)$customer_id
                                 ),
                                 "tags" => "Arcadier",
-                                "note" => $baseUrl
+                                "note" => $baseUrl,
+                                "shipping_address" => [
+                                    "first_name" => explode(" ", $order['DeliveryToAddress']['Name'])[0],
+                                    "last_name" => end(explode(" ", $order['DeliveryToAddress']['Name'])),
+                                    "address1" => $order['DeliveryToAddress']['Line1'],
+                                    "address2" => $order['DeliveryToAddress']['Line2'],
+                                    "city"=> $order['DeliveryToAddress']['City'],
+                                    "zip"=> $order['DeliveryToAddress']['PostCode'],
+                                    "province" => $order['DeliveryToAddress']['State'],
+                                    "country"=> $order['DeliveryToAddress']['Country'],
+                                    "name"=> $order['DeliveryToAddress']['Name'],
+                                    "country_code"=> $order['DeliveryToAddress']['CountryCode']
+                                ],
+                                "billing_address" => [
+                                    "first_name" => explode(" ", $order['DeliveryToAddress']['Name'])[0],
+                                    "last_name" => end(explode(" ", $order['DeliveryToAddress']['Name'])),
+                                    "address1" => $order['DeliveryToAddress']['Line1'],
+                                    "address2" => $order['DeliveryToAddress']['Line2'],
+                                    "city"=> $order['DeliveryToAddress']['City'],
+                                    "zip"=> $order['DeliveryToAddress']['PostCode'],
+                                    "province" => $order['DeliveryToAddress']['State'],
+                                    "country"=> $order['DeliveryToAddress']['Country'],
+                                    "name"=> $order['DeliveryToAddress']['Name'],
+                                    "country_code"=> $order['DeliveryToAddress']['CountryCode']
+                                ]
                             ),
             );
             //error_log('query '.  json_encode($query));
