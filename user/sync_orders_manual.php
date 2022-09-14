@@ -10,6 +10,7 @@ $content = json_decode($contentBodyJson, true);
 ///$userId = $content['userId'];
 $invoice_id = $content['invoice-id'];
 $order_id = $content['order-id'];
+$user_id = $content['user-id'];
 
 $baseUrl = getMarketplaceBaseUrl();
 $admin_token = $arc->AdminToken();
@@ -17,10 +18,9 @@ $customFieldPrefix = getCustomFieldPrefix();
 $packageId = getPackageID();
 // Query to get marketplace id
 
-
 $userToken = $_COOKIE["webapitoken"];
 $url = $baseUrl . '/api/v2/users/'; 
-$result = callAPI("GET", $userToken, $url, false);
+$result = $arc->getUserInfo($user_id);
 $userId = $result['ID'];
 
 $auth = array(array('Name' => 'merchant_guid', "Operator" => "in",'Value' => $userId));
