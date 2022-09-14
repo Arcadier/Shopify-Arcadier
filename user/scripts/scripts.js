@@ -66,6 +66,9 @@
 
         if (url.indexOf("/user/plugins") >= 0) {
             $('.navigation').hide();
+            $('.footer-wrapper').hide();
+            $('.search-bar').hide()
+
 
             $('.category-div').css('height', '400px'); 
             $('.category-div').niceScroll({ cursorcolor: "#b3b3b3 ", cursorwidth: "6px", cursorborderradius: "5px", cursorborder: "1px solid transparent", touchbehavior: true, preventmultitouchscrolling: true, enablekeyboard: true });
