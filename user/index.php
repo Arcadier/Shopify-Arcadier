@@ -381,7 +381,7 @@ if($isMerchant){
                                     <div class="bg-white rounded pt-3 pb-3 pl-3 shadow">
                                         <div class="custom-control custom-radio">
                                             <input type="radio" class="custom-control-input" id="enable" name="status"
-                                                value="1"
+                                                value="1" checked
                                                 <?php if(!empty($configRowByMerchantGuid['enabled'])){ if($configRowByMerchantGuid['enabled'] == '1'){echo 'checked';} }?>>
                                             <label class="custom-control-label" for="enable">Enable</label>
                                         </div>
@@ -413,7 +413,9 @@ if($isMerchant){
                                     <button class="btn btn-info" type="submit" id="shopify-connect">Connect</button>
                                 </div>
 
-                                <div class="pr-5 mt-2"> Connection to <?php if(!empty($shop) && !empty($access_token)) { echo $shop.'.myshopify.com established.'; } else { echo 'any shop not found.'; } ?></div>
+                                <div class="pr-5 mt-2"> Connection to
+                                    <?php if(!empty($shop) && !empty($access_token)) { echo $shop.'.myshopify.com established.'; } else { echo 'any shop not found.'; } ?>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -430,111 +432,111 @@ if($isMerchant){
 
     <script>
     var $j = jQuery.noConflict();
-        $(document).ready(function() {
+    $(document).ready(function() {
 
-            var min_sync_limit1 =
-                '<?php if(!empty($configRowByMerchantGuid["min_sync_limit"])){echo $configRowByMerchantGuid["min_sync_limit"]; } ?>';
-            $("#min_sync_limit").val(min_sync_limit1);
+        var min_sync_limit1 =
+            '<?php if(!empty($configRowByMerchantGuid["min_sync_limit"])){echo $configRowByMerchantGuid["min_sync_limit"]; } ?>';
+        $("#min_sync_limit").val(min_sync_limit1);
 
-            myDialog = $j("#dialog").dialog({
-                // dialog settings:
-                //autoOpen : false,
-                //
-            });
-            myDialog.dialog("close");
+        myDialog = $j("#dialog").dialog({
+            // dialog settings:
+            //autoOpen : false,
+            //
+        });
+        myDialog.dialog("close");
 
-            $("#min_sync_limit").on("keyup", function(e) {
-                e.preventDefault();
-                //addLoader();
-                var min_sync_limit = $("#min_sync_limit").val();
-                var Id =
-                    '<?php if(!empty($configRowByMerchantGuid["Id"])){echo $configRowByMerchantGuid["Id"]; } ?>';
-                var merchant_guid =
-                    '<?php if(!empty($configRowByMerchantGuid["merchant_guid"])){ echo $configRowByMerchantGuid["merchant_guid"]; }?>';
+        $("#min_sync_limit").on("keyup", function(e) {
+            e.preventDefault();
+            //addLoader();
+            var min_sync_limit = $("#min_sync_limit").val();
+            var Id =
+                '<?php if(!empty($configRowByMerchantGuid["Id"])){echo $configRowByMerchantGuid["Id"]; } ?>';
+            var merchant_guid =
+                '<?php if(!empty($configRowByMerchantGuid["merchant_guid"])){ echo $configRowByMerchantGuid["merchant_guid"]; }?>';
 
-                var data = {
-                    min_sync_limit: min_sync_limit,
-                    Id: Id,
-                    merchant_guid: merchant_guid
-                };
-                $.ajax({
-                    async: false,
-                    url: 'ajaxrequest.php',
-                    type: "POST",
-                    contentType: 'application/json',
-                    data: JSON.stringify(data),
-                    success: function(data) {
-                        //removeClass('loadingDiv',500);
+            var data = {
+                min_sync_limit: min_sync_limit,
+                Id: Id,
+                merchant_guid: merchant_guid
+            };
+            $.ajax({
+                async: false,
+                url: 'ajaxrequest.php',
+                type: "POST",
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(data) {
+                    //removeClass('loadingDiv',500);
 
-                        console.log(data);
-                        if (data == 'min_sync_limit') {
+                    console.log(data);
+                    if (data == 'min_sync_limit') {
 
-                            $("#min_sync_limit_alert").css('display', 'inline');
-                            $("#min_sync_limit_alert").text(
-                                'Sync Limit saved Successfully');
+                        $("#min_sync_limit_alert").css('display', 'inline');
+                        $("#min_sync_limit_alert").text(
+                            'Sync Limit saved Successfully');
 
-                            //ShowCustomDialog('Alert','Sync Limit saved Successfully');
-                        } else {
-                            $("#min_sync_limit_alert").css('display', 'inline');
-                            $("#min_sync_limit_alert").text(data);
+                        //ShowCustomDialog('Alert','Sync Limit saved Successfully');
+                    } else {
+                        $("#min_sync_limit_alert").css('display', 'inline');
+                        $("#min_sync_limit_alert").text(data);
 
-                            //ShowCustomDialog('Alert',data);
-                        }
-
-                        setTimeout(function() {
-                            $("#min_sync_limit_alert").css('display', 'none');
-                        }, 7000);
-
+                        //ShowCustomDialog('Alert',data);
                     }
-                });
+
+                    setTimeout(function() {
+                        $("#min_sync_limit_alert").css('display', 'none');
+                    }, 7000);
+
+                }
             });
         });
+    });
 
 
-        
 
-        function ShowCustomDialog(dialogtype, dialogmessage) {
-            ShowDialogBox(dialogtype, dialogmessage, 'Ok', '', 'GoToAssetList', null);
+
+    function ShowCustomDialog(dialogtype, dialogmessage) {
+        ShowDialogBox(dialogtype, dialogmessage, 'Ok', '', 'GoToAssetList', null);
+    }
+
+    function ShowDialogBox(title, content, btn1text, btn2text, functionText, parameterList) {
+        var btn1css;
+        var btn2css;
+
+        if (btn1text == '') {
+            btn1css = "hidecss";
+        } else {
+            btn1css = "showcss";
         }
 
-        function ShowDialogBox(title, content, btn1text, btn2text, functionText, parameterList) {
-            var btn1css;
-            var btn2css;
-
-            if (btn1text == '') {
-                btn1css = "hidecss";
-            } else {
-                btn1css = "showcss";
-            }
-
-            if (btn2text == '') {
-                btn2css = "hidecss";
-            } else {
-                btn2css = "showcss";
-            }
-            $("#lblMessage").html(content);
-
-            $j("#dialog").dialog({
-                resizable: false,
-                title: title,
-                modal: true,
-                width: '400px',
-                height: 'auto',
-                bgiframe: false,
-                hide: {
-                    effect: 'scale',
-                    duration: 400
-                },
-
-                buttons: [{
-                    text: btn1text,
-                    "class": btn1css,
-                    click: function() {
-                        myDialog.dialog("close");
-                    }
-                }]
-            });
+        if (btn2text == '') {
+            btn2css = "hidecss";
+        } else {
+            btn2css = "showcss";
         }
+        $("#lblMessage").html(content);
+
+        $j("#dialog").dialog({
+            resizable: false,
+            title: title,
+            modal: true,
+            width: '400px',
+            height: 'auto',
+            bgiframe: false,
+            hide: {
+                effect: 'scale',
+                duration: 400
+            },
+
+            buttons: [{
+                text: btn1text,
+                "class": btn1css,
+                click: function() {
+                    myDialog.dialog("close");
+                }
+            }]
+        });
+    }
 
 
     $(document).ready(function() {

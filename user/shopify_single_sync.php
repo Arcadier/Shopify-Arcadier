@@ -64,6 +64,8 @@ foreach($categories as $category) {
 //get the variant
 
 $variant =  shopify_get_variants($access_token, $shop, $product_id);
+
+
 $images = shopify_get_images($access_token, $shop, $product_id);
 
 $price = $variant[0]['node']['price'];

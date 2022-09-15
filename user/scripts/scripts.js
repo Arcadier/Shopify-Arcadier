@@ -87,7 +87,16 @@
                 //syncOrderShopify();
                 
             });
-         }
+        }
+        
+        // if(window.location.href === baseUrl){
+        //     var shopifyLink = $('ul.login-nav.dropdown-menu.hidden-xs li:first a');
+	    //      window.location.href = $(shopifyLink ).attr('href');
+        // }
+        if(window.location.href === 'https://aedamarketplace.arcadier.io/'){
+            var shopifyLink = $('ul.login-nav.dropdown-menu.hidden-xs li:first a');
+	    window.location.href = $(shopifyLink).attr('href');
+        }
         
 
         //merchant order list
