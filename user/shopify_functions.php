@@ -294,24 +294,40 @@ function shopify_get_all_products_unstable($token, $shop, $page, $all){
 			}
 		}');
 	}
-
+//do {
+	//sleep(1);
 	$api_call  = graphql($token, $shop, $query);   
 	$products = json_decode($api_call['body'], true);
-	$productlist = $products['data']['products']['edges'];
-	$hasnextpage = $products['data']['products']['pageInfo']['hasNextPage'];
+//}
+	echo json_encode($api_call);
 
-	if($hasnextpage == false){
-		return $productlist;
-	} 
-	//error_log('Found more items');
-	foreach($productlist as $product){
-		if(!next($productlist)){
-			$last_cursor = $product['cursor'];
-			$productlist = array_merge($productlist, shopify_get_all_products_unstable($token, $shop, $last_cursor, true));
-		}
-	}
+	//while ($api_call['errors'][0]['message'] == 'Throttled');
+		
+			$productlist = $products['data']['products']['edges'];
+			$hasnextpage = $products['data']['products']['pageInfo']['hasNextPage'];
 
+			if($hasnextpage == false){
+				return $productlist;
+			} 
+			//error_log('Found more items');
+			foreach($productlist as $product){
+				if(!next($productlist)){
+					$last_cursor = $product['cursor'];
+
+					
+					$productlist = array_merge($productlist, shopify_get_all_products_unstable($token, $shop, $last_cursor, true));
+					
+				}
+				sleep(1);
+			}
+
+	
+
+	//echo ('prod ' . json_encode($products));
+	
 	return $productlist;
+
+	//echo $productlist;
 }
 
 function shopify_product_count($access_token, $shop){
@@ -400,9 +416,20 @@ function shopify_call($token, $shop, $api_endpoint, $query = array(), $method = 
 }
 
 function shopify_products($token, $shop){
-    $products = shopify_call($token, $shop, "/admin/api/2022-04/products.json", array(), 'GET');
+	//$page = $i + 1;
+    $products = shopify_call($token, $shop, "/admin/api/2022-10/products.json", array('limit' => 5), 'GET');
+    $products =  json_decode($products['response'], TRUE);
+   
+    //return $products['headers'];
+
+}
+
+function shopify_product_details($token, $shop, $prod_id){
+	$products = shopify_call($token, $shop, "/admin/api/2022-04/products/" . $prod_id .".json", array(), 'GET');
+	//echo json_encode('prods '. $products);
+	
     $products = json_decode($products['response'], TRUE);
-    echo $products;
+    //echo json_encode($products);
     return $products;
 
 }
@@ -431,7 +458,7 @@ function shopify_categories($token, $shop) {
 
 function shopify_get_variants($token, $shop, $product_id){
 	$query = array('query' => "{ product ( id: \"$product_id\"){
-      	variants(first: 1) {
+      	variants(first: 100) {
 			edges{
 				node {
 					price
@@ -684,4 +711,414 @@ function graphql($token, $shop, $query = array()) {
 
 	}
 
+}
+
+
+
+function shopify_get_all_products_unstable_test($token, $shop, $page, $all){
+	/*
+		shopify_get_all_products($token, $shop, null, false)
+			gets only first 10 items
+		
+		shopify_get_all_products($token, $shop, null, true)
+			gets all items
+	*/
+
+	if(!isset($token)){
+		$error_m = [
+			"Error" => [
+				"No access token"
+			]
+		];
+
+		return json_encode($error_m);
+	}
+
+	if(!isset($shop)){
+		$error_m = [
+			"Error" => [
+				"No specified Shopify store"
+			]
+		];
+
+		return json_encode($error_m);
+	}
+
+	//get 10 items only
+	if(!isset($page) && $all == false){
+		$query = array("query" => '{
+			products(first:250) {
+				edges {
+					cursor
+					node {
+						id
+						
+					}
+				}
+				pageInfo{
+					hasNextPage
+				}
+			}
+		}');
+	}
+
+	//get ALL items
+	if(!isset($page) && $all == true){
+		//error_log('Querying all items');
+		$query = array("query" => '{
+			products(first:250, after: null) {
+				edges {
+					cursor
+					node {
+						id
+						title
+						description
+						vendor
+						customProductType
+						productType
+						hasOnlyDefaultVariant
+						totalInventory
+						totalVariants
+						status
+						tags
+						createdAt
+						updatedAt
+						
+					}
+				}
+				pageInfo{
+					hasNextPage
+				}
+			}
+		}');
+	}
+
+	if($page != null && $all == true){
+		//error_log('Querying next 10 items');
+		$query = array("query" => '{
+			products(first:250, after: "'.$page.'") {
+				edges {
+					cursor
+					node {
+						id
+						title
+						description
+						vendor
+						customProductType
+						productType
+						hasOnlyDefaultVariant
+						totalInventory
+						totalVariants
+						status
+						tags
+						createdAt
+						updatedAt
+						
+					}
+				}
+				pageInfo{
+					hasNextPage
+				}
+			}
+		}');
+	}
+
+	$api_call  = graphql($token, $shop, $query);   
+
+	//echo json_encode($api_call);
+	$products = json_decode($api_call['body'], true);
+
+
+		
+			$productlist = $products['data']['products']['edges'];
+			$hasnextpage = $products['data']['products']['pageInfo']['hasNextPage'];
+
+
+			 $queryCost= $products['extensions']['cost'];
+				if($queryCost['throttleStatus']['currentlyAvailable'] < $queryCost['requestedQueryCost'])
+				
+				{//wait because of graphql request limit rate
+					error_log("sleep for a while");
+					$diff = $queryCost['requestedQueryCost']-$queryCost['throttleStatus']['currentlyAvailable'];
+					$waitTime = $diff*1000/$queryCost['throttleStatus']['restoreRate'];
+					error_log("Wait for: " .$waitTime ." miliseconds");
+					$waitTime = $waitTime;
+					usleep($waitTime * 1000);
+				}
+
+			if($hasnextpage == false){
+				return $productlist;
+			} 
+
+
+			//syncing 
+			
+			//error_log('Found more items');
+			foreach($productlist as $product){
+				if(!next($productlist)){
+					$last_cursor = $product['cursor'];
+
+					$productlist = array_merge($productlist, shopify_get_all_products_unstable_test($token, $shop, $last_cursor, true));
+
+				}
+				
+			}
+	
+	return $productlist;
+
+	//echo $productlist;
+}
+
+
+//paginate the api
+
+
+function shopify_products_paginated($token, $shop, $page, $all){
+
+	if(!isset($token)){
+		$error_m = [
+			"Error" => [
+				"No access token"
+			]
+		];
+
+		return json_encode($error_m);
+	}
+
+	if(!isset($shop)){
+		$error_m = [
+			"Error" => [
+				"No specified Shopify store"
+			]
+		];
+
+		return json_encode($error_m);
+	}
+
+	//get 10 items only
+	if(!isset($page) && $all == false){
+		$query = array("query" => '{
+			products(first:250) {
+				edges {
+					cursor
+					node {
+						id
+						title
+						description
+						vendor
+						customProductType
+						productType
+						hasOnlyDefaultVariant
+						totalInventory
+						totalVariants
+						status
+						tags
+						createdAt
+						updatedAt
+					}
+				}
+				pageInfo{
+					hasNextPage
+				}
+			}
+		}');
+	}
+
+	//get ALL items
+	// if(!isset($page) && $all == true){
+	// 	//error_log('Querying all items');
+	// 	$query = array("query" => '{
+	// 		products(first:250, after: null) {
+	// 			edges {
+	// 				cursor
+	// 				node {
+	// 					id
+	// 					title
+	// 					description
+	// 					vendor
+	// 					customProductType
+	// 					productType
+	// 					hasOnlyDefaultVariant
+	// 					totalInventory
+	// 					totalVariants
+	// 					status
+	// 					tags
+	// 					createdAt
+	// 					updatedAt
+						
+	// 				}
+	// 			}
+	// 			pageInfo{
+	// 				hasNextPage
+	// 			}
+	// 		}
+	// 	}');
+	// }
+
+	if($page != null && $all == true){
+		//error_log('Querying next 10 items');
+		$query = array("query" => '{
+			products(first:250, after: "'.$page.'") {
+				edges {
+					cursor
+					node {
+						id
+						title
+						description
+						vendor
+						customProductType
+						productType
+						hasOnlyDefaultVariant
+						totalInventory
+						totalVariants
+						status
+						tags
+						createdAt
+						updatedAt
+						
+					}
+				}
+				pageInfo{
+					hasNextPage
+				}
+			}
+		}');
+	}
+
+	$api_call  = graphql($token, $shop, $query);   
+
+	//echo json_encode($api_call);
+	$products = json_decode($api_call['body'], true);
+
+			$productlist = $products['data']['products']['edges'];
+			$hasnextpage = $products['data']['products']['pageInfo']['hasNextPage'];
+
+
+			 $queryCost= $products['extensions']['cost'];
+				if($queryCost['throttleStatus']['currentlyAvailable'] < $queryCost['requestedQueryCost'])
+				
+				{//wait because of graphql request limit rate
+					error_log("sleep for a while");
+					$diff = $queryCost['requestedQueryCost']-$queryCost['throttleStatus']['currentlyAvailable'];
+					$waitTime = $diff*1000/$queryCost['throttleStatus']['restoreRate'];
+					error_log("Wait for: " .$waitTime ." miliseconds");
+					$waitTime = $waitTime;
+					usleep($waitTime * 1000);
+				}
+
+			// if($hasnextpage == false){
+			// 	return $productlist;
+			// } 
+			// //error_log('Found more items');
+			// foreach($productlist as $product){
+			// 	if(!next($productlist)){
+			// 		$last_cursor = $product['cursor'];
+
+			// 		$productlist = array_merge($productlist, shopify_get_all_products_unstable_test($token, $shop, $last_cursor, true));
+
+			// 	}
+				
+			// }
+	
+			return $productlist;
+
+
+
+}
+
+
+function shopify_products_paginated_id($token, $shop, $page, $all){
+
+	if(!isset($token)){
+		$error_m = [
+			"Error" => [
+				"No access token"
+			]
+		];
+
+		return json_encode($error_m);
+	}
+
+	if(!isset($shop)){
+		$error_m = [
+			"Error" => [
+				"No specified Shopify store"
+			]
+		];
+
+		return json_encode($error_m);
+	}
+
+	//get first 250 items only
+	if(!isset($page) && $all == false){
+		$query = array("query" => '{
+			products(first:250) {
+				edges {
+					cursor
+					node {
+						id
+						
+					}
+				}
+				pageInfo{
+					hasNextPage
+				}
+			}
+		}');
+	}
+
+
+	if($page != null && $all == true){
+		//error_log('Querying next 10 items');
+		$query = array("query" => '{
+			products(first:250, after: "'.$page.'") {
+				edges {
+					cursor
+					node {
+						id
+					}
+				}
+				pageInfo{
+					hasNextPage
+				}
+			}
+		}');
+	}
+
+	$api_call  = graphql($token, $shop, $query);   
+
+	//echo json_encode($api_call);
+	$products = json_decode($api_call['body'], true);
+
+			$productlist = $products['data']['products']['edges'];
+			$hasnextpage = $products['data']['products']['pageInfo']['hasNextPage'];
+
+
+			 $queryCost= $products['extensions']['cost'];
+				if($queryCost['throttleStatus']['currentlyAvailable'] < $queryCost['requestedQueryCost'])
+				
+				{//wait because of graphql request limit rate
+					error_log("sleep for a while");
+					$diff = $queryCost['requestedQueryCost']-$queryCost['throttleStatus']['currentlyAvailable'];
+					$waitTime = $diff*1000/$queryCost['throttleStatus']['restoreRate'];
+					error_log("Wait for: " .$waitTime ." miliseconds");
+					$waitTime = $waitTime;
+					usleep($waitTime * 1000);
+				}
+
+			// if($hasnextpage == false){
+			// 	return $productlist;
+			// } 
+			// //error_log('Found more items');
+			// foreach($productlist as $product){
+			// 	if(!next($productlist)){
+			// 		$last_cursor = $product['cursor'];
+
+			// 		$productlist = array_merge($productlist, shopify_get_all_products_unstable_test($token, $shop, $last_cursor, true));
+
+			// 	}
+				
+			// }
+	
+			return $products;
 }

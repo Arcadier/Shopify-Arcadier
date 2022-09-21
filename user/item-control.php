@@ -1,4 +1,6 @@
 <?php
+
+ini_set('max_execution_time', 0); // 0 = Unlimited
 include 'callAPI.php';
 include 'api.php';
 include 'shopify_functions.php';
@@ -8,11 +10,22 @@ $baseUrl = getMarketplaceBaseUrl();
 $admin_token = $arc->AdminToken();
 $customFieldPrefix = getCustomFieldPrefix();
 
-$userToken = $_COOKIE["webapitoken"];
-$url = $baseUrl . '/api/v2/users/'; 
-$result = callAPI("GET", $userToken, $url, false);
+//$userToken = $_COOKIE["webapitoken"];
+//$url = $baseUrl . '/api/v2/users/'; 
+//$result = callAPI("GET", $userToken, $url, false);
+$result = $arc->getUserInfo($_GET['user']);
 $userId = $result['ID'];
 $packageId = getPackageID();
+
+$url = $baseUrl . '/api/developer-packages/custom-fields?packageId=' . $packageId;
+$packageCustomFields = callAPI("GET", $admin_token, $url, false);
+
+$prods_code = '';
+foreach ($packageCustomFields as $cf) {
+    if ($cf['Name'] == 'all_items' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+        $prods_code = $cf['Code'];
+    }
+}
 
 $auth = array(array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
 $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
@@ -27,8 +40,101 @@ $product_import_speed = $product_count['count']/17;
 //error_log("Import time: ".$product_import_speed." seconds.", 3, "tanoo_log.php");
 
 //import Shopify Products
-$products = shopify_get_all_products_unstable($access_token, $shop, null, true);
+$products = shopify_products_paginated($access_token, $shop, null, false);
+
+// if ($products){
+
+//     $data = [
+
+//     'CustomFields' => [
+//         [
+//             'Code' => $prods_code,
+//             'Values' => [json_encode($products)],
+//         ],
+//     ],
+// ];
+
+// $url = $baseUrl . '/api/v2/users/' . $userId;
+// $result = callAPI("PUT", $admin_token, $url, $data);
+// }
+
+$all_items = '';
+if ($result['CustomFields'] != null)  {
+
+    foreach ($result['CustomFields'] as $cf) {
+        if ($cf['Name'] == 'all_items' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+                    $all_items = $cf['Values'][0];
+                    break;
+                    //if 1, it is a shopify item else not
+        }
+    
+    }
+
+$all_items = json_decode($all_items, true);
+//echo 'all items ' .  json_encode($all_items);
+
+}
+
+if ($all_items){
+    
+    $products  = $all_items;
+
+}
+
+$last_cursor ='';
+
+
+if ($products){
+
+    foreach($products as $product){
+    if(!next($products)){
+        $last_cursor = $product['cursor'];
+
+    }
+}
+
+}
+
+//echo json_encode($products);
+
+$url = $baseUrl . '/api/v2/users/' . $userId;
+$result = callAPI("GET", $admin_token, $url, null);
+            
+// echo 'res ' . json_encode($result);
+// $all_items = '';
+// if ($result['CustomFields'] != null)  {
+
+//     foreach ($result['CustomFields'] as $cf) {
+//         if ($cf['Name'] == 'all_items' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+//                     $all_items = $cf['Values'][0];
+//                     break;
+//                     //if 1, it is a shopify item else not
+//         }
+    
+//     }
+
+// $products = json_decode($all_items, true);
+// //echo 'all items ' .  json_encode($all_items);
+
+// }
+
+
+//echo json_encode($products);
+
+
+//$items =  shopify_products($access_token, $shop);
+
+
+//  foreach($products as $shopify_productsss){ 
+
+//     $product_details = shopify_product_details($access_token, $shop, ltrim($shopify_productsss['node']['id'],"gid://shopify/Product/"));
+
+//  }
+
+
 //error_log($products, 3, "tanoo_log.php");
+//error_log('products ' . json_encode($products));
+
 
 $pack_id = $packageId;
 $UserInfo = $arc->getUserInfo($_GET['user']);
@@ -92,6 +198,7 @@ if($isMerchant){
             $data = array(array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
             
             $category_map  =  $arc->searchTable($pack_id, "map", $data);
+          //  echo 'cat map ' . json_encode($category_map);
             if($category_map['TotalRecords'] == 1){
                 $category_map = $category_map['Records'][0]['map'];
             }
@@ -343,10 +450,17 @@ if($isMerchant){
             <!-- Start content -->
             <div class="content">
                 <div class="container-fluid">
+
+
                     <div class="page-title-box">
                         <div class="row align-items-center">
                             <div class="col-sm-6" id="flash_message">
                                 <h4 class="page-title">Item Control</h4>
+
+                                <a href="#" onclick="loadnext250items('<?php echo $last_cursor ?>');" id="show-next"
+                                    cursor-id="<?php echo $last_cursor ?>"> Show Next 250 Items
+                                </a>
+
                             </div>
                             <div id="dialog" title="Alert message" style="display: none">
                                 <div class="ui-dialog-content ui-widget-content">
@@ -397,7 +511,7 @@ if($isMerchant){
                                             ?></td>
                                             <td><?php  //Shopify Category
                                                 if($shopify_products['node']['customProductType'] == null){
-                                                    echo $shopify_products['node']['product_type'];
+                                                    echo $shopify_products['node']['productType'];
                                                 }else{
                                                     echo $shopify_products['node']['customProductType'];
                                                 }
@@ -419,7 +533,7 @@ if($isMerchant){
                                                     //error_log('Got in the if condition');
                                                     //get shopify product category
                                                     if($shopify_products['node']['customProductType'] == null){
-                                                        $shopify_product_category = $shopify_products['node']['product_type'];
+                                                        $shopify_product_category = $shopify_products['node']['productType'];
                                                     }else{
                                                         $shopify_product_category = $shopify_products['node']['customProductType'];
                                                     }
@@ -484,15 +598,15 @@ if($isMerchant){
                                                         }
                                                     ?>
                                                     <select
-                                                        
                                                         id="override_default_category_select-<?php echo ltrim($shopify_products['node']['id'],"gid://shopify/Product/"); ?>"
                                                         name="override_default_category_select" class="chosen-select"
                                                         data-placeholder="Select Arcadier Category" multiple>
                                                         <?php 
                                                             foreach($arcadier_categories as $arcadier_cat){
                                                                 ?>
-                                                                <option value="<?php echo $arcadier_cat['ID']; ?>"><?php echo $arcadier_cat['Name']; ?></option>
-                                                                <?php 
+                                                        <option value="<?php echo $arcadier_cat['ID']; ?>">
+                                                            <?php echo $arcadier_cat['Name']; ?></option>
+                                                        <?php 
                                                             } 
                                                         ?>
                                                     </select>
@@ -642,32 +756,33 @@ if($isMerchant){
             var category_names = [];
             var category;
             var override_category_array = [];
-            if($(`#override_default_category-${shortId}`).is(":checked")){
+            if ($(`#override_default_category-${shortId}`).is(":checked")) {
 
                 //loop through override choices, which are the Arcadier category names
-                $("#override_default_category_select_" + shortId + "_chosen > div.chosen-drop > ul.chosen-results > li").each(function(index, element){
-                    if($(element).attr("class") == "result-selected"){
-                        category_names.push($(element).context.innerHTML);
-                    }
-                });
+                $("#override_default_category_select_" + shortId + "_chosen > div.chosen-drop > ul.chosen-results > li")
+                    .each(function(index, element) {
+                        if ($(element).attr("class") == "result-selected") {
+                            category_names.push($(element).context.innerHTML);
+                        }
+                    });
                 console.log("Category Names: ", category_names);
-                
-                $(category_names).each(function(index1, element1){ //for each category name
+
+                $(category_names).each(function(index1, element1) { //for each category name
                     //get Arcadier all category ids
                     var category_ids = <?php echo json_encode($arcadier_categories); ?>;
 
-                    
-                    $(category_ids).each(function(index, element){ //for all category IDs
-                        if(element.Name == element1){  //if chosen category names are found, pull their ID
+
+                    $(category_ids).each(function(index, element) { //for all category IDs
+                        if (element.Name ==
+                            element1) { //if chosen category names are found, pull their ID
                             override_category_array.push(element.ID);
                             console.log(override_category_array);
                         }
                     });
                 });
-                
+
                 category = override_category_array;
-            }
-            else{
+            } else {
                 category = $(`#cat-${shortId}`).attr('cat-id').split(',');
             }
             console.log("Override Category: ", category);
@@ -804,6 +919,7 @@ if($isMerchant){
     }
 
     const removeById = (arr, id1) => {
+
         const requiredIndex = arr.findIndex(el => {
             return el.id1 === String(id1);
         });
@@ -948,6 +1064,41 @@ if($isMerchant){
         if (parts.length === 2) {
             return parts.pop().split(';').shift();
         }
+    }
+
+
+
+    function loadnext250items(cursor) {
+        var apiUrl = 'load_next_250.php';
+        var data = {
+            cursor
+        }
+
+        $.ajax({
+            url: apiUrl,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(result) {
+
+                location.reload()
+
+                // result =  JSON.parse(result);
+                //     console.log(`result  ${result}`);
+
+                //     if (result == 'success') {
+                //          toastr.success(`Synced order Number: ${orderId}`);
+                //     } else {
+                //         toastr.error(`This order has already been synced`);
+
+                //     }
+
+            },
+            error: function(jqXHR, status, err) {
+                //	toastr.error('Error!');
+            }
+        })
+
     }
     </script>
 </body>

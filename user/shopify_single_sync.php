@@ -62,32 +62,71 @@ foreach($categories as $category) {
 }
 
 //get the variant
-
-$variant =  shopify_get_variants($access_token, $shop, $product_id);
-
-
 $images = shopify_get_images($access_token, $shop, $product_id);
+$product_details = shopify_product_details($access_token, $shop, ltrim($product_id,"gid://shopify/Product/"));   // shopify_get_variants($access_token, $shop, $product_id);
 
-$price = $variant[0]['node']['price'];
-$variant_id = $variant[0]['node']['id'];
+$product_name = $product_details['product']['title'];
+$description = $product_details['product']['body_html'];
+
+$variants = $product_details['product']['variants'];
+
+$has_variants =  (count($variants) == 1 && $variants[0]['title'] == 'Default Title') ? 0 : 1;
+
+$price = $variants[0]['price'];
+$variant_id = $variants[0]['id'];
+$inventory = $variants[0]['inventory_quantity'];
+$sku = $variants[0]['sku'];
+
 $image =  $images[0]['node']['originalSrc'];
 
 
-//error_log(json_encode($variant));
+if ($has_variants) {
+
+    $all_variants = [];
+
+
+    $images = $product_details['product']['images'];
+
+   
+    //count the options array
+
+    foreach($variants as $variant){
+
+    error_log('variant ' .  json_encode($variant));
+    $id = $variant['id'];
+    $variant_image =  findItem($images, $id);
+      
+      
+    //   array_filter($images, function($image) use ($id) {
+    //   $filtered =  in_array($id, $image['variant_ids']);
+    //   return $filtered;
+    
+    // });
+
+
+    error_log('variant image ' . json_encode($variant_image));
+        
+        count($product_details['product']['options']) == 1 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name'])], 'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => array( "MediaUrl" => $variant_image['src'])) : '';
+        count($product_details['product']['options']) == 2 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'],'Media' => array("MediaUrl" => $variant_image['src'])) : '';
+        count($product_details['product']['options']) == 3 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name']),array('ID' => '', 'Name' => $variant['option3'], 'GroupName' => $product_details['product']['options'][2]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => array( "MediaUrl" => $variant_image['src'])) : '';
+    
+
+    }
+}
 
 $item_details = array(
       'SKU' =>  'sku',
       'Name' =>  $product_name,
-      'BuyerDescription' => 'description',
-      'SellerDescription' => 'description',
+      'BuyerDescription' => $description,
+      'SellerDescription' => $description,
       'Price' => (float)$price,
       'PriceUnit' => null,
       'StockLimited' => true,
-      'StockQuantity' =>  $stock,
+      'StockQuantity' =>  $inventory,
       'IsVisibleToCustomer' => true,
       'Active' => true,
       'IsAvailable' => '',
-      'CurrencyCode' =>  'SGD',
+      'CurrencyCode' =>  'AUD',
       'Categories' =>   $all_categories,
       'ShippingMethods'  => null,
       'PickupAddresses' => null,
@@ -97,7 +136,7 @@ $item_details = array(
          ],
       'Tags' => null,
       'CustomFields' => null,
-      'ChildItems' => null,
+      'ChildItems' => $allvariants
 
 );
 
@@ -114,7 +153,8 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
     $url =  $baseUrl . '/api/v2/merchants/' . $userId . '/items';
     $result =  callAPI("POST", $admin_token, $url, $item_details);
     $result1 = json_encode(['err' => $result]);
-   // echo $result1;
+    error_log(json_encode($item_details));
+    ///error_log(json_encode($result1));
 
       if ($result['ID']){
 
@@ -168,6 +208,16 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
     $updateItem =  callAPI("PUT", $admin_token, $url, $item_details); 
 }
 
+ function findItem(array $variants, int $id)
+{
+    foreach ($variants as $variant) {
+        if  (in_array($id, $variant['variant_ids']))
+        {
+            return $variant;
+        }
 
+        //return null;
+    }
+}
 
 ?>
