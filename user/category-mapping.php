@@ -397,7 +397,14 @@ if($isMerchant){
                                                 Submit your mapping choice
                                                 for each Shopify category:</div>
                                             <a id="save_map"
-                                                onclick="save_mapp('<?php if(preg_match('/\s/',$shopify_category)){ echo $shopify_category_id.'>'.$shopify_div_ids; } else { echo $shopify_category_id; } ?>');"
+                                                <?php 
+                                                    if(preg_match('/\s/',$shopify_category)){ 
+                                                        $escaped_category_name = str_replace("'", "\'", $shopify_category_id.'>'.$shopify_div_ids); 
+                                                    } else { 
+                                                        $escaped_category_name = str_replace("'", "\'", $shopify_category_id); 
+                                                    } 
+                                                ?>
+                                                onclick="save_mapp('<?php echo $escaped_category_name; ?>');"
                                                 style="border: #0e77d4;box-sizing: border-box;background-color: #333547;border-radius: 6px;color: white;padding: 5px 10px;font-size: 14px; cursor: pointer;">Submit
                                                 Mapping for <?php echo $shopify_category ?></a>
                                         </div>
@@ -493,7 +500,7 @@ if($isMerchant){
                     }
 
                     var selected = [];
-                    $('#divison' + shopify_div + ' input:checked').each(function() {
+                    $("#divison" + shopify_div + " input:checked").each(function() {
                         selected.push($(this).attr('id'));
                     });
                     var arcadier_guid = selected.join(",");
@@ -507,7 +514,7 @@ if($isMerchant){
                         cat_map: 'cat_map',
                         arc_user: arc_user
                     };
-                    console.log(data);
+                    console.log("Map data: " + data);
                     $.ajax({
                         type: "POST",
                         url: "ajaxrequest.php",
