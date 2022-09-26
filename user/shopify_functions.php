@@ -537,6 +537,41 @@ function shopify_add_tag($token, $shop, $product_id, $tags) {
 	return $tagsCreate;
 }
 
+// shopify_get_bulk_item($token, $shop){
+
+// $mutation = array('query' => "mutation {
+//   bulkOperationRunQuery(
+//    query:  \"\"\"
+//     {
+//       products {
+//         edges {
+//           node {
+//             id
+//             title
+//           }
+//         }
+//       }
+//     }
+//    \"\"\"
+//   ) {
+//     bulkOperation {
+//       id
+//       status
+//     }
+//     userErrors {
+//       field
+//       message
+//     } 
+//   }
+// }
+// ");
+
+// $bulkCall = graphql($token, $shop, $mutation);
+// 	//error_log('tags create ' .json_encode($tagsCreate));
+// 	return $bulkCall;
+
+// }
+
 function shopify_remove_tag($token, $shop, $product_id, $tag){
 	$mutation = array("query" => 'mutation {
 	tagsAdd(
@@ -771,18 +806,7 @@ function shopify_get_all_products_unstable_test($token, $shop, $page, $all){
 					cursor
 					node {
 						id
-						title
-						description
-						vendor
-						customProductType
-						productType
-						hasOnlyDefaultVariant
-						totalInventory
-						totalVariants
-						status
-						tags
-						createdAt
-						updatedAt
+						
 						
 					}
 				}
@@ -1071,7 +1095,7 @@ function shopify_products_paginated_id($token, $shop, $page, $all){
 	if($page != null && $all == true){
 		//error_log('Querying next 10 items');
 		$query = array("query" => '{
-			products(first:250, after: "'.$page.'") {
+			products(first:10, after: "'.$page.'") {
 				edges {
 					cursor
 					node {

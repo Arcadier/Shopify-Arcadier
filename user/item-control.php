@@ -27,6 +27,7 @@ foreach ($packageCustomFields as $cf) {
     }
 }
 
+
 $auth = array(array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
 $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
 $authDetails =  callAPI("POST", $admin_token, $url, $auth);
@@ -36,11 +37,18 @@ $access_token= $authDetails['Records'][0]['access_token'];
 
 //import Shopify Product count
 $product_count = shopify_product_count($access_token, $shop);
+
+echo $product_count;
 $product_import_speed = $product_count['count']/17;
 //error_log("Import time: ".$product_import_speed." seconds.", 3, "tanoo_log.php");
 
 //import Shopify Products
 $products = shopify_products_paginated($access_token, $shop, null, false);
+
+//$bulk = shopify_get_bulk_item($access_token, $shop);
+
+// echo json_encode($bulk);
+
 
 // if ($products){
 

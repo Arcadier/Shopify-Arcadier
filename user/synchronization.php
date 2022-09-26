@@ -1523,6 +1523,10 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
                         if ($('#m_orders').is(":checked") || $('#m_quantity').is(":checked") || $('#m_details').is(
                                 ":checked") || $('#m_prices').is(":checked")) {
 
+                            removeClass('loadingDiv', 500);
+                            ShowCustomDialog('Alert',
+                                "You will be notified via email once the products sync is completed.");
+
                             $.ajax({
                                 type: "POST",
                                 url: "bulk_sync.php",
@@ -1530,8 +1534,7 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
                                 // data: JSON.stringify(data),
                                 success: function(response) {
                                     console.log(JSON.parse(response));
-                                    removeClass('loadingDiv', 500);
-                                    ShowCustomDialog('Alert', JSON.parse(response));
+
                                 }
                             });
 

@@ -106,9 +106,9 @@ if ($has_variants) {
 
     error_log('variant image ' . json_encode($variant_image));
         
-        count($product_details['product']['options']) == 1 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name'])], 'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => array( "MediaUrl" => $variant_image['src'])) : '';
-        count($product_details['product']['options']) == 2 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'],'Media' => array("MediaUrl" => $variant_image['src'])) : '';
-        count($product_details['product']['options']) == 3 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name']),array('ID' => '', 'Name' => $variant['option3'], 'GroupName' => $product_details['product']['options'][2]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => array( "MediaUrl" => $variant_image['src'])) : '';
+        count($product_details['product']['options']) == 1 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name'])], 'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => array( "MediaUrl" => $variant_image['src']),'Tags' => array("gid://shopify/ProductVariant/" . $variant_id), 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
+        count($product_details['product']['options']) == 2 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'],'Media' => array("MediaUrl" => $variant_image['src']),'Tags' => array("gid://shopify/ProductVariant/" . $id), 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
+        count($product_details['product']['options']) == 3 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name']),array('ID' => '', 'Name' => $variant['option3'], 'GroupName' => $product_details['product']['options'][2]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => array( "MediaUrl" => $variant_image['src']), 'Tags' => array("gid://shopify/ProductVariant/" . $id), 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
     
 
     }
@@ -171,7 +171,7 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
                 "synced_date" => time(),
                 "merchant_guid" => $userId,
                 'arc_item_guid' => $result['ID'],
-                'variant_id' => $variant_id
+                'variant_id' => "gid://shopify/ProductVariant/" . $variant_id
                 
                 ];
 
@@ -192,6 +192,10 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
 
 
                 $response = $arc->createRowEntry($packageId, 'synced_items', $sync_details);
+
+                error_log(json_encode($response));
+
+                
                 //add counter to the total created 
                 //$total_created++;
 
