@@ -496,7 +496,7 @@ if($isMerchant){
             }
 
             function save_mapp(shopify_category_id) {
-
+                console.log(shopify_category_id);
                 var isMerchantAuth = '<?php echo  $isMerchantAuth; ?>';
 
                 if (isMerchantAuth == 'Yes') {
