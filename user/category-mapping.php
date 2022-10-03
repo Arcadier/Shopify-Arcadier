@@ -505,6 +505,7 @@ if($isMerchant){
                     if (shopify_category_id.includes(">")) {
                         shopify_category_name = shopify_category_id.split('>')[0];
                         shopify_div = shopify_category_id.split('>')[1];
+                        shopify_div = shopify_div.replace("'", "\'")
 
                         shopify_category_name = shopify_category_name.replace("_", " ");
                         shopify_category_name = shopify_category_name.replace("And", "&");
@@ -515,10 +516,13 @@ if($isMerchant){
                         shopify_category_name = shopify_category_id;
                     }
 
+                    console.log("Div id: " + shopify_div);
+                    console.log("Category name: " + shopify_category_name);
+
 
 
                     var selected = [];
-                    $("#divison" + shopify_category_id.split('>')[1] + " input:checked").each(function() {
+                    $("#divison" + shopify_div + " input:checked").each(function() {
                         selected.push($(this).attr('id'));
                     });
                     var arcadier_guid = selected.join(",");
