@@ -347,7 +347,7 @@ if($isMerchant){
                                     if(preg_match('/\s/',$shopify_category)){
                                         $shopify_div_ids = preg_replace('/\s+/', '_', $shopify_category);
                                         $shopify_div_ids = str_replace('&', 'and', $shopify_div_ids);
-                                        $shopify_div_ids = str_replace("'", "\'", $shopify_category_nospace);
+                                        // $shopify_div_ids = str_replace("'", "\'", $shopify_category_nospace);
                                         $shopify_div_ids = $shopify_div_ids.'_category';
                                     }
                                     else{
