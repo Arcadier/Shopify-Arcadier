@@ -518,7 +518,7 @@ if($isMerchant){
 
 
                     var selected = [];
-                    $("#divison" + shopify_div + " input:checked").each(function() {
+                    $("#divison" + shopify_category_id.split('>')[1] + " input:checked").each(function() {
                         selected.push($(this).attr('id'));
                     });
                     var arcadier_guid = selected.join(",");
