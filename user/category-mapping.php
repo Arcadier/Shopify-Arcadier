@@ -322,7 +322,7 @@ if($isMerchant){
                                                 if(preg_match('/\s/',$shopify_category)){
                                                     $shopify_category_nospace = str_replace(' ', '_', $shopify_category);
                                                     $shopify_category_nospace = str_replace('&', 'And', $shopify_category_nospace);
-                                                    $shopify_category_nospace = str_replace("'", "\'", $shopify_category_nospace);
+                                                    $shopify_category_nospace = str_replace("'", "-", $shopify_category_nospace);
                                                     echo $shopify_category_nospace.'_category';
                                                 }
                                                 else{
@@ -347,7 +347,7 @@ if($isMerchant){
                                     if(preg_match('/\s/',$shopify_category)){
                                         $shopify_div_ids = str_replace(' ', '_', $shopify_category);
                                         $shopify_div_ids = str_replace('&', 'And', $shopify_div_ids);
-                                        $shopify_div_ids = str_replace("'", "\'", $shopify_div_ids);
+                                        $shopify_div_ids = str_replace("'", "-", $shopify_div_ids);
                                         $shopify_div_ids = $shopify_div_ids.'_category';
                                     }
                                     else{
@@ -357,7 +357,7 @@ if($isMerchant){
                                     $shopify_category_id = $shopify_category.'_category';
                                     $shopify_category_id = str_replace(' ', '_',$shopify_category_id);
                                     $shopify_category_id = str_replace('&', 'And', $shopify_category_id);
-                                    $shopify_category_id = str_replace("'", "\'", $shopify_category_id);
+                                    $shopify_category_id = str_replace("'", "-", $shopify_category_id);
                                     
                                     if(1){?>
                                 <div id="a<?php echo $shopify_div_ids ?>" class="container tab-pane">
@@ -376,8 +376,8 @@ if($isMerchant){
                                                                     $map_arr_unserialize = unserialize($map['Records'][0]['map']);
                                                                     $list = $map_arr_unserialize['list'];
                                                                     foreach($list as $li){ 
-                                                                        if(preg_match('/\'/',$li['shopify_category'])){
-                                                                            $apostrophe_check = str_replace("\'", "'", $li['shopify_category']);
+                                                                        if(preg_match('/-/',$li['shopify_category'])){
+                                                                            $apostrophe_check = str_replace("-", "'", $li['shopify_category']);
                                                                         }
                                                                         else{
                                                                             $apostrophe_check = $shopify_category_id;
@@ -505,11 +505,11 @@ if($isMerchant){
                     if (shopify_category_id.includes(">")) {
                         shopify_category_name = shopify_category_id.split('>')[0];
                         shopify_div = shopify_category_id.split('>')[1];
-                        shopify_div = shopify_div.replace("'", "\'")
+                        shopify_div = shopify_div.replace("'", "-")
 
                         shopify_category_name = shopify_category_name.replace("_", " ");
                         shopify_category_name = shopify_category_name.replace("And", "&");
-                        shopify_category_name = shopify_category_name.replace("\'", "'");
+                        shopify_category_name = shopify_category_name.replace("-", "'");
 
                     } else {
                         shopify_div = shopify_category_id;
