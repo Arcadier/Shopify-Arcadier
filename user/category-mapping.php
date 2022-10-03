@@ -322,6 +322,7 @@ if($isMerchant){
                                                 if(preg_match('/\s/',$shopify_category)){
                                                     $shopify_category_nospace = preg_replace('/\s+/', '_', $shopify_category);
                                                     $shopify_category_nospace = str_replace('&', 'and', $shopify_category_nospace);
+                                                    $shopify_category_nospace = str_replace("'", "\'", $shopify_category_nospace);
                                                     echo $shopify_category_nospace.'_category';
                                                 }
                                                 else{
@@ -346,6 +347,7 @@ if($isMerchant){
                                     if(preg_match('/\s/',$shopify_category)){
                                         $shopify_div_ids = preg_replace('/\s+/', '_', $shopify_category);
                                         $shopify_div_ids = str_replace('&', 'and', $shopify_div_ids);
+                                        $shopify_div_ids = str_replace("'", "\'", $shopify_category_nospace);
                                         $shopify_div_ids = $shopify_div_ids.'_category';
                                     }
                                     else{
@@ -371,7 +373,13 @@ if($isMerchant){
                                                                     $map_arr_unserialize = unserialize($map['Records'][0]['map']);
                                                                     $list = $map_arr_unserialize['list'];
                                                                     foreach($list as $li){ 
-                                                                        if($li['shopify_category'] == $shopify_category_id){
+                                                                        if(preg_match('/\'/',$li['shopify_category'])){
+                                                                            $apostrophe_check = str_replace("\'", "'", $li['shopify_category']);
+                                                                        }
+                                                                        else{
+                                                                            $apostrophe_check = $shopify_category_id;
+                                                                        }
+                                                                        if($li['shopify_category'] == $apostrophe_check){
                                                                             foreach($li['arcadier_guid'] as $arcadier_id){
                                                                                 if($arcadier_category['ID'] == $arcadier_id){
                                                                                     echo checked;
@@ -401,7 +409,7 @@ if($isMerchant){
                                                     if(preg_match('/\s/',$shopify_category)){ 
                                                         $escaped_category_name = str_replace("'", "\'", $shopify_category_id.'>'.$shopify_div_ids); 
                                                     } else { 
-                                                        $escaped_category_name = str_replace("'", "\'", $shopify_category_id); 
+                                                        $escaped_category_name = str_replace("'", "\'", $shopify_category_id);
                                                     } 
                                                 ?>
                                                 onclick="save_mapp('<?php echo $escaped_category_name; ?>');"
