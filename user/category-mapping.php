@@ -407,9 +407,9 @@ if($isMerchant){
                                             <a id="save_map"
                                                 <?php 
                                                     if(preg_match('/\s/',$shopify_category)){ 
-                                                        $escaped_category_name = str_replace("'", "\'", $shopify_category_id.'>'.$shopify_div_ids); 
+                                                        $escaped_category_name = $shopify_category_id.'>'.$shopify_div_ids; 
                                                     } else { 
-                                                        $escaped_category_name = str_replace("'", "\'", $shopify_category_id);
+                                                        $escaped_category_name = $shopify_category_id;
                                                     } 
                                                 ?>
                                                 onclick="save_mapp('<?php echo $escaped_category_name; ?>');"
