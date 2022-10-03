@@ -320,8 +320,8 @@ if($isMerchant){
                                     data-toggle="tab" href="#a<?php 
                                                 //removes whitespaces and symbols, if any 
                                                 if(preg_match('/\s/',$shopify_category)){
-                                                    $shopify_category_nospace = preg_replace('/\s+/', '_', $shopify_category);
-                                                    $shopify_category_nospace = str_replace('&', 'and', $shopify_category_nospace);
+                                                    $shopify_category_nospace = str_replace(' ', '_', $shopify_category);
+                                                    $shopify_category_nospace = str_replace('&', 'And', $shopify_category_nospace);
                                                     $shopify_category_nospace = str_replace("'", "\'", $shopify_category_nospace);
                                                     echo $shopify_category_nospace.'_category';
                                                 }
@@ -345,8 +345,8 @@ if($isMerchant){
                                 <?php foreach($shopify_categories as $shopify_category){
                                     //removes whitespaces and symbols, if any 
                                     if(preg_match('/\s/',$shopify_category)){
-                                        $shopify_div_ids = preg_replace('/\s+/', '_', $shopify_category);
-                                        $shopify_div_ids = str_replace('&', 'and', $shopify_div_ids);
+                                        $shopify_div_ids = str_replace(' ', '_', $shopify_category);
+                                        $shopify_div_ids = str_replace('&', 'And', $shopify_div_ids);
                                         $shopify_div_ids = str_replace("'", "\'", $shopify_div_ids);
                                         $shopify_div_ids = $shopify_div_ids.'_category';
                                     }
@@ -355,6 +355,9 @@ if($isMerchant){
                                     }
                                     
                                     $shopify_category_id = $shopify_category.'_category';
+                                    $shopify_category_id = str_replace(' ', '_',$shopify_category_id);
+                                    $shopify_category_id = str_replace('&', 'And', $shopify_category_id);
+                                    $shopify_category_id = str_replace("'", "\'", $shopify_category_id);
                                     
                                     if(1){?>
                                 <div id="a<?php echo $shopify_div_ids ?>" class="container tab-pane">
@@ -502,10 +505,17 @@ if($isMerchant){
                     if (shopify_category_id.includes(">")) {
                         shopify_category_name = shopify_category_id.split('>')[0];
                         shopify_div = shopify_category_id.split('>')[1];
+
+                        shopify_category_name = shopify_category_name.replace("_", " ");
+                        shopify_category_name = shopify_category_name.replace("And", "&");
+                        shopify_category_name = shopify_category_name.replace("\'", "'");
+
                     } else {
                         shopify_div = shopify_category_id;
                         shopify_category_name = shopify_category_id;
                     }
+
+
 
                     var selected = [];
                     $("#divison" + shopify_div + " input:checked").each(function() {
