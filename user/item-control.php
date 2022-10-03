@@ -21,10 +21,30 @@ $url = $baseUrl . '/api/developer-packages/custom-fields?packageId=' . $packageI
 $packageCustomFields = callAPI("GET", $admin_token, $url, false);
 
 $prods_code = '';
+$sync_items_list_code = '';
+$sync_items_list = '';
 foreach ($packageCustomFields as $cf) {
     if ($cf['Name'] == 'all_items' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
         $prods_code = $cf['Code'];
     }
+    if ($cf['Name'] == 'auto_sync_list' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+       $sync_items_list_code = $cf['Code'];
+    }
+}
+
+if ($result['CustomFields'] != null)  {
+
+    foreach ($result['CustomFields'] as $cf) {
+        if ($cf['Name'] == 'auto_sync_list' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+                    $sync_items_list = $cf['Values'][0];
+                    $sync_items_list = json_decode($sync_items_list,true);
+                   // echo (json_encode($sync_items_list));
+                    break;
+                   
+        }
+    
+    }
+
 }
 
 
@@ -38,13 +58,24 @@ $access_token= $authDetails['Records'][0]['access_token'];
 //import Shopify Product count
 $product_count = shopify_product_count($access_token, $shop);
 
-echo $product_count;
+//echo $product_count;
 $product_import_speed = $product_count['count']/17;
 //error_log("Import time: ".$product_import_speed." seconds.", 3, "tanoo_log.php");
 
 //import Shopify Products
-$products = shopify_products_paginated($access_token, $shop, null, false);
+//$products = shopify_products_paginated($access_token, $shop, null, false);
+//$products = shopify_get_bulk_item($access_token, $shop);
 
+//var_dump(json_decode($products, true));
+
+
+// if ($products) {
+//     error_log(json_encode($products));
+// }
+// //echo json_encode($products);
+
+
+//echo $bulk;
 //$bulk = shopify_get_bulk_item($access_token, $shop);
 
 // echo json_encode($bulk);
@@ -66,42 +97,47 @@ $products = shopify_products_paginated($access_token, $shop, null, false);
 // $result = callAPI("PUT", $admin_token, $url, $data);
 // }
 
-$all_items = '';
-if ($result['CustomFields'] != null)  {
+// $all_items = '';
+// if ($result['CustomFields'] != null)  {
 
-    foreach ($result['CustomFields'] as $cf) {
-        if ($cf['Name'] == 'all_items' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
-                    $all_items = $cf['Values'][0];
-                    break;
-                    //if 1, it is a shopify item else not
-        }
+//     foreach ($result['CustomFields'] as $cf) {
+//         if ($cf['Name'] == 'all_items' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+//                     $all_items = $cf['Values'][0];
+//                     break;
+//                     //if 1, it is a shopify item else not
+//         }
     
-    }
+//     }
 
-$all_items = json_decode($all_items, true);
-//echo 'all items ' .  json_encode($all_items);
+// $all_items = json_decode($all_items, true);
+// //echo 'all items ' .  json_encode($all_items);
 
-}
+// }
 
-if ($all_items){
+// if ($all_items){
     
-    $products  = $all_items;
+//     $products  = $all_items;
 
-}
+// }
 
-$last_cursor ='';
+// $last_cursor ='';
+// $first_cursor = $first_cursor = $products[0]['cursor'];
 
 
-if ($products){
+// if ($products){
 
-    foreach($products as $product){
-    if(!next($products)){
-        $last_cursor = $product['cursor'];
+//     foreach($products as $product){
+//     if(!next($products)){
+//         $last_cursor = $product['cursor'];
 
-    }
-}
+//     }
+//    // if(next($products)){
+        
 
-}
+//     //}
+// }
+
+// }
 
 //echo json_encode($products);
 
@@ -209,6 +245,7 @@ if($isMerchant){
           //  echo 'cat map ' . json_encode($category_map);
             if($category_map['TotalRecords'] == 1){
                 $category_map = $category_map['Records'][0]['map'];
+                $category_map_unserialized = unserialize($category_map);
             }
             else{
                 $category_map = '<b>Not Mapped</b>';
@@ -245,6 +282,10 @@ if($isMerchant){
     <script src="scripts/jquery-ui.min.js"></script>
     <link rel="stylesheet" href="css/jquery-ui.css" />
     <script src="scripts/bootstrap.bundle.min.js"></script>
+    <link href="https://nightly.datatables.net/select/css/select.dataTables.css?_=766c9ac11eda67c01f759bab53b4774d.css"
+        rel="stylesheet" type="text/css" />
+    <script src="https://nightly.datatables.net/select/js/dataTables.select.js?_=766c9ac11eda67c01f759bab53b4774d">
+    </script>
 
     <style>
     .loader,
@@ -334,6 +375,26 @@ if($isMerchant){
         background-color: #2a3142;
     }
 
+    #loadingDiv2 {
+        position: fixed;
+        top: 0;
+        z-index: 9999;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #2a3142;
+    }
+
+    #loadingDiv3 {
+        position: fixed;
+        top: 0;
+        z-index: 9999;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #2a3142;
+    }
+
     ul#side-menu li a img {
         max-width: 16px;
     }
@@ -394,7 +455,7 @@ if($isMerchant){
             '<div id="loadingDiv1"><div style="position: absolute; top: 45%;left: 45%;">Loading <?php echo $product_count['count'] ?> items in about <?php echo round($product_import_speed, 0); ?>s... </div><div class="loader"></div></div>'
         );
     }
-    addLoader1();
+    // addLoader1();
     </script>
     <div id="wrapper">
         <div class="topbar">
@@ -465,9 +526,6 @@ if($isMerchant){
                             <div class="col-sm-6" id="flash_message">
                                 <h4 class="page-title">Item Control</h4>
 
-                                <a href="#" onclick="loadnext250items('<?php echo $last_cursor ?>');" id="show-next"
-                                    cursor-id="<?php echo $last_cursor ?>"> Show Next 250 Items
-                                </a>
 
                             </div>
                             <div id="dialog" title="Alert message" style="display: none">
@@ -482,10 +540,21 @@ if($isMerchant){
                         </div>
                     </div>
                     <!-- end row -->
-                    <div class="row">
+                    <div class="row" id="app">
+
+                        <input type="hidden" id="user-id" value="<?php echo $_GET['user'] ?>" />
+                        <input type="hidden" id="package-id" value="<?php echo $packageId ?>" />
+                        <input type="hidden" id="category-mapping" value='<?php echo $category_map ?>' />
+                        <input type="hidden" id="sync-list" value='<?php echo json_encode($sync_items_list) ?>' />
+                        <input type="hidden" id="unserialized"
+                            value='<?php echo json_encode($category_map_unserialized) ?>' />
+
+
                         <div class="col-12 p-3 bg-white shadow rounded">
                             <div class="table-responsive">
                                 <!--<table class="table table-bordered table-striped" id="logTable" >-->
+
+
                                 <table class="table hover" id="logTable">
                                     <thead>
                                         <tr>
@@ -494,145 +563,25 @@ if($isMerchant){
                                             <th>Shopify Updated</th>
                                             <th>Arcadier Synced</th>
                                             <th>Shopify Category</th>
-                                            <th>Syncronise</th>
+                                            <th> <input type="checkbox" @click="onSelect" class="selectAll"
+                                                    name="selectAll" value="all"> Select All -
+
+                                                Syncronise </th>
                                             <th>Default Category</th>
                                             <th>Override Default Category</th>
                                             <th>Override Category</th>
                                             <th>Action</th>
+                                            <th>ID</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php foreach($products as $shopify_products){ 
-                                            ?>
-                                        <tr id="<?php echo $shopify_products['node']['id']; ?>">
-                                            <td><?php echo $shopify_products['node']['title']; ?></td>
-                                            <td><?php echo date_format(date_create($shopify_products['node']['createdAt']),"d/m/Y H:i"); ?>
-                                            </td>
-                                            <td><?php echo date_format(date_create($shopify_products['node']['updatedAt']),"d/m/Y H:i"); ?>
-                                            </td>
-                                            <td><?php  //   synced date
-                                                if ( in_array("synced",$shopify_products['node']['tags'] )){
-                                                     echo '<b>Yes</b>';
-                                                }else {
-                                                     echo '<b>No</b>';
-                                                }
-                                            ?></td>
-                                            <td><?php  //Shopify Category
-                                                if($shopify_products['node']['customProductType'] == null){
-                                                    echo $shopify_products['node']['productType'];
-                                                }else{
-                                                    echo $shopify_products['node']['customProductType'];
-                                                }
-                                                    
-                                            ?></td>
-                                            <td>
-                                                <!-- Synchronise checkbox -->
-                                                <div class="custom-control custom-checkbox">
-                                                    <input type="checkbox" name="sync_product" class="sync_product"
-                                                        id="sync_product-<?php echo ltrim($shopify_products['node']['id'],"gid://shopify/Product/"); ?>"
-                                                        data-name="<?php echo $shopify_products['node']['title']; ?>"
-                                                        data-id="<?php echo $shopify_products['node']['id']; ?>">
-                                                    <label class="" for=""><span name="customSpan"></span></label>
-                                                </div>
-                                            </td>
-                                            <td><?php // Arcadier Category Map
-                                                //check if category map has been loaded
-                                                if($category_map != '<b>Not Mapped</b>'){
-                                                    //error_log('Got in the if condition');
-                                                    //get shopify product category
-                                                    if($shopify_products['node']['customProductType'] == null){
-                                                        $shopify_product_category = $shopify_products['node']['productType'];
-                                                    }else{
-                                                        $shopify_product_category = $shopify_products['node']['customProductType'];
-                                                    }
-                                                    //('Product Type: '.$shopify_product_category);
+                                        <!-- <tr>
+                                            <td>{{product.id}}</td>
+                                            <td>{{product.title}}</td>
 
-                                                    //unserialize the map from table
-                                                    //error_log(json_encode($category_map));
-                                                    $category_map_unserialized = unserialize($category_map);
-                                                    //error_log(json_encode($category_map));
-                                                    $shopify_category_list = $category_map_unserialized['list'];
-                                                    //echo 'shopify cat list ' . json_encode($shopify_category_list);
-                                                    //find the corresponding Arcadier category according to map
-                                                    $destination_arcadier_categories = [];
-                                                    foreach($shopify_category_list as $li){
-                                                        if($li['shopify_category'] == $shopify_product_category.'_category'){
-                                                            foreach($li['arcadier_guid'] as $arcadier_category){
-                                                                array_push($destination_arcadier_categories, $arcadier_category);
-                                                            }
-                                                        }
-                                                    }
+                                        </tr> -->
 
-                                                    $category_names = '';
-                                                    $category_div_ids = implode(',',$destination_arcadier_categories);
-                                                    
-                                                    foreach($arcadier_categories as $cat){
 
-                                                        if(in_array($cat['ID'], $destination_arcadier_categories)){
-                                                            $category_names = $category_names.$cat['Name'].' ';
-                                                        }
-                                                    }
-                                                    
-                                                    echo '<div cat-id='.$category_div_ids.'  id=cat-' . ltrim($shopify_products['node']['id'],"gid://shopify/Product/") .' image-src='. $shopify_products['node']['images']['edges'][0]['node']['originalSrc'] .' price=' .  $shopify_products['node']['variants']['edges'][0]['node']['price'] .' qty='. $shopify_products['node']['totalInventory'] .'>'.$category_names.'</div>';
-                                                }
-                                                else{
-                                                    echo $category_map;
-                                                }
-                                                ?></td>
-                                            <td>
-                                                <!-- Override Category checkbox -->
-                                                <div>
-                                                    <div class="custom-control custom-checkbox">
-                                                        <?php 
-                                                            // foreach($arcadier_mapped_category_lists as $arcadier_mapped_category_list1){
-                                                            //     $arc_cat_index = array_search($arcadier_mapped_category_list1['ID'],array_column($arc_cat_arr['Records'],"ID"));
-                                                            //     $default_cat = $arc_cat_arr['Records'][$arc_cat_index]["Name"];
-                                                            // }
-                                                        ?>
-                                                        <input type="checkbox" class="sync_product1"
-                                                            name="override_default_category"
-                                                            id="override_default_category-<?php echo ltrim($shopify_products['node']['id'],"gid://shopify/Product/") ?>" />
-                                                        <label class="" for=""><span name="customSpan"></span></label>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <!-- Override Category List -->
-                                                <div>
-                                                    <?php 
-                                                        foreach($arcadier_mapped_category_lists as $arcadier_mapped_category_list2){
-                                                            $arc_cat_index = array_search($arcadier_mapped_category_list2['ID'],array_column($arc_cat_arr['Records'],"ID"));
-                                                            $default_cat = $arc_cat_arr['Records'][$arc_cat_index]["Name"];
-                                                        }
-                                                    ?>
-                                                    <select
-                                                        id="override_default_category_select-<?php echo ltrim($shopify_products['node']['id'],"gid://shopify/Product/"); ?>"
-                                                        name="override_default_category_select" class="chosen-select"
-                                                        data-placeholder="Select Arcadier Category" multiple>
-                                                        <?php 
-                                                            foreach($arcadier_categories as $arcadier_cat){
-                                                                ?>
-                                                        <option value="<?php echo $arcadier_cat['ID']; ?>">
-                                                            <?php echo $arcadier_cat['Name']; ?></option>
-                                                        <?php 
-                                                            } 
-                                                        ?>
-                                                    </select>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <!-- Sync Button -->
-                                                <?php
-
-                                                    $short_id = ltrim($shopify_products['node']['id'],"gid://shopify/Product/");
-                                                ?>
-                                                <a id="save_map"
-                                                    onclick="sync_shopify_product('<?php echo $shopify_products['node']['id']; ?>','<?php echo $shopify_products['node']['title']; ?>','<?php echo $short_id; ?>');"
-                                                    style="margin-left: 25px;border: #0e77d4;box-sizing: border-box;background-color: #333547;border-radius: 6px;color: white;padding: 5px 10px;font-size: 14px; cursor: pointer;">Sync</a>
-                                            </td>
-                                        </tr>
-                                        <?php 
-                                    }?>
                                     </tbody>
                                 </table>
                             </div>
@@ -644,17 +593,567 @@ if($isMerchant){
     </div>
 
     <!-- <footer class="footer text-center"> © 2021. </footer> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.17-beta.0/vue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.js"></script>
     <script src="scripts/metisMenu.min.js"></script>
     <script src="scripts/jquery.slimscroll.js"></script>
     <script src="scripts/waves.min.js"></script>
     <script src="scripts/app.js"></script>
     <script>
-    $(document).ready(function() {
-        $('input[type=checkbox]').click(function() {
-            if (!$(this).is(':checked')) {
-                $('#' + this.id).prop('checked', false);
+    const packageId = $('#packageId').val()
+    const userId = $('#userGuid').val()
+    var shopify = new Vue({
+        el: "#app",
+        data() {
+            return {
+
+                sortOrders: {},
+                results: "",
+                getbulkApiUrl: "all_products_ajax.php",
+                getAutoSyncList: "auto_sync_list.php",
+                bulkUrl: "",
+                productsData: "",
+                data: "",
+                categories: [],
+                protocol: window.location.protocol,
+                baseURL: window.location.hostname,
+                userId: "",
+                packageId: "",
+                category_map: "",
+                unserialized: "",
+                total: "",
+                autoSyncList: "",
+                currentCount: 0
+
+
+
+            };
+        },
+        filters: {
+            capitalize: function(str) {
+                return str.charAt(0).toUpperCase() + str.slice(1);
             }
+        },
+
+        methods: {
+            sortBy: function(key) {
+                var vm = this;
+                vm.sortKey = key;
+                vm.sortOrders[key] = vm.sortOrders[key] * -1;
+            },
+            // JavaScript object
+
+            async loadCSV() {
+                var vm = this;
+                vm.addLoader1();
+
+                vm.bulkUrl = await axios({
+                        method: "post",
+                        url: vm.getbulkApiUrl,
+
+                    })
+                    .then((response) => {
+
+                        vm.bulkUrl = response.data;
+                        console.log(response);
+
+                        vm.readTextFile(vm.bulkUrl, function(text) {
+                            vm.data = text;
+                            if (vm.data) {
+                                console.log(`data ${vm.data}`);
+                                vm.data = vm.data.replaceAll(/\n\n+/ig, `\n`, vm.data)
+
+                                var lines = vm.data.split('\n');
+
+                                var total = lines.length - 1;
+                                vm.total = total;
+                                $.each(lines, function(key, model) {
+                                    // $('body').append(
+                                    //     `<div id="loadingDiv2"><div style="position: absolute; top: 45%;left: 45%;">Loading ${key} ${total} items </div><div class="loader"></div></div>`
+                                    // );
+                                    if (vm.isJsonString(model)) {
+                                        console.log('json')
+                                        // vm.currentCount = key;
+                                        // vm.addLoader(key, total);
+                                        vm.parseJSON(model, total, key);
+                                    } else {
+                                        console.log('not json')
+                                        //$('#loadingDiv2').remove();
+                                        $('#loadingDiv3').remove();
+                                    }
+
+                                })
+                                // removeClass('loadingDiv2', 500);
+                            }
+
+
+                        });
+
+
+                        //$(".data-loader").removeClass("active");
+
+                        // this.$nextTick(() => {
+                        //     $(".table").find("tbody tr:last").hide();
+                        //     // Scroll Down
+                        // });
+                    })
+                    .catch(function(response) {
+                        //handle error
+                        console.log(response);
+                    });
+            },
+            parseJSON(line, total, count) {
+                //$('#loadingDiv2').remove();
+
+
+                vm = this;
+
+
+                let auto_sync_list = JSON.parse(vm.autoSyncList);
+                let itemDetails = JSON.parse(line);
+                let createdAt = new Date(itemDetails.createdAt).toLocaleString()
+                console.log(createdAt);
+                let updatedAt = new Date(itemDetails.updatedAt).toLocaleString()
+                console.log(updatedAt);
+                let category_options;
+                $.each(vm.categories, function(index, option) {
+                    category_options +=
+                        `<option name='${option.Name}' value="${option.ID}">${option.Name}</option>`
+                });
+                let category_maps = '';
+                if (vm.category_map != '<b>Not Mapped</b>') {
+                    let shopify_product_category = itemDetails.productType;
+                    let category_map_unserialized = JSON.parse(vm.unserialized);
+                    let shopify_category_list = category_map_unserialized['list'];
+                    //find the corresponding Arcadier category according to map
+                    let destination_arcadier_categories = [];
+
+                    $.each(shopify_category_list, function(index, li) {
+                        if (li['shopify_category'] == `${shopify_product_category}_category`) {
+                            $.each(li['arcadier_guid'], function(index, arcadier_category) {
+                                destination_arcadier_categories.push(arcadier_category);
+                            })
+                        }
+                    })
+
+                    category_names = '';
+                    category_div_ids = destination_arcadier_categories.join(',');
+
+
+                    $.each(vm.categories, function(index, cat) {
+
+                        if (destination_arcadier_categories.includes(cat['ID'])) {
+                            category_names = `${category_names}${cat['Name']} `;
+
+                        }
+                    })
+
+                    category_maps =
+                        `<div cat-id=${category_div_ids}  id=cat-${itemDetails.id.replace("gid://shopify/Product/", "")}>${category_names}</div>`;
+
+                } else {
+                    category_maps = vm.category_map;
+                }
+
+                let checkStatus = auto_sync_list.includes(itemDetails.id) ? checked = 'checked' : '';
+                let selectedStatus = auto_sync_list.includes(itemDetails.id) ? checked = 'selected' : '';
+
+                //checking if already sync
+
+
+                let isExist = '-'; //vm.checkIfExist(itemDetails.id);
+
+                const tr = $(
+                    `<tr id=${itemDetails.id}><td>${itemDetails.title}</td>
+
+                    <td>${createdAt}</td>
+
+                    <td>${updatedAt}</td>
+
+                    <td>${isExist}</td>
+
+                    <td>${itemDetails.productType}</td>
+
+                    <td> <div class="custom-control custom-checkbox">
+                    <input type="checkbox" name="sync_product" class="sync_product" ${checkStatus}
+                        id="sync_product-${itemDetails.id.replace("gid://shopify/Product/", "")}"
+                        data-name="${itemDetails.title}"
+                        data-id="${itemDetails.id}">
+                        <label class="" for=""><span name="customSpan"></span></label>
+                    </div></td>
+
+                    <td>
+
+                    ${category_maps}
+                    
+                    </td>
+
+                    <td> <div>
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="sync_product1"
+                            name="override_default_category"
+                            id="override_default_category-${itemDetails.id.replace("gid://shopify/Product/", "")}" />
+                        <label class="" for=""><span name="customSpan"></span></label>
+                    </div>
+                    </div></td>
+                    <td>
+
+                     <div>                      
+                        <select
+                            id="override_default_category_select-${itemDetails.id.replace("gid://shopify/Product/", "")}"
+                            name="override_default_category_select" class="chosen-select"
+                            data-placeholder="Select Arcadier Category" multiple>
+                            ${category_options}
+                        </select>
+                    </div>
+                    </td>
+                   
+                    <td> 
+                    <a id="save_map"
+                        onclick="sync_shopify_product('${itemDetails.id}','${itemDetails.title}','${itemDetails.id.replace("gid://shopify/Product/", "")}');"
+                        style="margin-left: 25px;border: #0e77d4;box-sizing: border-box;background-color: #333547;border-radius: 6px;color: white;padding: 5px 10px;font-size: 14px; cursor: pointer;">Sync</a></td>
+                        
+                    <td> 
+                    
+                        ${itemDetails.id}
+
+                    </td>
+                        
+                    </tr>`
+                );
+                var table = $("#logTable").DataTable()
+                var trDOM = table.row.add(tr[0]).draw().node();
+                $(trDOM).addClass(
+                    selectedStatus
+                );
+                // $(`"#${itemDetails.id}"`).addClass(selectedStatus);
+                //document.getElementById(`${itemDetails.id}`).classList.add('.selected');
+
+
+                //table.column([10]).visible(false);
+
+
+                console.log(`count ${count} total ${total}`);
+                vm.currentCount = count;
+                var newtotal = total - 1;
+                // if (count === newtotal) {
+
+                // }
+            },
+            async readTextFile(file, callback) {
+                var rawFile = new XMLHttpRequest();
+                rawFile.overrideMimeType("application/json");
+                rawFile.open("GET", file, true);
+                rawFile.onreadystatechange = function() {
+                    if (rawFile.readyState === 4 && rawFile.status == "200") {
+                        callback(rawFile.responseText);
+                    }
+                }
+                rawFile.send(null);
+            },
+
+            async checkIfExist(prodId) {
+
+                // isExisting = "";
+                var data = [{
+                    'Name': 'product_id',
+                    'Operator': "equal",
+                    "Value": prodId
+                }]
+
+                const isExisting = await axios({
+                        method: "POST",
+                        url: `${vm.protocol}//${vm.baseURL}/api/v2/plugins/${vm.packageId}/custom-tables/synced_items/`,
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+                        data: JSON.stringify(data)
+                    })
+
+                    .then(res => {
+
+                        const items = res.data
+                        const itemsDetails = items.Records[0]
+                        //if existing user, verify the status
+                        if (items.TotalRecords == 1) {
+                            console.log('mapped');
+
+                            return itemsDetails['synced_date'];
+
+                        } else {
+                            console.log('not mapped');
+                            return 'No'
+                        }
+
+                    })
+                // success: function(response) {
+                //     console.log({
+                //         response
+                //     })
+
+
+
+            },
+
+            isJsonString(str) {
+                try {
+                    JSON.parse(str);
+                } catch (e) {
+                    return false;
+                }
+                return true;
+            },
+            addLoader(count, total) {
+                $('body').append(
+                    ` < div id = "loadingDiv2" > < div style = "position: absolute; top: 45%;left: 45%;" > Loading $ {
+                        count
+                    } of $ {
+                        total
+                    }
+                    items < /div><div class="loader"></div > < /div>`
+                );
+            },
+
+            addLoader1() {
+                vm = this;
+                $('body').append(
+                    `<div id="loadingDiv3"><div style="position: absolute; top: 45%;left: 45%;">Initialising all products... </div><div class="loader"></div></div>`
+                );
+            },
+            async onSelect() {
+
+                vm = this;
+                var DT1 = $("#logTable").DataTable();
+                $(".selectAll").on("click", function(e) {
+                    if ($(this).is(":checked")) {
+                        // DT1.rows().select();
+                        $('.sync_product').prop("checked", true);
+
+                        DT1.rows({
+                            search: 'applied'
+                        }).select();
+
+                        var ids = $.map(DT1.rows('.selected').data(), function(item) {
+                            return item[10]
+                        });
+                        console.log(ids)
+
+                        vm.saveAutoSyncProducts(ids);
+
+                        // selectedProducts.concat(ids);
+
+                        // console.log(selectedProducts);
+
+                        // alert(DT1.rows('.selected').data().length + ' row(s) selected');
+
+                        // $.each(ids, function(index, id) {
+                        //     console.log(id);
+                        // })
+
+                    } else {
+                        // DT1.rows().deselect();
+                        $('.sync_product').prop("checked", false);
+                        // $('.sync_product').parents('tr').removeClass('selected');
+
+                        DT1.rows({
+                            search: 'applied'
+                        }).deselect();
+
+                        var ids = $.map(DT1.rows('.selected').data(), function(item) {
+                            return item[10]
+                        });
+                        console.log(ids)
+
+                        vm.saveAutoSyncProducts(ids);
+
+                    }
+                });
+            },
+
+
+            async onImport() {
+
+                vm = this;
+                var DT1 = $("#logTable").DataTable();
+
+                var ids = $.map(DT1.rows('.selected').data(), function(item) {
+                    return item[0]
+                });
+
+                $.each(ids, function(index, id) {
+                    console.log(id);
+                })
+
+
+            },
+
+
+            async saveAutoSyncProducts(productIds) {
+                // var data = {
+                //     'product-list': JSON.stringify(productIds),
+                //     'user-id': vm.userId
+                // }
+
+
+
+                // $.ajax({
+                //     method: "POST",
+                //     url: vm.getAutoSyncList,
+                //     headers: {
+                //         "Content-Type": "application/json"
+                //     },
+
+                //     data: JSON.stringify(data),
+
+                //     success: function(response) {
+                //         console.log({
+                //             response
+                //         })
+
+
+
+                //     }
+                // })
+
+                vm = this;
+                var data = {
+                    'product-list': JSON.stringify(productIds),
+                    'user-id': vm.userId
+                }
+                vm.autoSyncList = await axios({
+                        method: "post",
+                        url: vm.getAutoSyncList,
+                        data: JSON.stringify(data)
+                    })
+                    .then((response) => {
+                        console.log(response.data)
+                        return response.data;
+
+                    })
+                    .catch(function(response) {
+                        //handle error
+                        console.log(response);
+                    });
+
+
+
+            },
+
+            async getCategoryMapping() {
+
+                vm = this;
+
+                var data = [{
+                    'Name': 'merchant_guid',
+                    'Operator': "equal",
+                    "Value": vm.userId
+                }]
+
+                $.ajax({
+                    method: "POST",
+                    url: `${vm.protocol}//${vm.baseURL}/api/v2/plugins/${vm.packageId}/custom-tables/map/`,
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    data: JSON.stringify(data),
+
+                    success: function(response) {
+                        console.log({
+                            response
+                        })
+
+                        const maps = response
+                        const mapDetails = maps.Records[0]
+                        //if existing user, verify the status
+                        if (maps.TotalRecords == 1) {
+                            console.log('mapped');
+                            return mapDetails['map'];
+
+                        } else {
+                            console.log('not mapped');
+                            return 'Not Mapped';
+                        }
+
+
+
+                    }
+                })
+
+
+
+            }
+        },
+
+        mounted: function() {
+            //  
+
+            this.userId = document.getElementById("user-id").value,
+                this.packageId = document.getElementById("package-id").value,
+                this.loadCSV();
+            this.getCategoryMapping();
+
+            //categories
+            axios({
+                    method: 'GET',
+                    url: `${vm.protocol}//${vm.baseURL}/api/v2/categories?pageSize=1000`,
+
+                }).then(response => {
+                    this.categories = response.data.Records
+                    console.log(this.categories);
+
+                })
+                .catch(function(error) {
+
+                    console.log(error);
+                })
+
+            this.category_map = document.getElementById("category-mapping").value
+            this.unserialized = document.getElementById("unserialized").value,
+                this.autoSyncList = document.getElementById("sync-list").value
+
+
+
+
+            //get the mapping
+
+
+
+
+        },
+
+        // watch: {
+        //     // messages: function(val, oldVal) {
+        //     //     $(".table").find("tbody tr:last").hide();
+        //     //     //Scroll to bottom
+        //     // },
+        // },
+    });
+
+
+
+
+    $(document).ready(function() {
+
+        var selectedProducts = [];
+        var confirmModal =
+            `<div class='popup-area cart-checkout-confirm' id ='plugin-popup'><div class='wrapper'> <div class='title-area text-capitalize'><h1>ARE YOU SURE YOU WANT TO PROCEED?</h1></div><div class='content-area'><span id ='main'>You are about to import <span id="total-items">  </span> products. An email notification will be sent once the import has started and completed.</span> </div><div class='btn-area'> <a href='javascript:void(0)' class='btn-black-cmn' id='btn-cancel'>Cancel</a> <a  class='add-cart-btn' id='btn-sync-all'>Sync</a></div></div></div>`;
+        $('.footer').after(confirmModal);
+
+        // loadAllItemsUrl();
+        $('#plugin-popup #btn-cancel').click(function() {
+            $("#plugin-popup").fadeOut();
+            $("#cover").fadeOut();
         });
+
+        // $('input[type=checkbox]').click(function() {
+        //     if (!$(this).is(':checked')) {
+        //         $('#' + this.id).prop('checked', false);
+        //     }
+        // });
+
+
         $.noConflict();
         $(".chosen-select").chosen({
             width: "125px"
@@ -673,7 +1172,12 @@ if($isMerchant){
             "lengthMenu": [
                 [10, 25, 50, -1],
                 [10, 25, 50, "All"]
-            ]
+            ],
+
+            columnDefs: [{
+                targets: [10],
+                visible: false
+            }]
         });
         myDialog = $("#dialog").dialog({
             // dialog settings:
@@ -681,6 +1185,61 @@ if($isMerchant){
             // ... 
         });
         myDialog.dialog("close");
+
+        //select / unselect each item to be sync
+        document.querySelector("tbody").addEventListener("change", function(e) {
+            if (e.target.type === 'checkbox') {
+                var productId = e.target.parentNode.parentNode.parentNode.id;
+
+                //e.target.parentNode.parentNode.parentNode.classList.add('.main-btn');
+
+                // selectedProducts.push(productId);
+
+                //do something with the product ID or get everything that's been checked,
+
+                var DT1 = $("#logTable").DataTable();
+
+                $('#logTable tbody').on('click', '.sync_product', function() {
+
+
+                    if ($(this).parents('tr').hasClass('selected')) {
+                        $(this).parents('tr').removeClass('selected');
+                    } else {
+                        // DT1.$('tr.selected').removeClass('selected');
+                        $(this).parents('tr').addClass('selected');
+
+                    }
+
+
+                    // var data = table.row(this).data();
+                    //  $(this).parents('tr').addClass('selected');
+                    //  alert('You clicked on ' + data[0] + "'s row");
+                });
+
+                var ids = $.map(DT1.rows('.selected').data(), function(item) {
+                    return item[10]
+                });
+
+                console.log(ids);
+
+                shopify.saveAutoSyncProducts(ids);
+
+            }
+        });
+
+
+        //data table events
+        // var table = $("#logTable").DataTable()
+        // table.on('deselect', function(e, dt, type, indexes) {
+
+        //     console.log(`deselected ${indexes}`)
+
+        // });
+        // table.on('select', function(e, dt, type, indexes) {
+
+
+        //     console.log(`selected ${indexes}`)
+        // });
     });
 
     function ShowCustomDialog(dialogtype, dialogmessage) {
@@ -751,6 +1310,7 @@ if($isMerchant){
     }
 
     function removeClass(div_id, time) {
+
         $("#" + div_id).fadeOut(time, function() {
             $("#" + div_id).remove();
         });
@@ -767,7 +1327,8 @@ if($isMerchant){
             if ($(`#override_default_category-${shortId}`).is(":checked")) {
 
                 //loop through override choices, which are the Arcadier category names
-                $("#override_default_category_select_" + shortId + "_chosen > div.chosen-drop > ul.chosen-results > li")
+                $("#override_default_category_select_" + shortId +
+                        "_chosen > div.chosen-drop > ul.chosen-results > li")
                     .each(function(index, element) {
                         if ($(element).attr("class") == "result-selected") {
                             category_names.push($(element).context.innerHTML);
@@ -782,7 +1343,8 @@ if($isMerchant){
 
                     $(category_ids).each(function(index, element) { //for all category IDs
                         if (element.Name ==
-                            element1) { //if chosen category names are found, pull their ID
+                            element1
+                        ) { //if chosen category names are found, pull their ID
                             override_category_array.push(element.ID);
                             console.log(override_category_array);
                         }
@@ -805,7 +1367,8 @@ if($isMerchant){
                 'qty': $(`#cat-${shortId}`).attr('qty')
             };
             // console.table(data);
-            $('body').append('<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
+            $('body').append(
+                '<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
 
             $.ajax({
                 type: "POST",
@@ -849,8 +1412,10 @@ if($isMerchant){
 
 
     function sync_product(sku, name, id) {
-        var configRowByMerchantGuid_min_sync_limit = '<?php echo $configRowByMerchantGuid["min_sync_limit"]; ?>';
-        var configRowByMerchantGuid_min_sync_limit1 = parseInt(configRowByMerchantGuid_min_sync_limit);
+        var configRowByMerchantGuid_min_sync_limit =
+            '<?php echo $configRowByMerchantGuid["min_sync_limit"]; ?>';
+        var configRowByMerchantGuid_min_sync_limit1 = parseInt(
+            configRowByMerchantGuid_min_sync_limit);
         var mag_product1_count = '<?php echo $mag_product1_count; ?>';
         var mag_product1_count1 = parseInt(mag_product1_count);
         console.log(configRowByMerchantGuid_min_sync_limit);
@@ -864,10 +1429,14 @@ if($isMerchant){
 
         if ($('#sync_product-' + id).is(":checked")) {
             // if (mag_product1_count1 >= configRowByMerchantGuid_min_sync_limit1) {
-            var override_default_category_select = $('#override_default_category_select-' + id).val();
-            var arc_user = '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
+            var override_default_category_select = $('#override_default_category_select-' + id)
+                .val();
+            var arc_user =
+                '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
             if ($('#override_default_category-' + id).is(":checked")) {
-                if (override_default_category_select == null || override_default_category_select.length == '0') {
+                if (override_default_category_select == null || override_default_category_select
+                    .length ==
+                    '0') {
                     alert("Please Select Override Category");
                     return false;
                 }
@@ -910,7 +1479,8 @@ if($isMerchant){
                     } else {
                         response = JSON.parse(JSON.stringify(response));
                         var message1 = response.toString();
-                        var message = "The following items did not have their categories mapped: " +
+                        var message =
+                            "The following items did not have their categories mapped: " +
                             message1 + ", and were not created.";
                         ShowCustomDialog('Alert', message);
                     }
@@ -953,7 +1523,8 @@ if($isMerchant){
         var baseUrl = window.location.hostname;
         var token = getCookie('webapitoken');
         var user = $("#userGuid").val();
-        var arc_user1 = '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
+        var arc_user1 =
+            '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
         if (($('#merchantId') && $('#merchantId').length) && (user == arc_user1)) {
             removeClass('loadingDiv1', 500);
             return false;
@@ -1107,6 +1678,200 @@ if($isMerchant){
             }
         })
 
+    }
+
+    function loadprevious250items(cursor) {
+        var apiUrl = 'load_prev_250.php';
+        var data = {
+            cursor
+        }
+
+        $.ajax({
+            url: apiUrl,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(result) {
+
+                location.reload()
+
+                // result =  JSON.parse(result);
+                //     console.log(`result  ${result}`);
+
+                //     if (result == 'success') {
+                //          toastr.success(`Synced order Number: ${orderId}`);
+                //     } else {
+                //         toastr.error(`This order has already been synced`);
+
+                //     }
+
+            },
+            error: function(jqXHR, status, err) {
+                //	toastr.error('Error!');
+            }
+        })
+
+    }
+
+    function loadAllItemsUrl() {
+
+
+        var apiUrl = 'all_products_ajax.php';
+
+        $.ajax({
+            url: apiUrl,
+            method: 'POST',
+            contentType: 'application/json',
+            // data: JSON.stringify(data),
+            success: function(results) {
+
+                console.log(`result ${results}`);
+                // var data;
+                readTextFile(results, function(text) {
+                    data = text;
+
+                    if (data) {
+                        var lines = data.split('\n');
+                        // console.log(lines);
+
+                        $.each(lines, function(key, model) {
+
+                            console.log(JSON.parse(model));
+
+                        })
+                    }
+
+                });
+                // var reader = new FileReader();
+                // reader.readAsText(result);
+                // // Handle errors load
+                // reader.onload = function(event) {
+                //     var csv = event.target.result;
+
+                //     var parse_csv = csvJSON(csv);
+
+                //     console.log(parse_csv)
+
+
+                // };
+                // reader.onerror = function(evt) {
+                //     if (evt.target.error.name == "NotReadableError") {
+                //         alert("Cannot read file !");
+                //     }
+                // };
+
+
+                // var url = results;
+                // $.getJSON(url, function(data) {
+                //     var lines = data.split("\n");
+                //     var result = [];
+                //     lines.map(function(line, indexLine) {
+
+                //         var obj = {};
+                //         var currentline = line;
+                //         console.log(line);
+                //         result.push(obj);
+
+                //     })
+
+
+
+
+
+
+                //     // $.each(data, function(key, model) {
+
+                //     //     console.log(model);
+                //     //     // if (model.key == "INFO") {
+                //     //     //     console.log(model.value)
+                //     //     // }
+                //     // })
+                // });
+
+                //location.reload()
+
+                // result =  JSON.parse(result);
+                //     console.log(`result  ${result}`);
+
+                //     if (result == 'success') {
+                //          toastr.success(`Synced order Number: ${orderId}`);
+                //     } else {
+                //         toastr.error(`This order has already been synced`);
+
+                //     }
+
+            },
+            error: function(jqXHR, status, err) {
+                //	toastr.error('Error!');
+            }
+        })
+
+
+    }
+
+
+
+    function readTextFile(file, callback) {
+        var rawFile = new XMLHttpRequest();
+        rawFile.overrideMimeType("application/json");
+        rawFile.open("GET", file, true);
+        rawFile.onreadystatechange = function() {
+            if (rawFile.readyState === 4 && rawFile.status == "200") {
+                callback(rawFile.responseText);
+            }
+        }
+        rawFile.send(null);
+    }
+
+
+    function csvJSON(csv) {
+        // var vm = this;
+
+        var lines = csv.split("\n");
+        // lines.unshift(counter);
+        // csvcontent =  lines.shift();
+        // vm.count = lines.length - 1;
+        // vm.count = vm.count - 1;
+        var result = [];
+        //for failed results,
+        // var failed_results = [];
+
+
+        //   var headers = lines[0].split(",");
+        //   vm.parse_header = lines[0].split(",");
+
+        //   vm.csvcontent = lines;
+        //   lines[0].split(",").forEach(function (key)
+        //   {
+        //     // counter++;
+        //     vm.sortOrders[key] = 1;
+        //   });
+
+        lines.map(function(line, indexLine) {
+            // if (indexLine < 1) return; // Jump header line
+
+            var obj = {};
+            var currentline; //= line.split(",");
+
+            headers.map(function(header, indexHeader) {
+                obj[header] = currentline[indexHeader];
+            });
+
+            // console.log(obj['Item Name']);
+
+            // //validate if item name is empty
+            // if (obj['Item Name'] == '' || obj['Category ID'] == '' || obj['Merchant ID'] == '' || obj[
+            //     'Price'] == '') {
+            //     failed_results.push(obj);
+            //     vm.failedcount++;
+            // }
+            result.push(obj);
+
+        });
+
+        // result.pop() // remove the last item because undefined values
+
+        return result; // JavaScript object
     }
     </script>
 </body>

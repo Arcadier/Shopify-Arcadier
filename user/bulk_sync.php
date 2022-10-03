@@ -20,7 +20,7 @@ $userId = $result['ID'];
 
 
 $userEmail = $result['Email'];
-
+$userDisplayName = $result['DisplayName'];
 
 $packageId = getPackageID();
 
@@ -67,17 +67,33 @@ $arcadier_categories = $arcadier_categories['Records'];
 
 $time_start = microtime(true);
 $data = array(array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
+error_log(json_encode($data));
+
 $url =  $baseUrl . '/api/v2/plugins/'. $packageId.'/custom-tables/map';
 $category_map  =  callAPI("POST", $admin_token, $url, $data);    
+error_log(json_encode($category_map));
+
 $time_end = microtime(true);
 $execution_time = ($time_end - $time_start);
 //execution time of the script
 error_log('<b>Total Execution Time of getting category mapping:</b> '.$execution_time.' seconds');
 
-
+$product_count = shopify_product_count($access_token, $shop);
+$total = $product_count['count'];
 //step 1. Get all shopify products
 
 //$shopify_products = shopify_get_all_products($access_token, $shop);
+
+//send initial edm to let users know the import has started
+$html = "<html><body> <h2>Import Started</h2> <p style=\"background-color: white\"> Hi $userDisplayName !</p> <br> 
+Your Shopify products import has started at " . date("h:i:sa") . "<br>
+<b> </b> $total products were found. <br>
+<b> You will receive another notification once the import is completed. <br>
+</body> </html>";
+
+$subject= 'Product import started for ' . $shop;
+
+$arc->sendEmail($userEmail, $html, $subject);
 
 $time_start = microtime(true);
 $shopify_products = shopify_get_all_products_unstable_test($access_token, $shop, null, true);
@@ -93,7 +109,7 @@ error_log('<b>Total Execution Time of getting paginated products:</b> '.$executi
 if ($shopify_products) {
     
     $time_start = microtime(true);
-    bulk_sync_items($shopify_products, $access_token, $shop,$baseUrl,$userId,$admin_token, $packageId,$arc, $is_shopify_code,$arcadier_categories,$category_map,$userEmail);
+    bulk_sync_items($shopify_products, $access_token, $shop,$baseUrl,$userId,$admin_token, $packageId,$arc, $is_shopify_code,$arcadier_categories, $category_map,$userEmail);
     $time_end = microtime(true);
     //dividing with 60 will give the execution time in minutes other wise seconds
     $execution_time = ($time_end - $time_start);
@@ -361,7 +377,7 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
 
                 if($category_map['TotalRecords'] == 1){
 
-                    $category_map = $category_map['Records'][0]['map'];
+                    $category_maps = $category_map['Records'][0]['map'];
                         if($product_type == null){
                             $shopify_product_category = $product_type;
                         }else{
@@ -369,7 +385,7 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                         }
                     // echo 'item has been mapped';
                         //echo json_encode($category_map);
-                        $category_map_unserialized = unserialize($category_map);
+                        $category_map_unserialized = unserialize($category_maps);
                         $shopify_category_list = $category_map_unserialized['list'];
                 
                         //find the corresponding Arcadier category according to map
@@ -485,7 +501,7 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
             //send edm here instead
     
             $html = "<html><body> <h2>Import Completed</h2> <p style=\"background-color: white\"> Hi $userEmail !</p> <br> 
-            Your Shopify products that you started importing at <date timestamp> am is now complete. <br>
+            Your Shopify products that you started importing is now complete. <br>
             <b> $total_created </b> products were created. <br>
             <b> $total_changed </b> products were updated. <br>
             </body> </html>";
