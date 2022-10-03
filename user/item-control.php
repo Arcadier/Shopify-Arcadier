@@ -678,8 +678,80 @@ if($isMerchant){
                                         vm.parseJSON(model, total, key);
                                     } else {
                                         console.log('not json')
-                                        //$('#loadingDiv2').remove();
+
+                                        var table = $("#logTable").DataTable()
+                                        table.rows().every(function(rowIdx, tableLoop,
+                                            rowLoop) {
+
+                                            var data = this.data();
+                                            id = data[10];
+
+                                            // var cell = table.cell(this);
+                                            // table.cell(node).data('40');
+
+                                            var data = [{
+                                                'Name': 'product_id',
+                                                'Operator': "equal",
+                                                "Value": id
+                                            }]
+
+                                            const isExisting = axios({
+                                                    method: "POST",
+                                                    url: `${vm.protocol}//${vm.baseURL}/api/v2/plugins/${vm.packageId}/custom-tables/synced_items/`,
+                                                    headers: {
+                                                        "Content-Type": "application/json"
+                                                    },
+
+                                                    data: JSON.stringify(
+                                                        data)
+                                                })
+
+                                                .then(res => {
+
+                                                    const items = res.data
+                                                    const itemsDetails =
+                                                        items.Records[0]
+                                                    //if existing user, verify the status
+                                                    if (items
+                                                        .TotalRecords == 1
+                                                    ) {
+                                                        console.log(
+                                                            'mapped');
+
+                                                        table.cell(rowIdx,
+                                                                3)
+                                                            .data(
+                                                                new Date(
+                                                                    itemsDetails[
+                                                                        'synced_date'
+                                                                    ] * 1000
+                                                                )
+                                                                .format(
+                                                                    "dd/mm/yyyy"
+                                                                )
+                                                            )
+                                                            .draw();
+
+                                                    } else {
+                                                        console.log(
+                                                            'not mapped'
+                                                        );
+                                                        table.cell(rowIdx,
+                                                                3)
+                                                            .data('No')
+                                                            .draw();
+                                                    }
+                                                    // this.data(data)
+                                                });
+                                            //$('#loadingDiv2').remove();
+
+                                        })
+
                                         $('#loadingDiv3').remove();
+
+
+                                        //$('#loadingDiv2').remove();
+
                                     }
 
                                 })
@@ -854,6 +926,7 @@ if($isMerchant){
 
             async checkIfExist(prodId) {
 
+
                 // isExisting = "";
                 var data = [{
                     'Name': 'product_id',
@@ -886,6 +959,25 @@ if($isMerchant){
                             return 'No'
                         }
 
+                        var table = $("#logTable").DataTable()
+                        table.rows().every(function(rowIdx, tableLoop, rowLoop) {
+
+
+                            var data = this.data();
+                            data[2] += ' >> updated in loop' //append a string to every col #2
+                            this.data(data)
+                        })
+
+
+
+                        table.rows().every(function() {
+
+                            var Row = this.data(); //store every row data in a variable
+
+                            console.log(Row[3]); //show Row + Cell index
+
+                        });
+
                     })
                 // success: function(response) {
                 //     console.log({
@@ -895,6 +987,8 @@ if($isMerchant){
 
 
             },
+
+
 
             isJsonString(str) {
                 try {
@@ -1084,6 +1178,9 @@ if($isMerchant){
 
 
             }
+
+
+
         },
 
         mounted: function() {
@@ -1130,8 +1227,6 @@ if($isMerchant){
         //     // },
         // },
     });
-
-
 
 
     $(document).ready(function() {
