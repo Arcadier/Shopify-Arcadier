@@ -321,8 +321,8 @@ if($isMerchant){
                                                 //removes whitespaces and symbols, if any 
                                                 if(preg_match('/\s/',$shopify_category)){
                                                     $shopify_category_nospace = str_replace(' ', '_', $shopify_category);
-                                                    $shopify_category_nospace = str_replace('&', 'And', $shopify_category_nospace);
-                                                    $shopify_category_nospace = str_replace("'", "-", $shopify_category_nospace);
+                                                    // $shopify_category_nospace = str_replace('&', 'And', $shopify_category_nospace);
+                                                    // $shopify_category_nospace = str_replace("'", "-", $shopify_category_nospace);
                                                     echo $shopify_category_nospace.'_category';
                                                 }
                                                 else{
@@ -356,8 +356,8 @@ if($isMerchant){
                                     
                                     $shopify_category_id = $shopify_category.'_category';
                                     $shopify_category_id = str_replace(' ', '_',$shopify_category_id);
-                                    $shopify_category_id = str_replace('&', 'And', $shopify_category_id);
-                                    $shopify_category_id = str_replace("'", "-", $shopify_category_id);
+                                    // $shopify_category_id = str_replace('&', 'And', $shopify_category_id);
+                                    // $shopify_category_id = str_replace("'", "-", $shopify_category_id);
                                     
                                     if(1){?>
                                 <div id="a<?php echo $shopify_div_ids ?>" class="container tab-pane">
@@ -409,13 +409,13 @@ if($isMerchant){
                                                 for each Shopify category:</div>
                                             <a id="save_map"
                                                 <?php 
-                                                    if(preg_match('/\s/',$shopify_category)){ 
-                                                        $escaped_category_name = $shopify_category_id.'>'.$shopify_div_ids; 
-                                                    } else { 
-                                                        $escaped_category_name = $shopify_category_id;
-                                                    } 
+                                                    // if(preg_match('/\s/',$shopify_category)){ 
+                                                    //     $escaped_category_name = $shopify_category_id.'>'.$shopify_div_ids; 
+                                                    // } else { 
+                                                    //     $escaped_category_name = $shopify_category_id;
+                                                    // } 
                                                 ?>
-                                                onclick="save_mapp('<?php echo $escaped_category_name; ?>');"
+                                                class="<?php echo $shopify_category_id; ?>"
                                                 style="border: #0e77d4;box-sizing: border-box;background-color: #333547;border-radius: 6px;color: white;padding: 5px 10px;font-size: 14px; cursor: pointer;">Submit
                                                 Mapping for <?php echo $shopify_category ?></a>
                                         </div>
@@ -445,6 +445,74 @@ if($isMerchant){
                     // ... 
                 });
                 myDialog.dialog("close");
+            });
+
+            $("#save_map").click(function(){
+                console.log("Shopify Product Type: "+ this.className);
+                
+                var isMerchantAuth = '<?php echo  $isMerchantAuth; ?>';
+
+                if (isMerchantAuth == 'Yes') {
+                    addLoader();
+
+                    if (shopify_category_id.includes(">")) {
+                        shopify_category_name = shopify_category_id.split('>')[0];
+                        shopify_div = shopify_category_id.split('>')[1];
+                        shopify_div = shopify_div.replace("'", "-")
+
+                        shopify_category_name = shopify_category_name.replace("_", " ");
+                        shopify_category_name = shopify_category_name.replace("And", "&");
+                        shopify_category_name = shopify_category_name.replace("-", "'");
+
+                    } else {
+                        shopify_div = shopify_category_id;
+                        shopify_category_name = shopify_category_id;
+                    }
+
+                    console.log("Div id: " + shopify_div);
+                    console.log("Category name: " + shopify_category_name);
+
+
+
+                    var selected = [];
+                    $("#divison" + shopify_div + " input:checked").each(function() {
+                        selected.push($(this).attr('id'));
+                    });
+                    var arcadier_guid = selected.join(",");
+                    console.log(arcadier_guid);
+                    var arc_user =
+                        '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
+
+                    var data = {
+                        shopify_category_id: shopify_category_name,
+                        arcadier_guid: arcadier_guid,
+                        cat_map: 'cat_map',
+                        arc_user: arc_user
+                    };
+                    console.log("Map data: " + data);
+                    $.ajax({
+                        type: "POST",
+                        url: "ajaxrequest.php",
+                        contentType: 'application/json',
+                        data: JSON.stringify(data),
+                        success: function(data) {
+                            removeClass('loadingDiv', 500);
+                            if (data == 'Mapped') {
+                                ShowCustomDialog('Success', 'Map Saved');
+                            } else if (data == 'UnMapped') {
+                                ShowCustomDialog('Alert',
+                                    'There was a problem saving your mapping. Please contact marketplace admin.'
+                                );
+                            } else {
+                                ShowCustomDialog('Alert',
+                                    'There was a problem saving your mapping. Please contact marketplace admin.'
+                                );
+                            }
+                        }
+                    });
+                } else {
+                    ShowCustomDialog('Alert', 'Please authenticate first in configuration.');
+                }
             });
 
             function ShowCustomDialog(dialogtype, dialogmessage) {

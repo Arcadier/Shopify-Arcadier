@@ -660,7 +660,7 @@ if($isMerchant){
                         vm.readTextFile(vm.bulkUrl, function(text) {
                             vm.data = text;
                             if (vm.data) {
-                                console.log(`data ${vm.data}`);
+                                // console.log(`data ${vm.data}`);
                                 vm.data = vm.data.replaceAll(/\n\n+/ig, `\n`, vm.data)
 
                                 var lines = vm.data.split('\n');
