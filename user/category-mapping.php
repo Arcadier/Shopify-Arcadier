@@ -328,27 +328,27 @@ if($isMerchant){
 
                         <div class="col-6 p-0 tab-content-box mt-2">
                             <div class="tab-content" style="height: inherit;">
-                                <?php foreach($shopify_categories as $key => $shopify_category){
+                                <?php foreach($shopify_categories as $key => $shopify_category){            //children's toys                     
                                     //removes whitespaces and symbols, if any 
                                     if(preg_match('/\s/',$shopify_category)){
-                                        $shopify_div_ids = str_replace(' ', '_', $shopify_category);
-                                        $shopify_div_ids = str_replace('&', 'And', $shopify_div_ids);
-                                        $shopify_div_ids = str_replace("'", "~", $shopify_div_ids);
-                                        $shopify_div_ids = $shopify_div_ids.'_category';
+                                        $shopify_div_ids = str_replace(' ', '_', $shopify_category);        //children's_toys
+                                        $shopify_div_ids = str_replace('&', 'And', $shopify_div_ids);       //children's_toys
+                                        $shopify_div_ids = str_replace("'", "~", $shopify_div_ids);         //children~s_toys
+                                        $shopify_div_ids = $shopify_div_ids.'_category';                    //children~s_toys_category
                                     }
                                     else{
                                         $shopify_div_ids = $shopify_category.'_category';
                                     }
                                     
-                                    $shopify_category_id = $shopify_category.'_category';
-                                    $shopify_category_id = str_replace(' ', '_',$shopify_category_id);
+                                    $shopify_category_id = $shopify_category.'_category';                    //children~s_toys_category
+                                    $shopify_category_id = str_replace(' ', '_',$shopify_category_id);       //children~s_toys_category
                                     // $shopify_category_id = str_replace('&', 'And', $shopify_category_id);
                                     // $shopify_category_id = str_replace("'", "-", $shopify_category_id);
                                     
                                     if(1){?>
                                 <div id="a<?php echo $key; ?>" class="container tab-pane">
                                     <div class="font-weight-bolder mt-3 mb-3">
-                                        <?php echo "Shopify product type ".$shopify_category." goes to which category?"; ?>
+                                        <?php echo "Shopify product type ".$shopify_category." goes to which category?"; ?>    <!-- children's toys --> 
                                     </div>
                                     <form class="save_map_form category-div">
                                         <?php
@@ -358,26 +358,31 @@ if($isMerchant){
                                         <div class="custom-control custom-checkbox mt-3 mb-3"
                                             id="divison<?php echo $shopify_div_ids; ?>">
                                             <input type="checkbox" <?php 
-                                                                if ($map['Records'][0]['merchant_guid'] == $_GET['user']) {
-                                                                    $map_arr_unserialize = unserialize($map['Records'][0]['map']);
-                                                                    $list = $map_arr_unserialize['list'];
-                                                                    foreach($list as $li){ 
-                                                                        if(preg_match('/-/',$li['shopify_category'])){
-                                                                            $apostrophe_check = str_replace("~", "'", $li['shopify_category']);
-                                                                        }
-                                                                        else{
-                                                                            $apostrophe_check = $shopify_category_id;
-                                                                        }
-                                                                        if($li['shopify_category'] == $apostrophe_check){
-                                                                            foreach($li['arcadier_guid'] as $arcadier_id){
-                                                                                if($arcadier_category['ID'] == $arcadier_id){
-                                                                                    echo checked;
-                                                                                    break;
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                }?> name="arc_category[]" class="arc_category"
+                                                if ($map['Records'][0]['merchant_guid'] == $_GET['user']) {
+                                                    $map_arr_unserialize = unserialize($map['Records'][0]['map']);
+                                                    $list = $map_arr_unserialize['list'];
+
+
+                                                    foreach($list as $li){ 
+                                                        if(preg_match('/~/',$li['shopify_category'])){                                          //children's toys_category
+                                                            $apostrophe_check = str_replace("'", "~", $li['shopify_category']);                 //children~s toys_category
+                                                            $apostrophe_check = str_replace(" ", "_", $li['shopify_category']);                 //children~s_toys_category
+                                                        }
+                                                        else{
+                                                            $apostrophe_check = $shopify_category_id;
+                                                        }
+
+
+                                                        if($li['shopify_category'] == $apostrophe_check){
+                                                            foreach($li['arcadier_guid'] as $arcadier_id){
+                                                                if($arcadier_category['ID'] == $arcadier_id){
+                                                                    echo checked;
+                                                                    break;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }?> name="arc_category[]" class="arc_category"
                                                 id="<?php echo $arcadier_category['ID'];?>" />
                                             <label class="" for=""><?php echo $arcadier_category['Name']; ?></label>
                                         </div>
@@ -460,8 +465,8 @@ if($isMerchant){
                     console.log("Category name: " + shopify_category_name);
 
                     var selected = [];
-                    if(shopify_div_id.includes("'")){
-                        shopify_div_id = shopify_div_id.replace("'", "~");
+                    if(shopify_div.includes("'")){
+                        shopify_div= shopify_div.replace("'", "~");
                     }
                     $("#divison" + shopify_div + " input:checked").each(function() {
                         selected.push($(this).attr('id'));
@@ -478,7 +483,7 @@ if($isMerchant){
                         cat_map: 'cat_map',
                         arc_user: arc_user
                     };
-                    console.log("Map data: " + data);
+                    console.log("Map data: " + JSON.stringify(data));
                     $.ajax({
                         type: "POST",
                         url: "ajaxrequest.php",
