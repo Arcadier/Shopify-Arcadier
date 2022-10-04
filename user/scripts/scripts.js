@@ -41,7 +41,7 @@
     //fix footer's wonky look
     $(document).ready(function ()
     {
-       if (url.indexOf("/merchants/dashboard") >= 0) {
+       if (url.indexOf("/merchants/dashboard") >= 0) { 
 
              userId = window.REDUX_DATA.userReducer.user.ID;
             $('.sidebar-nav').append(`<li id="shopify-link"><a href="#">
