@@ -80,7 +80,7 @@ foreach($result['Orders'] as $order) {
 
         //error_log(json_encode($isOrderSyncResult));
         
-        if ($isOrderSyncResult['TotalRecords'] == 0) {    
+        // if ($isOrderSyncResult['TotalRecords'] == 0) {    
 
             //check if the customer already exist,if exist, get the shopify customer id
             //if not, create a new customer, shopify validates duplicate customer via email
@@ -135,10 +135,41 @@ foreach($result['Orders'] as $order) {
             //loop through each cart item details, assuming there are multiple different items on the cart, or some items in the cart are not from shopify
             $all_items = [];
             foreach($order['CartItemDetails'] as $cartItem) {
+
+                 $quantity = $cartItem['Quantity'];
                 
                 $cartItemId =  $cartItem['ID'];
                 $itemId =  $cartItem['ItemDetail']['ID'];
-                $quantity = $cartItem['Quantity'];
+
+                //checking if the item is a variant or not
+                if ($cartItem['ItemDetail']['ParentID'] == null) {
+                    $itemId =  $cartItem['ItemDetail']['ID'];
+
+
+                }else {
+                    $variantId = $cartItem['ItemDetail']['ID'];
+                    $parentId = $cartItem['ItemDetail']['ParentID'];
+                    $url = $baseUrl . '/api/v2/items/' . $parentId;
+                    $item = callAPI("GET", $admin_token, $url, false);
+                    $childItems = $item['ChildItems'];
+                    
+
+                    $filtered = array_filter($childItems, function($value) use ($variantId) {
+                        return $value['ID'] == $variantId;
+                    });
+
+                    $variant_id = ltrim($filtered[1]['AdditionalDetails'], "gid://shopify/ProductVariant/");
+                    
+                    $all_items[] = array('variant_id' => $variant_id,'quantity' => $quantity);
+                    
+                    //error_log(json_encode($filtered));
+                    //error_log(json_encode($filtered[1]['AdditionalDetails']));
+                   // error_log(json_encode($filtered['AdditionalDetails']));
+
+                }
+
+        
+               
 
                 //check the details of the item using the item id to check if the item is from shopify
 
@@ -167,9 +198,9 @@ foreach($result['Orders'] as $order) {
                         
                         // echo json_encode($isItemSyncResult);
                         
-                        $variant_id = ltrim($isItemSyncResult['Records'][0]['variant_id'],"gid://shopify/ProductVariant/");     
+                       // $variant_id = ltrim($isItemSyncResult['Records'][0]['variant_id'],"gid://shopify/ProductVariant/");     
 
-                        $all_items[] = array('variant_id' => $variant_id,'quantity' => $quantity);
+                        
                                   
                     }   
                 }
@@ -274,9 +305,9 @@ foreach($result['Orders'] as $order) {
 
             echo json_encode('success');
 
-        } else {
-            echo json_encode('This order has been sync');
-        }
+        // } else {
+        //     echo json_encode('This order has been sync');
+        // }
     }        
 }
 
