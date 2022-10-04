@@ -781,7 +781,7 @@ if($isMerchant){
                 vm = this;
 
 
-                let auto_sync_list = JSON.parse(vm.autoSyncList);
+                let auto_sync_list = vm.autoSyncList.length ? JSON.parse(vm.autoSyncList) : '';
                 let itemDetails = JSON.parse(line);
                 let createdAt = new Date(itemDetails.createdAt).toLocaleString()
                 console.log(createdAt);
