@@ -356,7 +356,7 @@ if($isMerchant){
                                                     foreach($arcadier_categories['Records'] as $arcadier_category){
                                                         ?>
                                         <div class="custom-control custom-checkbox mt-3 mb-3"
-                                            id="divison<?php echo $shopify_div_ids; ?>">
+                                            id="divison" shopify-id="<?php echo $shopify_div_ids; ?>">
                                             <input type="checkbox" <?php 
                                                 if ($map['Records'][0]['merchant_guid'] == $_GET['user']) {
                                                     $map_arr_unserialize = unserialize($map['Records'][0]['map']);
@@ -465,10 +465,14 @@ if($isMerchant){
                     console.log("Category name: " + shopify_category_name);
 
                     var selected = [];
-                    if(shopify_div.includes("'")){
-                        shopify_div= shopify_div.replace("'", "~");
-                    }
-                    $("#divison" + shopify_div + " input:checked").each(function() {
+                    // if(shopify_div.includes("'")){
+                    //     shopify_div= shopify_div.replace("'", "~");
+                    // }
+                    console.log("shopify_div: ", shopify_div)
+                    var arcadier_cats = Array.from(document.querySelectorAll(`[shopify-id="`+shopify_div+`"]`));
+                    console.log(arcadier_cats);
+                    $("div " + shopify_div + " input:checked").each(function() {
+                        console.log("Arcadier Categories chosen: ", $(this).attr('id'));
                         selected.push($(this).attr('id'));
                     });
                     

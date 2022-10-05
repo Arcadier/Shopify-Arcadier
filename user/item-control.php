@@ -801,6 +801,9 @@ if($isMerchant){
                     let destination_arcadier_categories = [];
 
                     $.each(shopify_category_list, function(index, li) {
+                        if(li['shopify_category'].indexOf("~") >= 0){
+                            li['shopify_category'].replace("~", "'");
+                        }
                         if (li['shopify_category'] == `${shopify_product_category}_category`) {
                             $.each(li['arcadier_guid'], function(index, arcadier_category) {
                                 destination_arcadier_categories.push(arcadier_category);
