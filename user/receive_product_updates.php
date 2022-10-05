@@ -23,10 +23,17 @@
 	error_log(json_encode($arcadier_item));
 
 
-	//if results are found
+	//if item is found are found
 	if($arcadier_item['TotalRecords'] == 1){
 		$arcadier_item_guid = $arcadier_item['Records'][0]['arc_item_guid'];       //get item guid
 		$arcadier_merchant_guid = $arcadier_item['Records'][0]['merchant_guid'];   //get item merchant guid
+
+		//----------------------------------------------------------------------->//check if item is flagged for syncing <-------------------------------------------------------------------------------
+
+
+
+
+		//----------------------------------------------------------------------->//check if item is flagged for syncing <-------------------------------------------------------------------------------
 
 		//resync item details from shopify
 		resync_item($arcadier_item_guid, $arcadier_merchant_guid, $baseUrl, $admin_token, $packageId);
