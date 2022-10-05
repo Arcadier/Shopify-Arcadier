@@ -78,7 +78,7 @@ foreach($result['Orders'] as $order) {
         $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/synced_orders';
         $isOrderSyncResult =  callAPI("POST", $admin_token, $url, $syncOrders);
 
-        //error_log(json_encode($isOrderSyncResult));
+        error_log('Check if order was in synced_orders table: '.json_encode($isOrderSyncResult));
         
         // if ($isOrderSyncResult['TotalRecords'] == 0) {    
 
@@ -97,6 +97,7 @@ foreach($result['Orders'] as $order) {
                 foreach ($user['CustomFields'] as $cf) {
                     if ($cf['Name'] == 'shopify_customer_id' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
                         $customer_id = $cf['Values'][0];
+                        error_log('Customer\'s shopify ID: '.json_encode($customer_id));
                     }
                 }
             }
@@ -112,6 +113,7 @@ foreach($result['Orders'] as $order) {
 
                 //create the customer
                 $customer =  createCustomer($access_token, $shop, $consumer_fname, $consumer_lname, $consumer_email);
+                error_log('New Customer created: '. json_encode($customer));
 
                 if ($customer) {
 
@@ -129,6 +131,7 @@ foreach($result['Orders'] as $order) {
             
                     $url = $baseUrl . '/api/v2/users/' . $consumer_id ;
                     $result = callAPI("PUT", $admin_token, $url, $data);
+                    error_log('Customer with new custom field:'.json_encode($result));
                 }
             }
 
@@ -152,7 +155,7 @@ foreach($result['Orders'] as $order) {
                     $url = $baseUrl . '/api/v2/items/' . $parentId;
                     $item = callAPI("GET", $admin_token, $url, false);
                     $childItems = $item['ChildItems'];
-                    
+                    error_log('ChildItems: '.json_encode($childItems));
 
                     $filtered = array_filter($childItems, function($value) use ($variantId) {
                         return $value['ID'] == $variantId;
@@ -162,9 +165,9 @@ foreach($result['Orders'] as $order) {
                     
                     $all_items[] = array('variant_id' => $variant_id,'quantity' => $quantity);
                     
-                    //error_log(json_encode($filtered));
-                    //error_log(json_encode($filtered[1]['AdditionalDetails']));
-                   // error_log(json_encode($filtered['AdditionalDetails']));
+                    error_log(json_encode($filtered));
+                    error_log(json_encode($filtered[1]['AdditionalDetails']));
+                    error_log(json_encode($filtered['AdditionalDetails']));
 
                 }
 
@@ -182,6 +185,7 @@ foreach($result['Orders'] as $order) {
                     foreach ($item['CustomFields'] as $cf) {
                         if ($cf['Name'] == 'is_shopify_item' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
                             $is_shopify_item = $cf['Values'][0];
+                            error_log('Is shopify item?'.json_encode($is_shopify_item));
                             //if 1, it is a shopify item else not
                         }
                     }
@@ -229,10 +233,14 @@ foreach($result['Orders'] as $order) {
             }
 
             $latest_fulfilment_status = $order['Statuses'][$latest_key]['Name'];
+            error_log('Lastest FulfilmentStatus:'. json_encode($latest_fulfilment_status));
 
             $order_statuses = status_mapping($latest_fulfilment_status, $latest_payment_status);
             $payment_status = $order_statuses['payment_status'];
             $fulfilment_status = $order_statuses['fulfilment_status'];
+
+            error_log('Payment Status:'.json_encode($payment_status));
+            error_log('Payment Status:'.json_encode($fulfilment_status));
 
 
             $api_endpoint = "/admin/api/2022-04/orders.json";
@@ -273,11 +281,11 @@ foreach($result['Orders'] as $order) {
                                 ]
                             ),
             );
-            //error_log('query '.  json_encode($query));
+            error_log('SHopify Order query: '.  json_encode($query));
 
             $orders = shopify_call($access_token, $shop, "/admin/orders.json", json_encode($query), 'POST',array("Content-Type: application/json"));
 
-            //error_log('orders ' .  json_encode($orders));
+            error_log('Shopify orders API response ' .  json_encode($orders));
 
             $count_details = [
 
@@ -302,6 +310,7 @@ foreach($result['Orders'] as $order) {
             ];
                 
             $response = $arc->createRowEntry($packageId, 'synced_orders', $sync_details);
+            error_log('Arcadier Custom Table response: '.json_encode($response));
 
             echo json_encode('success');
 
