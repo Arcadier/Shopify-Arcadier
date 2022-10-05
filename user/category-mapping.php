@@ -92,13 +92,14 @@ if($isMerchant){
     <title>Wireframe Designs - BootStrap</title>
     <meta content="Admin Dashboard" name="description" />
     <meta content="Themesbrand" name="author" />
+    <link href="css/shopify.css" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="css/category.css">
     <link rel="shortcut icon" href="/images/favicon.ico">
     <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css">
     <link href="css/metismenu.min.css" rel="stylesheet" type="text/css">
     <link href="css/icons.css" rel="stylesheet" type="text/css">
     <link href="css/style.css" rel="stylesheet" type="text/css">
-    <link href="css/shopify.css" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="css/chosen.css" />
 
     <script src="scripts/jquery.min.js"></script>
 
@@ -245,7 +246,14 @@ if($isMerchant){
     function addLoader1() {
         $('body').append('<div style="" id="loadingDiv1"><div class="loader">Loading...</div></div>');
     }
-    addLoader1();
+
+    addLoader2() {
+            // vm = this;
+            $('body').append(
+                '<div style="" id="loadingDiv1"><div class="loader">Successfully mapped category.</div></div>'
+            );
+        },
+        addLoader1();
     </script>
     <div id="wrapper">
         <div class="left side-menu">
@@ -329,8 +337,21 @@ if($isMerchant){
                                     </div>
                                     <div class="sc-category-footer">
                                         <p>Submit your choice for each Shopify category:</p>
-                                        <input type="submit" class="btn btn-dark" value="Submit" @click="onMap">
+
+                                        <button
+                                            style="margin-left: 25px;border: #0e77d4;box-sizing: border-box;background-color: #333547;border-radius: 6px;color: white;padding: 5px 10px;font-size: 14px; cursor: pointer;"
+                                            @click="onMap">Submit</button>
+
                                     </div>
+
+                                    <div class="sc-category-footer">
+
+                                        <p class="text-success" v-if="status == 1" v-text="notification"></p>
+
+                                    </div>
+
+
+
                                 </div>
 
 
@@ -393,7 +414,7 @@ if($isMerchant){
                     }
                     $("#lblMessage").html(content);
 
-                    $j("#dialog").dialog({
+                    $("#dialog").dialog({
                         resizable: false,
                         title: title,
                         modal: true,
@@ -441,7 +462,9 @@ if($isMerchant){
                             userId: "",
                             packageId: "",
                             allMapped: [],
-                            existingMaps: ""
+                            existingMaps: "",
+                            status: '',
+                            notification: ''
 
 
                         };
@@ -529,37 +552,43 @@ if($isMerchant){
                                     let category_name = $(this).attr('data-name');
 
 
-                                    let category_temp_id = $(this).attr('data-category');
+                                    let category_temp_id = $(this).attr(
+                                        'data-category');
 
                                     if (vm.existingMaps) {
-                                        let rendered_category = vm.existingMaps.filter(
-                                            name =>
-                                            name
-                                            .shopify_category ==
-                                            category_name);
+                                        let rendered_category = vm.existingMaps
+                                            .filter(
+                                                name =>
+                                                name
+                                                .shopify_category ==
+                                                category_name);
 
                                         console.log({
                                             rendered_category
                                         });
 
-                                        let selected_arc_categories = rendered_category[0]
+                                        let selected_arc_categories =
+                                            rendered_category[0]
                                             .mapped_arc_categories;
 
                                         $(`#${category_temp_id} .shopify_product_sub_cat`)
                                             .each(
                                                 function() {
 
-                                                    if (selected_arc_categories.length !=
+                                                    if (selected_arc_categories
+                                                        .length !=
                                                         0) {
                                                         // parent.parents('li').addClass('select')
                                                     }
 
 
-                                                    if (selected_arc_categories.includes($(
+                                                    if (selected_arc_categories
+                                                        .includes($(
                                                                 this)
                                                             .attr(
                                                                 'arc-cat-id'))) {
-                                                        $(this).prop("checked", true);
+                                                        $(this).prop("checked",
+                                                            true);
                                                     }
 
                                                 })
@@ -590,13 +619,14 @@ if($isMerchant){
                                 let category_temp_id = $(this).attr('data-category');
 
                                 let selected_arc_categories = [];
-                                $(`#${category_temp_id} .shopify_product_sub_cat`).each(function() {
-                                    if ($(this).is(':checked')) {
-                                        let selected = $(this).attr('arc-cat-id');
-                                        selected_arc_categories.push(selected);
-                                    }
+                                $(`#${category_temp_id} .shopify_product_sub_cat`).each(
+                                    function() {
+                                        if ($(this).is(':checked')) {
+                                            let selected = $(this).attr('arc-cat-id');
+                                            selected_arc_categories.push(selected);
+                                        }
 
-                                })
+                                    })
                                 //use the temp category_temp_id to reference the arc cat div and get the selected arc categories
 
                                 let mapped_category = {
@@ -615,7 +645,10 @@ if($isMerchant){
                         },
                         async onSaveMapped(everything) {
 
+
+                            // addLoader2();
                             var vm = this;
+                            vm.status = ""
                             var data = {
                                 'user-id': vm.userId,
                                 'mapping-data': everything,
@@ -629,6 +662,10 @@ if($isMerchant){
                                 })
                                 .then((response) => {
                                     console.log(response.data);
+                                    // addLoader2();
+                                    // $('loadingDiv1').remove();
+                                    vm.status = 1;
+                                    vm.notification = "Category mapping saved."
                                     ShowCustomDialog('Success', 'Map Saved');
                                 })
                                 .catch(function(response) {
@@ -744,7 +781,8 @@ if($isMerchant){
                         let cat_val = $cat.data("category");
                         if ($cat.is(":checked")) {
                             $(".sc-sub-category-list").removeClass("active");
-                            $(".sc-category-list ul").find('.shopify_product_cat[data-category=' +
+                            $(".sc-category-list ul").find(
+                                '.shopify_product_cat[data-category=' +
                                 cat_val + ']').closest("li").addClass("select");
                             $(".sc-sub-category-list-content div[data-sub-category=" + cat_val +
                                     "]")
@@ -763,7 +801,8 @@ if($isMerchant){
                         if ($('.sc-sub-category-list.active .shopify_product_sub_cat:checked')
                             .length >
                             0) {
-                            $(".sc-category-list ul").find('.shopify_product_cat[data-category=' +
+                            $(".sc-category-list ul").find(
+                                '.shopify_product_cat[data-category=' +
                                 cat_val + ']').closest("li").addClass("select");
                         } else {
                             $(".sc-category-list ul").find('[data-category=' + cat_val + ']')
@@ -880,6 +919,16 @@ if($isMerchant){
                 }
 
                 $(document).ready(function() {
+
+                    var confirmModal =
+                        `<div class='popup-area cart-checkout-confirm' id ='plugin-popup'><div class='wrapper'> <div class='title-area text-capitalize'><h1>Successfully mapped category.</h1></div><div class='btn-area'> <a href='javascript:void(0)' class='btn-black-cmn' id='btn-cancel'>OK</a> </div></div></div>`;
+                    $('.footer').after(confirmModal);
+
+                    // loadAllItemsUrl();
+                    $('#plugin-popup #btn-cancel').click(function() {
+                        $("#plugin-popup").fadeOut();
+                        $("#cover").fadeOut();
+                    });
                     var baseUrl = window.location.hostname;
                     var token = getCookie('webapitoken');
                     var user = $("#userGuid").val();
