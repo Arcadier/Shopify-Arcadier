@@ -73,6 +73,8 @@ $url =  $baseUrl . '/api/v2/plugins/'. $packageId.'/custom-tables/map';
 $category_map  =  callAPI("POST", $admin_token, $url, $data);    
 error_log(json_encode($category_map));
 
+
+
 $time_end = microtime(true);
 $execution_time = ($time_end - $time_start);
 //execution time of the script
@@ -227,18 +229,32 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                         }
                     // echo 'item has been mapped';
                         //echo json_encode($category_map);
-                        $category_map_unserialized = unserialize($category_maps);
-                        $shopify_category_list = $category_map_unserialized['list'];
+                        $category_map_unserialized = json_decode($category_maps, 1);
+                        //error_log($category_maps);
+                        error_log('cat ' . json_encode($category_map_unserialized));
+
+                         $filtered = array_filter($category_map_unserialized, function($value) use ($shopify_product_category) {
+
+                            error_log('val '. json_encode($value));
+                         return $value['shopify_category'] == $shopify_product_category;
+
+
+                         });
+
+
+                        error_log(json_encode($filtered));
+                        
+                        //$shopify_category_list = $category_map_unserialized['list'];
                 
                         //find the corresponding Arcadier category according to map
-                        $destination_arcadier_categories = []; //these are the arcadier category id's needed
-                        foreach($shopify_category_list as $li){
-                            if($li['shopify_category'] == $shopify_product_category.'_category'){
-                                foreach($li['arcadier_guid'] as $arcadier_category){
-                                    array_push($destination_arcadier_categories, $arcadier_category);
-                                }
-                            }
-                        }
+                        $destination_arcadier_categories = $filtered[0]['mapped_arc_categories']; //these are the arcadier category id's needed
+                        // foreach($shopify_category_list as $li){
+                        //     if($li['shopify_category'] == $shopify_product_category.'_category'){
+                        //         foreach($li['arcadier_guid'] as $arcadier_category){
+                        //             array_push($destination_arcadier_categories, $arcadier_category);
+                        //         }
+                        //     }
+                        // }
 
                     //finally create the item with the mapped category
                     $all_categories = [];
@@ -385,18 +401,22 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                         }
                     // echo 'item has been mapped';
                         //echo json_encode($category_map);
-                        $category_map_unserialized = unserialize($category_maps);
-                        $shopify_category_list = $category_map_unserialized['list'];
+                         $category_map_unserialized = json_decode($category_maps, 1);
+                        //error_log($category_maps);
+                        //error_log($category_map_unserialized);
+
+
+                         $filtered = array_filter($category_map_unserialized[0], function($value) use ($shopify_product_category) {
+                          return $value['shopify_category'] == $shopify_product_category;
+                         });
+
+
+                            error_log(json_encode($filtered));
+                        
+                        //$shopify_category_list = $category_map_unserialized['list'];
                 
                         //find the corresponding Arcadier category according to map
-                        $destination_arcadier_categories = []; //these are the arcadier category id's needed
-                        foreach($shopify_category_list as $li){
-                            if($li['shopify_category'] == $shopify_product_category.'_category'){
-                                foreach($li['arcadier_guid'] as $arcadier_category){
-                                    array_push($destination_arcadier_categories, $arcadier_category);
-                                }
-                            }
-                        }
+                        $destination_arcadier_categories = $filtered[0]['mapped_arc_categories']; //these are the arcadier category id's needed
 
                     //finally create the item with the mapped category
                     $all_categories = [];

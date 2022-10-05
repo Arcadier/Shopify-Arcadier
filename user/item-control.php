@@ -544,10 +544,8 @@ if($isMerchant){
 
                         <input type="hidden" id="user-id" value="<?php echo $_GET['user'] ?>" />
                         <input type="hidden" id="package-id" value="<?php echo $packageId ?>" />
-                        <input type="hidden" id="category-mapping" value='<?php echo $category_map ?>' />
+
                         <input type="hidden" id="sync-list" value='<?php echo json_encode($sync_items_list) ?>' />
-                        <input type="hidden" id="unserialized"
-                            value='<?php echo json_encode($category_map_unserialized) ?>' />
 
 
                         <div class="col-12 p-3 bg-white shadow rounded">
@@ -620,10 +618,11 @@ if($isMerchant){
                 userId: "",
                 packageId: "",
                 category_map: "",
-                unserialized: "",
+                //unserialized: "",
                 total: "",
                 autoSyncList: "",
-                currentCount: 0
+                currentCount: 0,
+                existingMaps: ""
 
 
 
@@ -787,45 +786,60 @@ if($isMerchant){
                 console.log(createdAt);
                 let updatedAt = new Date(itemDetails.updatedAt).toLocaleString()
                 console.log(updatedAt);
+
+
                 let category_options;
                 $.each(vm.categories, function(index, option) {
                     category_options +=
                         `<option name='${option.Name}' value="${option.ID}">${option.Name}</option>`
                 });
+
+                let shopify_product_category = itemDetails.productType;
                 let category_maps = '';
-                if (vm.category_map != '<b>Not Mapped</b>') {
-                    let shopify_product_category = itemDetails.productType;
-                    let category_map_unserialized = JSON.parse(vm.unserialized);
-                    let shopify_category_list = category_map_unserialized['list'];
-                    //find the corresponding Arcadier category according to map
-                    let destination_arcadier_categories = [];
+                if (vm.existingMaps) {
+                    let rendered_category = vm.existingMaps.filter(name =>
+                        name
+                        .shopify_category ==
+                        shopify_product_category);
 
-                    $.each(shopify_category_list, function(index, li) {
-                        if (li['shopify_category'] == `${shopify_product_category}_category`) {
-                            $.each(li['arcadier_guid'], function(index, arcadier_category) {
-                                destination_arcadier_categories.push(arcadier_category);
+                    console.log({
+                        rendered_category
+                    });
+
+                    if (rendered_category.length != 0) {
+                        //if (selected_arc_categories.length != 0) {
+                        let selected_arc_categories = rendered_category[0]
+                            .mapped_arc_categories;
+                        // }
+
+
+                        if (selected_arc_categories.length != 0) {
+
+
+                            category_names = '';
+                            category_div_ids = selected_arc_categories
+
+
+                            $.each(vm.categories, function(index, cat) {
+
+                                if (selected_arc_categories.includes(cat['ID'])) {
+                                    category_names = `${category_names}${cat['Name']} `;
+
+                                }
                             })
+
+                            category_maps =
+                                `<div cat-id=${category_div_ids}  id=cat-${itemDetails.id.replace("gid://shopify/Product/", "")}>${category_names}</div>`;
+
+                        } else {
+                            category_maps = 'Not Mapped';
                         }
-                    })
 
-                    category_names = '';
-                    category_div_ids = destination_arcadier_categories.join(',');
+                    }
 
 
-                    $.each(vm.categories, function(index, cat) {
-
-                        if (destination_arcadier_categories.includes(cat['ID'])) {
-                            category_names = `${category_names}${cat['Name']} `;
-
-                        }
-                    })
-
-                    category_maps =
-                        `<div cat-id=${category_div_ids}  id=cat-${itemDetails.id.replace("gid://shopify/Product/", "")}>${category_names}</div>`;
-
-                } else {
-                    category_maps = vm.category_map;
                 }
+
 
                 let checkStatus = auto_sync_list.includes(itemDetails.id) ? checked = 'checked' : '';
                 let selectedStatus = auto_sync_list.includes(itemDetails.id) ? checked = 'selected' : '';
@@ -983,6 +997,44 @@ if($isMerchant){
                 //     console.log({
                 //         response
                 //     })
+
+
+
+            },
+
+            async getExistingMaps(userId) {
+
+                var data = [{
+                    'Name': 'merchant_guid',
+                    'Operator': "equal",
+                    "Value": userId
+                }]
+
+                const isExisting = await axios({
+                        method: "POST",
+                        url: `${vm.protocol}//${vm.baseURL}/api/v2/plugins/${vm.packageId}/custom-tables/map/`,
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+                        data: JSON.stringify(data)
+                    })
+
+                    .then(res => {
+
+                        const mapping = res.data
+                        const mappingDetails = mapping.Records[0]
+
+                        const categoryMapping = mappingDetails.map;
+                        if (categoryMapping) {
+                            vm.existingMaps = JSON.parse(categoryMapping);
+                            console.log(vm.existingMaps);
+                        }
+
+
+
+
+                    })
 
 
 
@@ -1190,9 +1242,10 @@ if($isMerchant){
                 this.packageId = document.getElementById("package-id").value,
                 this.loadCSV();
             this.getCategoryMapping();
+            this.getExistingMaps(vm.userId),
 
-            //categories
-            axios({
+                //categories
+                axios({
                     method: 'GET',
                     url: `${vm.protocol}//${vm.baseURL}/api/v2/categories?pageSize=1000`,
 
@@ -1206,9 +1259,9 @@ if($isMerchant){
                     console.log(error);
                 })
 
-            this.category_map = document.getElementById("category-mapping").value
-            this.unserialized = document.getElementById("unserialized").value,
-                this.autoSyncList = document.getElementById("sync-list").value
+            //this.category_map = document.getElementById("category-mapping").value
+            //this.unserialized = document.getElementById("unserialized").value,
+            this.autoSyncList = document.getElementById("sync-list").value
 
 
 
