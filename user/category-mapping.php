@@ -289,8 +289,7 @@ if($isMerchant){
                         <input type="hidden" id="user-id" value="<?php echo $_GET['user'] ?>" />
                         <input type="hidden" id="package-id" value="<?php echo $plugin_id ?>" />
 
-                        <input type="hidden" id="arcadier-categories"
-                            value='<?php echo json_encode($arcadier_categories) ?>' />
+
 
                         <div class="sc-caegory-flex">
                             <div class="sc-category-list">
@@ -373,6 +372,57 @@ if($isMerchant){
 
 
                 <script>
+                function ShowCustomDialog(dialogtype, dialogmessage) {
+                    ShowDialogBox(dialogtype, dialogmessage, 'Ok', '', 'GoToAssetList', null);
+                }
+
+                function ShowDialogBox(title, content, btn1text, btn2text, functionText, parameterList) {
+                    var btn1css;
+                    var btn2css;
+
+                    if (btn1text == '') {
+                        btn1css = "hidecss";
+                    } else {
+                        btn1css = "showcss";
+                    }
+
+                    if (btn2text == '') {
+                        btn2css = "hidecss";
+                    } else {
+                        btn2css = "showcss";
+                    }
+                    $("#lblMessage").html(content);
+
+                    $j("#dialog").dialog({
+                        resizable: false,
+                        title: title,
+                        modal: true,
+                        width: '400px',
+                        height: 'auto',
+                        bgiframe: false,
+                        hide: {
+                            effect: 'scale',
+                            duration: 400
+                        },
+                        buttons: [{
+                            text: btn1text,
+                            "class": btn1css,
+                            click: function() {
+                                myDialog.dialog("close");
+                            }
+                        }]
+                    });
+                }
+
+                function waitForElement(elementPath, callBack) {
+                    window.setTimeout(function() {
+                        if ($(elementPath).length) {
+                            callBack(elementPath, $(elementPath));
+                        } else {
+                            waitForElement(elementPath, callBack);
+                        }
+                    }, 500);
+                }
                 // vue js component
 
                 var shopify = new Vue({
@@ -435,9 +485,14 @@ if($isMerchant){
 
                                     const categoryMapping = mappingDetails.map;
 
-                                    vm.existingMaps = JSON.parse(categoryMapping);
+                                    if (categoryMapping) {
+                                        vm.existingMaps = JSON.parse(categoryMapping);
 
-                                    console.log(vm.existingMaps);
+                                        console.log(vm.existingMaps);
+
+                                    }
+
+
 
                                 })
 
@@ -463,51 +518,74 @@ if($isMerchant){
                                 });
 
                         },
-
                         async renderExistingMapping() {
                             console.log('render run')
+                            waitForElement('.shopify_product_cat', function() {
 
-                            $('.shopify_product_cat').each(function() {
+                                $('.shopify_product_cat').each(function() {
+                                    let parent = $(this);
 
 
-                                let category_name = $(this).attr('data-name');
+                                    let category_name = $(this).attr('data-name');
 
 
-                                let category_temp_id = $(this).attr('data-category');
-                                let rendered_category = vm.existingMaps.filter(name => name
-                                    .shopify_category ==
-                                    category_name);
+                                    let category_temp_id = $(this).attr('data-category');
 
-                                console.log({
-                                    rendered_category
-                                });
+                                    if (vm.existingMaps) {
+                                        let rendered_category = vm.existingMaps.filter(
+                                            name =>
+                                            name
+                                            .shopify_category ==
+                                            category_name);
 
-                                let selected_arc_categories = rendered_category
-                                    .mapped_arc_categories;
+                                        console.log({
+                                            rendered_category
+                                        });
 
-                                $(`#${category_temp_id} .shopify_product_sub_cat`).each(function() {
+                                        let selected_arc_categories = rendered_category[0]
+                                            .mapped_arc_categories;
 
-                                    if (selected_arc_categories.includes($(this).attr(
-                                            'arc-cat-id'))) {
-                                        $(this).prop("checked", true);
+                                        $(`#${category_temp_id} .shopify_product_sub_cat`)
+                                            .each(
+                                                function() {
+
+                                                    if (selected_arc_categories.length !=
+                                                        0) {
+                                                        // parent.parents('li').addClass('select')
+                                                    }
+
+
+                                                    if (selected_arc_categories.includes($(
+                                                                this)
+                                                            .attr(
+                                                                'arc-cat-id'))) {
+                                                        $(this).prop("checked", true);
+                                                    }
+
+                                                })
+
                                     }
 
-                                })
-                                //use the temp category_temp_id to reference the arc cat div and get the selected arc categories
+                                    //use the temp category_temp_id to reference the arc cat div and get the selected arc categories
 
+
+                                })
 
                             })
 
                         },
-
                         async onMap() {
 
                             vm = this;
+
+                            vm.allMapped = [];
 
                             //get all the shopify categories li element
                             //let all_mapped = [];
 
                             $('.shopify_product_cat').each(function() {
+
+                                console.log('here')
                                 let category_name = $(this).attr('data-name');
                                 let category_temp_id = $(this).attr('data-category');
 
@@ -534,10 +612,7 @@ if($isMerchant){
                             console.log(vm.allMapped);
                             vm.onSaveMapped(vm.allMapped);
 
-
-
                         },
-
                         async onSaveMapped(everything) {
 
                             var vm = this;
@@ -546,7 +621,6 @@ if($isMerchant){
                                 'mapping-data': everything,
 
                             };
-
                             saveMapped = await axios({
                                     method: "post",
                                     url: vm.saveCategories,
@@ -555,6 +629,7 @@ if($isMerchant){
                                 })
                                 .then((response) => {
                                     console.log(response.data);
+                                    ShowCustomDialog('Success', 'Map Saved');
                                 })
                                 .catch(function(response) {
                                     //handle error
@@ -593,6 +668,7 @@ if($isMerchant){
                             this.$nextTick(function() {
 
                                 this.renderExistingMapping()
+
                                 // Code that will run only after the
                                 // entire view has been rendered
                             })
@@ -603,15 +679,8 @@ if($isMerchant){
 
                     },
 
-                    // watch: {
-                    //     // messages: function(val, oldVal) {
-                    //     //     $(".table").find("tbody tr:last").hide();
-                    //     //     //Scroll to bottom
-                    //     // },
-                    // },
+
                 });
-
-
 
 
                 $(window).load(function() {
@@ -802,47 +871,7 @@ if($isMerchant){
                     }
                 });
 
-                function ShowCustomDialog(dialogtype, dialogmessage) {
-                    ShowDialogBox(dialogtype, dialogmessage, 'Ok', '', 'GoToAssetList', null);
-                }
 
-                function ShowDialogBox(title, content, btn1text, btn2text, functionText, parameterList) {
-                    var btn1css;
-                    var btn2css;
-
-                    if (btn1text == '') {
-                        btn1css = "hidecss";
-                    } else {
-                        btn1css = "showcss";
-                    }
-
-                    if (btn2text == '') {
-                        btn2css = "hidecss";
-                    } else {
-                        btn2css = "showcss";
-                    }
-                    $("#lblMessage").html(content);
-
-                    $j("#dialog").dialog({
-                        resizable: false,
-                        title: title,
-                        modal: true,
-                        width: '400px',
-                        height: 'auto',
-                        bgiframe: false,
-                        hide: {
-                            effect: 'scale',
-                            duration: 400
-                        },
-                        buttons: [{
-                            text: btn1text,
-                            "class": btn1css,
-                            click: function() {
-                                myDialog.dialog("close");
-                            }
-                        }]
-                    });
-                }
 
                 function removeClass(div_id, time) {
                     $("#" + div_id).fadeOut(time, function() {
