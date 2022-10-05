@@ -161,13 +161,13 @@ foreach($result['Orders'] as $order) {
                         return $value['ID'] == $variantId;
                     });
 
-                    $variant_id = ltrim($filtered[1]['AdditionalDetails'], "gid://shopify/ProductVariant/");
+                    $variant_id = ltrim($filtered[0]['AdditionalDetails'], "gid://shopify/ProductVariant/");
                     
                     $all_items[] = array('variant_id' => $variant_id,'quantity' => $quantity);
                     
-                    error_log(json_encode($filtered));
-                    error_log(json_encode($filtered[1]['AdditionalDetails']));
-                    error_log(json_encode($filtered['AdditionalDetails']));
+                    error_log('Filtered: '.json_encode($filtered));
+                    // error_log(json_encode($filtered[1]['AdditionalDetails']));
+                    // error_log(json_encode($filtered['AdditionalDetails']));
 
                 }
 

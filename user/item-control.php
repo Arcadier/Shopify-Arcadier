@@ -310,8 +310,8 @@ if($isMerchant){
         -webkit-transform: translateZ(0);
         -ms-transform: translateZ(0);
         transform: translateZ(0);
-        -webkit-animation: load8 <?php echo $product_import_speed ?>s infinite;
-        animation: load8 <?php echo $product_import_speed ?>s infinite;
+        -webkit-animation: load8 3s infinite;
+        animation: load8 3s infinite;
     }
 
     @-webkit-keyframes load8 {
@@ -1064,7 +1064,7 @@ if($isMerchant){
             addLoader1() {
                 vm = this;
                 $('body').append(
-                    `<div id="loadingDiv3"><div style="position: absolute; top: 45%;left: 45%;">Initialising all products... </div><div class="loader"></div></div>`
+                    `<div id="loadingDiv3"><div style="position: absolute; top: 45%;left: 45%;">Checking on all of your Shopify items... <br> This could take some time (Up to 5 minutes.)</div><div class="loader"></div></div>`
                 );
             },
             async onSelect() {
