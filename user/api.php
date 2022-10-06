@@ -645,8 +645,8 @@ class ApiSdk
             $this->adminToken = get_admin_token();
         }
         $url  = $this->baseUrl . '/api/v2/plugins/' . $packageId . '/custom-tables/' . $tableName . '/rows';
-        error_log('url ' . $url);
-        error_log('data' . json_encode($data));
+       // error_log('url ' . $url);
+        //error_log('data' . json_encode($data));
         $response = $this->callAPI("POST", $this->adminToken['access_token'], $url, $data);
         return $response;
     }

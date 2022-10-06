@@ -40,6 +40,26 @@ $total_created = 0;
 $total_unchanged = 0;
 $total_changed = 0;
 
+//$userToken = $_COOKIE["webapitoken"];
+//$url = $baseUrl . '/api/v2/users/'; 
+//$result = callAPI("GET", $userToken, $url, false);
+
+if ($result['CustomFields'] != null)  {
+
+    foreach ($result['CustomFields'] as $cf) {
+        if ($cf['Name'] == 'auto_sync_list' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+                    $sync_items_list = $cf['Values'][0];
+                    $sync_items_list = json_decode($sync_items_list,true);
+                   // echo (json_encode($sync_items_list));
+                    break;
+                   
+        }
+    
+    }
+
+}
+
+error_log(json_encode($sync_items_list));
 
 
 // get the custom field id to tag that the items are from shopify
@@ -67,29 +87,31 @@ $arcadier_categories = $arcadier_categories['Records'];
 
 $time_start = microtime(true);
 $data = array(array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
-error_log(json_encode($data));
+//error_log(json_encode($data));
 
 $url =  $baseUrl . '/api/v2/plugins/'. $packageId.'/custom-tables/map';
 $category_map  =  callAPI("POST", $admin_token, $url, $data);    
-error_log(json_encode($category_map));
+//error_log(json_encode($category_map));
 
 
 
 $time_end = microtime(true);
 $execution_time = ($time_end - $time_start);
 //execution time of the script
-error_log('<b>Total Execution Time of getting category mapping:</b> '.$execution_time.' seconds');
+//error_log('<b>Total Execution Time of getting category mapping:</b> '.$execution_time.' seconds');
 
 $product_count = shopify_product_count($access_token, $shop);
 $total = $product_count['count'];
 //step 1. Get all shopify products
+
+$count_chosen =  count($sync_items_list);
 
 //$shopify_products = shopify_get_all_products($access_token, $shop);
 
 //send initial edm to let users know the import has started
 $html = "<html><body> <h2>Import Started</h2> <p style=\"background-color: white\"> Hi $userDisplayName !</p> <br> 
 Your Shopify products import has started at " . date("h:i:sa") . "<br>
-<b> </b> $total products were found. <br>
+<b> </b> $count_chosen products were found. <br>
 <b> You will receive another notification once the import is completed. <br>
 </body> </html>";
 
@@ -97,44 +119,69 @@ $subject= 'Product import started for ' . $shop;
 
 $arc->sendEmail($userEmail, $html, $subject);
 
-$time_start = microtime(true);
-$shopify_products = shopify_get_all_products_unstable_test($access_token, $shop, null, true);
 
-$time_end = microtime(true);
+//$shopify_products = shopify_get_all_products_unstable_test($access_token, $shop, null, true);
+
+
+//error_log(json_encode($shopify_products));
+
+
 
 //dividing with 60 will give the execution time in minutes other wise seconds
-$execution_time = ($time_end - $time_start);
 
-//execution time of the script
-error_log('<b>Total Execution Time of getting paginated products:</b> '.$execution_time.' seconds');
 
-if ($shopify_products) {
+//if ($shopify_products) {
     
     $time_start = microtime(true);
-    bulk_sync_items($shopify_products, $access_token, $shop,$baseUrl,$userId,$admin_token, $packageId,$arc, $is_shopify_code,$arcadier_categories, $category_map,$userEmail);
+    bulk_sync_items($sync_items_list, $access_token, $shop,$baseUrl,$userId,$admin_token, $packageId,$arc, $is_shopify_code,$arcadier_categories, $category_map,$userEmail);
     $time_end = microtime(true);
     //dividing with 60 will give the execution time in minutes other wise seconds
     $execution_time = ($time_end - $time_start);
 
     //execution time of the script
     error_log('<b>Total Execution Time of getting bulk sync products:</b> '.$execution_time.' seconds');
-}
-
-
-   
+//}
 
 function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $admin_token, $packageId, $arc, $is_shopify_code,$arcadier_categories,$category_map,$userEmail) {
 
     //step 2.  Loop and check if the item has been sync e.g if item exists on synced products custom table
+    $time_start = microtime(true);
+    $productsLink = shopify_get_bulk_item($access_token, $shop);
+
+    $time_end = microtime(true);
+    $execution_time = ($time_end - $time_start);
+
+//execution time of the script
+    error_log('<b>Total Execution Time of getting paginated products:</b> '.$execution_time.' seconds');
+        $fp = @fopen($productsLink, "r");
+        // if ($fp) {
+        //     while (($buffer = fgets($fp)) !== false) {
+        //         //echo $buffer;
+
+        //     $buffer =  json_decode($buffer, true);
+        //         echo $buffer['id'];
+
+                
+        //     }
+        //     if (!feof($fp)) {
+        //         echo "Error: unexpected fgets() fail\n";
+        //     }
+        //     fclose($fp);
+        // }
 
 
     //error_log('prods list ' . json_encode($products));
     $total_variants = 0;
     foreach($products as $product) {
+        // while (($buffer = fgets($fp)) !== false) {
+        //         //echo $buffer;
+
+        // $buffer =  json_decode($buffer, true);
+                //echo $buffer['id'];
 
         //get the shopify id
         $allvariants = [];
-        $product_id = $product['node']['id'];
+        $product_id =  $product; //;$buffer['id'];
         
         $time_start = microtime(true);
         $product_details = shopify_product_details($access_token, $shop, ltrim($product_id,"gid://shopify/Product/"));   // shopify_get_variants($access_token, $shop, $product_id);
@@ -154,7 +201,7 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
 
         $price = $variants[0]['price'];
         $variant_id = $variants[0]['id'];
-        error_log('variant id '. $variant_id);
+       
         $inventory = $variants[0]['inventory_quantity'];
         $sku = $variants[0]['sku'];
 
@@ -195,7 +242,7 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
         $time_end = microtime(true);
         $execution_time = ($time_end - $time_start);
         //execution time of the script
-        error_log('<b>Total Execution Time of checking if the product exists:</b> '.$execution_time.' seconds');
+       // error_log('<b>Total Execution Time of checking if the product exists:</b> '.$execution_time.' seconds');
         
         error_log('exist check ' . $isItemSyncResult['TotalRecords']);
         
@@ -231,39 +278,31 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                         //echo json_encode($category_map);
                         $category_map_unserialized = json_decode($category_maps, 1);
                         //error_log($category_maps);
-                        error_log('cat ' . json_encode($category_map_unserialized));
+                       
+                        //  $filtered = array_filter($category_map_unserialized, function($value) use ($shopify_product_category) {
 
-                         $filtered = array_filter($category_map_unserialized, function($value) use ($shopify_product_category) {
-
-                            error_log('val '. json_encode($value));
-                         return $value['shopify_category'] == $shopify_product_category;
-
-
-                         });
+                        //     error_log('val '. json_encode($value));
+                        //  return $value['shopify_category'] == $shopify_product_category;
 
 
-                        error_log(json_encode($filtered));
-                        
-                        //$shopify_category_list = $category_map_unserialized['list'];
+                        //  });
+                                            
+                        $destination_arcadier_categories = [];
+                         foreach($category_map_unserialized as $category){
+                            if ($category['shopify_category'] == $shopify_product_category) {
+                                $destination_arcadier_categories = $category['mapped_arc_categories'];
+                            }
+                         }
+
+
                 
-                        //find the corresponding Arcadier category according to map
-                        $destination_arcadier_categories = $filtered[0]['mapped_arc_categories']; //these are the arcadier category id's needed
-                        // foreach($shopify_category_list as $li){
-                        //     if($li['shopify_category'] == $shopify_product_category.'_category'){
-                        //         foreach($li['arcadier_guid'] as $arcadier_category){
-                        //             array_push($destination_arcadier_categories, $arcadier_category);
-                        //         }
-                        //     }
-                        // }
-
                     //finally create the item with the mapped category
                     $all_categories = [];
                     foreach($destination_arcadier_categories as $category) {
                             $all_categories[] = array("ID" => $category);
                             
                     }
-                   
-
+                
                     $time_start = microtime(true);
                     $item_details = array(
                         'SKU' =>  $sku,
@@ -297,13 +336,13 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                     $time_end = microtime(true);
                     $execution_time = ($time_end - $time_start);
                     //execution time of the script
-                    error_log('<b>Total Execution Time of saving the item:</b> '.$execution_time.' seconds');
+                   // error_log('<b>Total Execution Time of saving the item:</b> '.$execution_time.' seconds');
                     $result1 = json_encode(['err' => $result]);
                     // error_log($result1);
                     //echo 'item added';
 
                     //update the tag of the item in shopify after a successful item upload
-                    error_log('item id ' .$result['ID']);
+                    //error_log('item id ' .$result['ID']);
                     if ($result['ID']){
 
                        // error_log($result['ID']);
@@ -344,16 +383,16 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                         $time_end = microtime(true);
                         $execution_time = ($time_end - $time_start);
                         //execution time of the script
-                        error_log('<b>Total Execution Time of updating the item custom field:</b> '.$execution_time.' seconds');    
+                      //  error_log('<b>Total Execution Time of updating the item custom field:</b> '.$execution_time.' seconds');    
 
 
                         $time_start = microtime(true);
                         $response = $arc->createRowEntry($packageId, 'synced_items', $sync_details);
-                        error_log('sync to custom table ' . $response);
+                       
                         $time_end = microtime(true);
                         $execution_time = ($time_end - $time_start);
                         //execution time of the script
-                        error_log('<b>Total Execution Time of updating the item synced custom table:</b> '.$execution_time.' seconds');    
+                       // error_log('<b>Total Execution Time of updating the item synced custom table:</b> '.$execution_time.' seconds');    
 
                         
 
@@ -399,24 +438,16 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                         }else{
                             $shopify_product_category = $product_type;
                         }
-                    // echo 'item has been mapped';
-                        //echo json_encode($category_map);
+                   
                          $category_map_unserialized = json_decode($category_maps, 1);
-                        //error_log($category_maps);
-                        //error_log($category_map_unserialized);
+                       
 
-
-                         $filtered = array_filter($category_map_unserialized[0], function($value) use ($shopify_product_category) {
-                          return $value['shopify_category'] == $shopify_product_category;
-                         });
-
-
-                            error_log(json_encode($filtered));
-                        
-                        //$shopify_category_list = $category_map_unserialized['list'];
-                
-                        //find the corresponding Arcadier category according to map
-                        $destination_arcadier_categories = $filtered[0]['mapped_arc_categories']; //these are the arcadier category id's needed
+                        $destination_arcadier_categories = [];
+                         foreach($category_map_unserialized as $category){
+                            if ($category['shopify_category'] == $shopify_product_category) {
+                                $destination_arcadier_categories = $category['mapped_arc_categories'];
+                            }
+                         }
 
                     //finally create the item with the mapped category
                     $all_categories = [];
@@ -491,8 +522,12 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
 
                 }
             }
-        }
+        } //end product loop
 
+        //  if (!feof($fp)) {
+        //         echo "Error: unexpected fgets() fail\n";
+        //     }
+        //     fclose($fp);
 
             $count_details = [
 
@@ -508,13 +543,13 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
             $time_end = microtime(true);
             $execution_time = ($time_end - $time_start);
             //execution time of the script
-            error_log('<b>Total Execution Time of saving the event log to custom table:</b> '.$execution_time.' seconds');
+           // error_log('<b>Total Execution Time of saving the event log to custom table:</b> '.$execution_time.' seconds');
             //next iteration
             echo json_encode('done syncing');
 
             $total_created = $total_created ? $total_created : 0;
             $total_unchanged =  $total_unchanged ?  $total_unchanged : 0;
-            
+            $total_changed =  $total_changed ?  $total_changed  : 0;
             error_log('total variants ' .  $total_variants);
 
             
@@ -534,45 +569,6 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
             
             $arc->sendEmail($userEmail, $html, $subject);
             
-          // $hasnextpage = $products['data']['products']['pageInfo']['hasNextPage'];
-
-           //error_log('has next page ' . $hasnextpage);
-           // if ($hasnextpage){
-
-                // if($hasnextpage != 1) {
-                    
-                   
-                    
-                // }else {
-                //     //error_log('Found more items');
-                //     $productList = $products['data']['products']['edges'];
-                //     foreach($productList as $product){
-                //         if(!next($productList)){
-                //             $last_cursor = $product['cursor'];
-
-                //             $time_start = microtime(true);
-                //             $moreProducts =  shopify_products_paginated_id($access_token, $shop, $last_cursor, true);
-                //             $time_end = microtime(true);
-                //             $execution_time = ($time_end - $time_start);
-                //             //execution time of the script
-                //             error_log('<b>Total Execution Time of getting products from shopify next iteration:</b> '.$execution_time.' seconds');
-                            
-                //             if ($moreProducts) {
-                //                 bulk_sync_items($moreProducts, $access_token, $shop, $baseUrl, $userId, $admin_token, $packageId, $arc, $is_shopify_code);     
-                //             }
-                            
-                            
-                //         }
-                        
-                //     }
-
-                // } 
-
-           // }else {
-           //     echo json_encode('done syncing');    
-           // }
-			
-
     
     }
 

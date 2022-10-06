@@ -16,6 +16,8 @@ $cursor =  $content['cursor'];
 
 
 $userToken = $_COOKIE["webapitoken"];
+
+
 $url = $baseUrl . '/api/v2/users/'; 
 $result = callAPI("GET", $userToken, $url, false);
 //$result = $arc->getUserInfo($_GET['user']);

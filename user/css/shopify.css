@@ -22,7 +22,7 @@
 
 .font-weight-500 {
 	font-weight: 500;
-}
+}sc-sub-category-list-content
 
 .font-weight-bold {
 	font-weight: bold;
@@ -361,7 +361,7 @@ shopify product type
 
 .sc-sub-category-list .sc-sub-category {
 	padding: 15px 10px;
-	height: 250px;
+	height: 800px;
 	overflow-x: hidden;
 	overflow-y: scroll;
 }
