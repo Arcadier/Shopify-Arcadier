@@ -87,23 +87,37 @@ foreach($result['Orders'] as $order) {
             
             $consumer_id = $order['ConsumerDetail']['ID'];
 
-            $url = $baseUrl . '/api/v2/users/' . $consumer_id; 
-            $user = callAPI("GET", $admin_token, $url, false);  
-            $customer_id = '';
+            $shopify_id = '';
+
+            //revising to user custom tables instead to support buyers -> multi store registration
 
 
-            if ($user['CustomFields'] != null)  {
+            $customers = array(array('Name' => 'arc_user_guid', "Operator" => "equal",'Value' => $consumer_id), array('Name' =>
+            'store_name', "Operator" => "equal",'Value' => $shop) );
+            
+            $url = $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/customers';
+            $customerDetails = callAPI("POST", $admin_token, $url,  $customers);
 
-                foreach ($user['CustomFields'] as $cf) {
-                    if ($cf['Name'] == 'shopify_customer_id' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
-                        $customer_id = $cf['Values'][0];
-                        error_log('Customer\'s shopify ID: '.json_encode($customer_id));
-                    }
-                }
+             if ($customerDetails['TotalRecords']  ==  1) {
+
+                $shopify_id = ltrim($customerDetails['Records'][0]['shopify_user_id'],"gid://shopify/Customer/");
+                
             }
+           
+
+        
+            // if ($user['CustomFields'] != null)  {
+
+            //     foreach ($user['CustomFields'] as $cf) {
+            //         if ($cf['Name'] == 'shopify_customer_id' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+            //             $customer_id = $cf['Values'][0];
+            //             error_log('Customer\'s shopify ID: '.json_encode($customer_id));
+            //         }
+            //     }
+            // }
 
             //if no customer id exists, create a new one
-            if (!$customer_id) {
+            if (!$shopify_id) {
 
                 //get the customer details ;
 
@@ -117,21 +131,38 @@ foreach($result['Orders'] as $order) {
 
                 if ($customer) {
 
-                    $customer_id = ltrim($customer,"gid://shopify/Customer/");
+                   $shopify_id = ltrim($customer,"gid://shopify/Customer/");
                     
-                    //save the obtained customer id on user's custom field
-                    $data = [
-                        'CustomFields' => [
-                            [
-                                'Code' => $user_shopify_customerId_code,
-                                'Values' => [ $customer_id ]
-                            ],
-                        ],
-                    ];
+                    //save the obtained customer id on customer's custom table
+
+                        $customer_details = [
+                            
+                            "arc_user_guid" => $consumer_id,
+                            "shopify_user_id"=> $customer,
+                            "store_name" =>  $shop
+
+                            
+                        ];
+
+                    error_log(json_encode($customer_details));
+                    
+
+                    $response = $arc->createRowEntry($packageId, 'customers',  $customer_details);
+                    error_log('customer create ' . json_encode($response));
+                    
+
+                    // $data = [
+                    //     'CustomFields' => [
+                    //         [
+                    //             'Code' => $user_shopify_customerId_code,
+                    //             'Values' => [ $customer_id ]
+                    //         ],
+                    //     ],
+                    // ];
             
-                    $url = $baseUrl . '/api/v2/users/' . $consumer_id ;
-                    $result = callAPI("PUT", $admin_token, $url, $data);
-                    error_log('Customer with new custom field:'.json_encode($result));
+                    // $url = $baseUrl . '/api/v2/users/' . $consumer_id ;
+                    // $result = callAPI("PUT", $admin_token, $url, $data);
+                    // error_log('Customer with new custom field:'.json_encode($result));
                 }
             }
 
@@ -147,8 +178,19 @@ foreach($result['Orders'] as $order) {
                 //checking if the item is a variant or not
                 if ($cartItem['ItemDetail']['ParentID'] == null) {
                     $itemId =  $cartItem['ItemDetail']['ID'];
+                
+                    $syncItems = array(array('Name' => 'arc_item_guid', "Operator" => "equal",'Value' => $itemId));
+                    $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/synced_items';
+                    $isItemSyncResult =  callAPI("POST", $admin_token, $url, $syncItems);
 
+                    // echo json_encode($syncItems);
+                    
+                    // echo json_encode($isItemSyncResult);
+                    
+                    $variant_id = ltrim($isItemSyncResult['Records'][0]['variant_id'],"gid://shopify/ProductVariant/"); 
 
+                    echo 'variant id no variant ' . $variant_id;
+                   
                 }else {
                     $variantId = $cartItem['ItemDetail']['ID'];
                     $parentId = $cartItem['ItemDetail']['ParentID'];
@@ -157,22 +199,24 @@ foreach($result['Orders'] as $order) {
                     $childItems = $item['ChildItems'];
                     error_log('ChildItems: '.json_encode($childItems));
 
-                    $filtered = array_filter($childItems, function($value) use ($variantId) {
-                        return $value['ID'] == $variantId;
-                    });
+                    // $filtered = array_filter($childItems, function($value) use ($variantId) {
+                    //     return $value['ID'] == $variantId;
+                    // });
 
-                    $variant_id = ltrim($filtered[0]['AdditionalDetails'], "gid://shopify/ProductVariant/");
-                    
-                    $all_items[] = array('variant_id' => $variant_id,'quantity' => $quantity);
-                    
-                    error_log('Filtered: '.json_encode($filtered));
-                    // error_log(json_encode($filtered[1]['AdditionalDetails']));
-                    // error_log(json_encode($filtered['AdditionalDetails']));
 
+                    foreach ($childItems as $child) { 
+                        if ($child['ID'] ==  $variantId) {
+                               $variant_id = ltrim($child['AdditionalDetails'], "gid://shopify/ProductVariant/");
+                               break;
+                        }
+                    }
+
+                 
                 }
 
-        
-               
+                $all_items[] = array('variant_id' => $variant_id,'quantity' => $quantity);
+                    
+                    
 
                 //check the details of the item using the item id to check if the item is from shopify
 
@@ -251,7 +295,7 @@ foreach($result['Orders'] as $order) {
                                 "financial_status"=> $payment_status,
                                 "fulfillment_status"=> $fulfilment_status,
                                 "customer" => array(
-                                    "id" => (int)$customer_id
+                                    "id" => (int)$shopify_id
                                 ),
                                 "tags" => "Arcadier",
                                 "note" => $baseUrl,
