@@ -93,6 +93,7 @@ if($isMerchant){
     <meta content="Admin Dashboard" name="description" />
     <meta content="Themesbrand" name="author" />
     <link href="css/shopify.css" rel="stylesheet" type="text/css">
+    <link href="css/seller-style.css" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="css/category.css">
     <link rel="shortcut icon" href="/images/favicon.ico">
     <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css">
@@ -233,6 +234,21 @@ if($isMerchant){
 
 <body>
     <script>
+    function removeClass(div_id, time) {
+        $("#" + div_id).fadeOut(time, function() {
+            $("#" + div_id).remove();
+        });
+    }
+
+
+    function getCookie(name) {
+        var value = '; ' + document.cookie;
+        var parts = value.split('; ' + name + '=');
+        if (parts.length === 2) {
+            return parts.pop().split(';').shift();
+        }
+    }
+
     function addLoader() {
         $('body').append('<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
     }
@@ -247,13 +263,13 @@ if($isMerchant){
         $('body').append('<div style="" id="loadingDiv1"><div class="loader">Loading...</div></div>');
     }
 
-    addLoader2() {
-            // vm = this;
-            $('body').append(
-                '<div style="" id="loadingDiv1"><div class="loader">Successfully mapped category.</div></div>'
-            );
-        },
-        addLoader1();
+    function addLoader2() {
+        // vm = this;
+        $('body').append(
+            '<div style="" id="loadingDiv1"><div class="loader">Successfully mapped category.</div></div>'
+        );
+    }
+    //addLoader1();
     </script>
     <div id="wrapper">
         <div class="left side-menu">
@@ -314,27 +330,194 @@ if($isMerchant){
                             </div>
 
 
-                            <div class="sc-sub-category-list-content"
-                                v-for="(shopify_cats, index) in shopify_categories">
 
-                                <div class="sc-sub-category-list" :data-sub-category="index" :id="index">
+                            <div class="sc-sub-category-list-content"
+                                v-for="(shopify_cats, indexTop) in shopify_categories">
+
+                                <div class="sc-sub-category-list" :data-sub-category="indexTop" :id="indexTop">
                                     <div class="sc-category-header">
                                         <p>Shopify product type <span
                                                 class="text-blue font-weight-bold">{{shopify_cats}}</span> goes to which
                                             category?</p>
                                     </div>
-                                    <div class="sc-sub-category">
+                                    <!-- <div class="sc-sub-category">
                                         <ul class="sub-category">
-                                            <li v-for="arcadier_cats in arcadier_categories">
-                                                <label class="custom-checkbox"> {{arcadier_cats.Name}}
-                                                    <input type="checkbox" name="shopify_product_sub_cat[]"
-                                                        class="shopify_product_sub_cat" :arc-cat-id="arcadier_cats.ID">
-                                                    <span class="custom-checkbox-checkmark"></span>
+                                            <li v-for="arcadier_cats in arcadier_categories"
+                                                class="check-category parent-cat">
+                                                <span class="cat-toggle"
+                                                    v-if="arcadier_cats.ChildCategories.length > 0">
+                                                    <i class="fa fa-angle-up up hide"></i>
+                                                    <i class="fa fa-angle-down down"></i>
+                                                </span>
+                                                <input type="checkbox" name="shopify_product_sub_cat[]"
+                                                    class="shopify_product_sub_cat" :arc-cat-id="arcadier_cats.ID">
+                                                <label :for="arcadier_cats.ID" class="custom-checkbox">
+
                                                 </label>
+                                                <span class="custom-checkbox-checkmark">{{arcadier_cats.Name}}</span>
                                             </li>
 
                                         </ul>
+                                    </div> -->
+
+                                    <div class="sc-sub-category item-form-group un-inputs">
+                                        <div class="col-md-12">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <div class="row">
+                                                        <div class="item-upload-category-container required">
+                                                            <div class="col-md-9">
+                                                                <div class="row cat-search">
+                                                                    <input type="text" class="categorySearch"
+                                                                        name="category-name" value="" maxlength="130">
+                                                                    <i class="fa fa-search" aria-hidden="true"></i>
+                                                                </div>
+                                                            </div>
+                                                            <div class="checkbox-container">
+                                                                <div class="col-md-12">
+                                                                    <div class="row">
+                                                                        <div class="col-md-9">
+                                                                            <div class="row">
+                                                                                <div class="checkbox-selection">
+                                                                                    <span
+                                                                                        class="pull-left selectAll">Select
+                                                                                        all</span>
+                                                                                    <span
+                                                                                        class="pull-right selectNow">Select
+                                                                                        none</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="checkbox-content">
+                                                                            <ul>
+
+                                                                                <li v-for="(arcadier_cats,index) in arcadier_categories"
+                                                                                    class="check-category parent-cat has-child-sub">
+                                                                                    <span class="cat-toggle"
+                                                                                        v-if="arcadier_cats.ChildCategories.length > 0">
+                                                                                        <i
+                                                                                            class="fa fa-angle-up up hide"></i>
+                                                                                        <i
+                                                                                            class="fa fa-angle-down down"></i>
+
+                                                                                    </span>
+                                                                                    <input type="checkbox"
+                                                                                        :id="arcadier_cats.ID + indexTop"
+                                                                                        :arc-cat-id="arcadier_cats.ID"
+                                                                                        class="shopify_product_sub_cat">
+                                                                                    <label
+                                                                                        :for="arcadier_cats.ID + indexTop"></label>
+                                                                                    <span>{{arcadier_cats.Name}}</span>
+                                                                                    <ul class="sub-cat"
+                                                                                        style="display: none;">
+                                                                                        <li v-for="level1 in arcadier_cats.ChildCategories"
+                                                                                            class="check-category parent-sub-cat has-child-sub">
+                                                                                            <input type="checkbox"
+                                                                                                class="shopify_product_sub_cat"
+                                                                                                :id="level1.ID + indexTop"
+                                                                                                :arc-cat-id="level1.ID">
+                                                                                            <label
+                                                                                                :for="level1.ID + indexTop"></label>
+                                                                                            <span>{{level1.Name}}</span>
+
+                                                                                            <ul class="sub-sub-cat"
+                                                                                                v-for="level2 in level1.ChildCategories">
+                                                                                                <li class="check-category parent-sub-sub-cat has-child-sub"
+                                                                                                    v-for="level2 in level1.ChildCategories">
+                                                                                                    <input
+                                                                                                        class="shopify_product_sub_cat"
+                                                                                                        type="checkbox"
+                                                                                                        :id="level2.ID + indexTop"
+                                                                                                        :arc-cat-id="level2.ID">
+                                                                                                    <label
+                                                                                                        :for="level2.ID + indexTop"></label>
+                                                                                                    <span>{{level2.Name}}</span>
+                                                                                                    <!-- <ul
+                                                                                                        class="sub-sub-cat">
+                                                                                                        <li class="check-category parent-sub-sub-cat"
+                                                                                                            style="display: none;">
+                                                                                                            <input
+                                                                                                                type="checkbox"
+                                                                                                                id="checkSubSubCat2a">
+                                                                                                            <label
+                                                                                                                for="checkSubSubCat2a"></label>
+                                                                                                            <span>Catgeory1-sub-sub</span>
+                                                                                                        </li>
+                                                                                                        <li class="check-category parent-sub-sub-cat"
+                                                                                                            style="display: none;">
+                                                                                                            <input
+                                                                                                                type="checkbox"
+                                                                                                                id="checkSubSubCat2b">
+                                                                                                            <label
+                                                                                                                for="checkSubSubCat2b"></label>
+                                                                                                            <span>Catgeory2-sub-sub</span>
+                                                                                                        </li>
+                                                                                                        <li class="check-category parent-sub-sub-cat has-child-sub"
+                                                                                                            style="display: none;">
+                                                                                                            <input
+                                                                                                                type="checkbox"
+                                                                                                                id="checkSubSubCat3c">
+                                                                                                            <label
+                                                                                                                for="checkSubSubCat3c"></label>
+                                                                                                            <span>Catgeory3-sub-sub</span>
+                                                                                                            <ul
+                                                                                                                class="sub-sub-cat">
+                                                                                                                <li class="check-category parent-sub-sub-cat"
+                                                                                                                    style="display: none;">
+                                                                                                                    <input
+                                                                                                                        type="checkbox"
+                                                                                                                        id="checkSubSubCat3cc">
+                                                                                                                    <label
+                                                                                                                        for="checkSubSubCat3cc"></label>
+                                                                                                                    <span>Catgeory3-sub-sub</span>
+                                                                                                                </li>
+                                                                                                                <li class="check-category parent-sub-sub-cat"
+                                                                                                                    style="display: none;">
+                                                                                                                    <input
+                                                                                                                        type="checkbox"
+                                                                                                                        id="checkSubSubCat3ccc">
+                                                                                                                    <label
+                                                                                                                        for="checkSubSubCat3ccc"></label>
+                                                                                                                    <span>Catgeory3-sub-sub</span>
+                                                                                                                </li>
+                                                                                                            </ul>
+                                                                                                            <div
+                                                                                                                class="cat-line">
+                                                                                                            </div>
+                                                                                                        </li>
+                                                                                                    </ul> -->
+                                                                                                    <div
+                                                                                                        class="cat-line">
+                                                                                                    </div>
+                                                                                                </li>
+
+                                                                                            </ul>
+                                                                                            <div class="cat-line"></div>
+                                                                                        </li>
+
+                                                                                    </ul>
+                                                                                    <div class="cat-line"></div>
+                                                                                </li>
+
+
+                                                                            </ul>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
+
+
+
+
+
+
+
                                     <div class="sc-category-footer">
                                         <p>Submit your choice for each Shopify category:</p>
 
@@ -686,13 +869,13 @@ if($isMerchant){
                             //arcadier categories
                             axios({
                                 method: 'GET',
-                                url: `${vm.protocol}//${vm.baseURL}/api/v2/categories?pageSize=1000`,
+                                url: `${vm.protocol}//${vm.baseURL}/api/v2/categories/hierarchy`,
 
                             }).then(response => {
                                 let result = response.data
-                                vm.arcadier_categories = result.Records
+                                vm.arcadier_categories = result
                                 console.log(
-                                    `${vm.arcadier_categories}`
+                                    `hell0 ${vm.arcadier_categories}`
                                 )
 
 
@@ -811,21 +994,99 @@ if($isMerchant){
                         }
                     });
 
+
+
+                    //category selection
+                    $(document.body).on("keyup", ".categorySearch", function() {
+                        //$("#categorySearch").on("keyup", function() {
+                        var value = $(this).val().toLowerCase();
+                        $(".checkbox-content li").filter(function() {
+                            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                        });
+                    });
+
+                    $("li.check-category").each(function() {
+                        var $this = $(this);
+                        if ($this.find('ul').length !== 0) {
+                            $this.addClass("has-child-sub");
+                            $this.find(".cat-toggle .up").removeClass("hide");
+                        }
+                    });
+
+
+                    $("li.check-category.has-child-sub").each(function() {
+                        var $ulFirst = $(this).find("ul").first();
+                        var $ulliFirst1 = $ulFirst.children("li").last().find("label")
+                            .first()
+                            .innerHeight() * 1.5;
+                        var $ulliFirst = $ulFirst.children("li").last().innerHeight();
+                        console.log($ulliFirst);
+                        var newHeight = $ulliFirst + $ulliFirst1;
+                        $(this).append('<div class="cat-line"></div>');
+                        //$(this).find(".cat-line:first").css("height", $(this).height() - newHeight + "px");
+                    });
+
+                    $(document.body).on("click", ".selectAll", function() {
+                        // $("#selectAll").on("click", function() {
+
+                        console.log('clicked');
+                        $('.checkbox-content > ul > li input[type="checkbox"]').prop(
+                            "checked", true);
+                    });
+
+
+                    $(document.body).on("click", ".selectNow", function() {
+                        //$("#selectNow").on("click", function() {
+                        $('.checkbox-content > ul > li input[type="checkbox"]').prop(
+                            "checked", false);
+                    });
+
+                    $(document.body).on("click", '.check-category input[type="checkbox"]',
+                        function() {
+                            // jQuery('.check-category input[type="checkbox"]').click(function() {
+                            if (jQuery(this).is(":checked")) {
+                                jQuery(this).closest('li').find('input[type="checkbox"]').prop(
+                                    "checked",
+                                    true);
+                            } else {
+                                jQuery(this).closest('li').find('input[type="checkbox"]').prop(
+                                    "checked",
+                                    false);
+                            }
+                        });
+
+
+                    $(document.body).on("click", '.cat-toggle > .up', function() {
+                        // $(".cat-toggle > .up").on("click", function() {
+                        var $this = $(this);
+                        var $parent = $this.parents(".parent-cat");
+                        var $findSubCat = $parent.find("ul.sub-cat");
+                        $findSubCat.slideToggle();
+                        $parent.find(".cat-toggle > .down").removeClass("hide");
+                        $this.addClass("hide");
+                    });
+
+
+                    $(document.body).on("click", ".cat-toggle > .down", function() {
+                        // $(".cat-toggle > .down").on("click", function() {
+                        var $this = $(this);
+                        var $parent = $this.parents(".parent-cat");
+                        var $findSubCat = $parent.find("ul.sub-cat");
+                        $findSubCat.slideToggle();
+                        $parent.find(".cat-toggle > .up").removeClass("hide");
+                        $this.addClass("hide");
+                    });
+
+
+
+
+
+
+
+
+
                 });
                 </script>
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
                 <script>
@@ -837,6 +1098,49 @@ if($isMerchant){
                         // ... 
                     });
                     myDialog.dialog("close");
+
+
+
+                    var confirmModal =
+                        `<div class='popup-area cart-checkout-confirm' id ='plugin-popup'><div class='wrapper'> <div class='title-area text-capitalize'><h1>Successfully mapped category.</h1></div><div class='btn-area'> <a href='javascript:void(0)' class='btn-black-cmn' id='btn-cancel'>OK</a> </div></div></div>`;
+                    $('.footer').after(confirmModal);
+
+                    // loadAllItemsUrl();
+                    $('#plugin-popup #btn-cancel').click(function() {
+                        $("#plugin-popup").fadeOut();
+                        $("#cover").fadeOut();
+                    });
+                    var baseUrl = window.location.hostname;
+                    var token = getCookie('webapitoken');
+                    var user = $("#userGuid").val();
+                    var arc_user1 =
+                        '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
+
+                    if (($('#merchantId') && $('#merchantId').length) && (user == arc_user1)) {
+                        removeClass('loadingDiv1', 500);
+                        return false;
+                    } else {
+                        window.location.replace('https://' + baseUrl);
+                    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 });
 
                 $(".save_map").click(function() {
@@ -909,46 +1213,6 @@ if($isMerchant){
                         ShowCustomDialog('Alert', 'Please authenticate first in configuration.');
                     }
                 });
-
-
-
-                function removeClass(div_id, time) {
-                    $("#" + div_id).fadeOut(time, function() {
-                        $("#" + div_id).remove();
-                    });
-                }
-
-                $(document).ready(function() {
-
-                    var confirmModal =
-                        `<div class='popup-area cart-checkout-confirm' id ='plugin-popup'><div class='wrapper'> <div class='title-area text-capitalize'><h1>Successfully mapped category.</h1></div><div class='btn-area'> <a href='javascript:void(0)' class='btn-black-cmn' id='btn-cancel'>OK</a> </div></div></div>`;
-                    $('.footer').after(confirmModal);
-
-                    // loadAllItemsUrl();
-                    $('#plugin-popup #btn-cancel').click(function() {
-                        $("#plugin-popup").fadeOut();
-                        $("#cover").fadeOut();
-                    });
-                    var baseUrl = window.location.hostname;
-                    var token = getCookie('webapitoken');
-                    var user = $("#userGuid").val();
-                    var arc_user1 =
-                        '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
-                    if (($('#merchantId') && $('#merchantId').length) && (user == arc_user1)) {
-                        removeClass('loadingDiv1', 500);
-                        return false;
-                    } else {
-                        window.location.replace('https://' + baseUrl);
-                    }
-                });
-
-                function getCookie(name) {
-                    var value = '; ' + document.cookie;
-                    var parts = value.split('; ' + name + '=');
-                    if (parts.length === 2) {
-                        return parts.pop().split(';').shift();
-                    }
-                }
                 </script>
             </div>
         </div>
