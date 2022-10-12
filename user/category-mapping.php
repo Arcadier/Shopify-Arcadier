@@ -318,7 +318,7 @@ if($isMerchant){
                         <div class="sc-caegory-flex">
                             <div class="sc-category-list">
                                 <ul class="list">
-                                    <li class="" v-for="(shopify_cats,index) in shopify_categories">
+                                    <li class="category-not-map" v-for="(shopify_cats,index) in shopify_categories">
                                         <label class="custom-checkbox"> {{shopify_cats}}
                                             <input type="checkbox" name="shopify_product_cat[]"
                                                 class="shopify_product_cat" :data-category="index"
@@ -956,43 +956,65 @@ if($isMerchant){
                         cancel_remove();
                     });
                 }
+
+
+                function confirm_Submit(ele) {
+                    var $this = $(ele);
+                    $('.category-not-map.select').addClass('category-mapped').removeClass('category-not-map');
+
+                }
                 $(document).ready(function() {
                     $('.onoffswitch input[type=checkbox]').prop("checked", false);
 
+                    $('body').on('click', '.sc-category-list ul li', function() {
+
+                        $('.sc-category-list ul li').removeClass('select');
+                        $(this).addClass('select');
+
+
+                    })
+
                     $('body').on('click', '.shopify_product_cat', function() {
+
                         $cat = $(this);
                         let cat_val = $cat.data("category");
-                        if ($cat.is(":checked")) {
-                            $(".sc-sub-category-list").removeClass("active");
-                            $(".sc-category-list ul").find(
-                                '.shopify_product_cat[data-category=' +
-                                cat_val + ']').closest("li").addClass("select");
-                            $(".sc-sub-category-list-content div[data-sub-category=" + cat_val +
-                                    "]")
-                                .addClass("active");
-                        } else {
-                            $(".sc-category-list ul").find('[data-category=' + cat_val + ']')
-                                .closest(
-                                    "li").removeClass("select");
-                            $(".sc-sub-category-list").removeClass("active");
-                        }
+                        // if ($cat.is(":checked")) {
+                        $(".sc-sub-category-list").removeClass("active");
+                        $(".sc-category-list ul").find(
+                            '.shopify_product_cat[data-category=' +
+                            cat_val + ']').closest("li").addClass("select");
+                        $(".sc-sub-category-list-content div[data-sub-category=" +
+                                cat_val +
+                                "]")
+                            .addClass("active");
+                        // } else {
+                        //     $(".sc-category-list ul").find('[data-category=' + cat_val +
+                        //             ']')
+                        //         .closest(
+                        //             "li").removeClass("select");
+                        //     $(".sc-sub-category-list").removeClass("active");
+                        // }
                     });
 
-                    $('body').on('click', '.sc-sub-category-list-content .active input', function() {
-                        var cat_val = $(this).closest('.sc-sub-category-list').attr(
-                            'data-sub-category');
-                        if ($('.sc-sub-category-list.active .shopify_product_sub_cat:checked')
-                            .length >
-                            0) {
-                            $(".sc-category-list ul").find(
-                                '.shopify_product_cat[data-category=' +
-                                cat_val + ']').closest("li").addClass("select");
-                        } else {
-                            $(".sc-category-list ul").find('[data-category=' + cat_val + ']')
-                                .closest(
-                                    "li").removeClass("select");
-                        }
-                    });
+                    $('body').on('click', '.sc-sub-category-list-content .active input',
+                        function() {
+                            var cat_val = $(this).closest('.sc-sub-category-list').attr(
+                                'data-sub-category');
+                            if ($(
+                                    '.sc-sub-category-list.active .shopify_product_sub_cat:checked'
+                                )
+                                .length >
+                                0) {
+                                // $(".sc-category-list ul").find(
+                                //     '.shopify_product_cat[data-category=' +
+                                //     cat_val + ']').closest("li").addClass("select");
+                            } else {
+                                $(".sc-category-list ul").find('[data-category=' + cat_val +
+                                        ']')
+                                    .closest(
+                                        "li").removeClass("select");
+                            }
+                        });
 
 
 
@@ -1001,7 +1023,8 @@ if($isMerchant){
                         //$("#categorySearch").on("keyup", function() {
                         var value = $(this).val().toLowerCase();
                         $(".checkbox-content li").filter(function() {
-                            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                            $(this).toggle($(this).text().toLowerCase().indexOf(
+                                value) > -1)
                         });
                     });
 
@@ -1076,6 +1099,34 @@ if($isMerchant){
                         $parent.find(".cat-toggle > .up").removeClass("hide");
                         $this.addClass("hide");
                     });
+
+
+                    $('body').on('click',
+                        '.sc-sub-category-list-content .active input.shopify_product_sub_cat',
+                        function() {
+
+                            var cat_val = $(this).closest('.sc-sub-category-list').attr(
+                                'data-sub-category');
+
+                            if ($(
+                                    '.sc-sub-category-list.active .shopify_product_sub_cat:checked'
+                                )
+                                .length >
+                                0) {
+
+                                $(".sc-category-list ul").find(
+                                    '.shopify_product_cat[data-category=' +
+                                    cat_val + ']').closest("li").addClass("select");
+
+                            } else {
+
+                                $(".sc-category-list ul").find('[data-category=' + cat_val +
+                                    ']').closest(
+                                    "li").removeClass("select");
+
+                            }
+
+                        });
 
 
 

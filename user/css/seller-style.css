@@ -5109,3 +5109,11 @@ cursor: pointer;
 .seller-upload-page textarea[readonly],
 .seller-upload-page input[readonly]
 {background-color: #eee !important;}
+
+
+.sc-category-list li.select .custom-checkbox .custom-checkbox-checkmark:after,
+.sc-category-list li.select.category-mapped .custom-checkbox .custom-checkbox-checkmark:after {
+
+	border-color: #fff;
+
+}
