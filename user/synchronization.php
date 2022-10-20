@@ -7,10 +7,17 @@ $arc = new ApiSdk();
 $admin_token = $arc->AdminToken();
 $packageId = getPackageID();
 
+$baseUrl = getMarketplaceBaseUrl();
+
 //retrieve the sync events from custom table
 
+//$all_events =  $arc->getCustomTable($packageId, "sync_events", $admin_token);
 
-$all_events =  $arc->getCustomTable($packageId, "sync_events", $admin_token);
+
+$events= array(array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $_GET['user']));
+$url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/sync_events';
+$all_events =  callAPI("POST", $admin_token, $url,  $events);
+
 
 $arc = new ApiSdk();
 $mag = new MagSdk();

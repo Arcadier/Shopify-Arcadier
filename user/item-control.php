@@ -896,7 +896,7 @@ if($isMerchant){
                    
                     <td> 
                     <a id="save_map"
-                        onclick="sync_shopify_product('${itemDetails.id}','${itemDetails.title}','${itemDetails.id.replace("gid://shopify/Product/", "")}');"
+                        onclick="sync_shopify_product('${itemDetails.id}','${itemDetails.id.replace("gid://shopify/Product/", "")}');"
                         style="margin-left: 25px;border: #0e77d4;box-sizing: border-box;background-color: #333547;border-radius: 6px;color: white;padding: 5px 10px;font-size: 14px; cursor: pointer;">Sync</a></td>
                         
                     <td> 
@@ -1345,16 +1345,22 @@ if($isMerchant){
 
                 //do something with the product ID or get everything that's been checked,
 
+
+
+
+
                 var DT1 = $("#logTable").DataTable();
 
-                $('#logTable tbody').on('click', '.sync_product', function() {
+
+                $('#logTable tbody').on('change', '.sync_product', function() {
 
 
-                    if ($(this).parents('tr').hasClass('selected')) {
-                        $(this).parents('tr').removeClass('selected');
-                    } else {
-                        // DT1.$('tr.selected').removeClass('selected');
+                    if ($(this).is(":checked")) {
                         $(this).parents('tr').addClass('selected');
+                    } else {
+                        //DT1.$('tr.selected').removeClass('selected');
+
+                        $(this).parents('tr').removeClass('selected');
 
                     }
 
@@ -1464,7 +1470,7 @@ if($isMerchant){
         });
     }
 
-    function sync_shopify_product(id, name, shortId) {
+    function sync_shopify_product(id, shortId) {
 
         console.log('syncing');
 
@@ -1507,7 +1513,7 @@ if($isMerchant){
             console.log($(`#cat-${shortId}`).attr('image-src'));
             data = {
                 id,
-                name,
+                //name,
                 'method': 'sync_one',
                 'category': category,
                 'images': $(`#cat-${shortId}`).attr('image-src'),
@@ -1710,61 +1716,64 @@ if($isMerchant){
         arr.forEach((c, i) => $('.sync_product').eq(i).prop('checked', c));
 
         //$(".sync_product").click((elem) => { 
-        $('.sync_product').change(function() {
-            console.log($(this).attr('data-id'));
-            var data_id = $(this).attr('data-id').split(",");
+        // $('.sync_product').change(function() {
+        //     console.log($(this).attr('data-id'));
+        //     var data_id = $(this).attr('data-id').split(",");
 
-            if ($('#' + $(this).attr('id')).is(":checked")) {
-                var cart = JSON.parse(localStorage.getItem('checked_data')) || [];
-                cart.push({
-                    sku1: data_id[0],
-                    name1: data_id[1],
-                    id1: data_id[2],
-                    create_arc_item_manual: 'create_arc_item_manual',
-                    arc_user: data_id[3]
-                });
-                localStorage.setItem("checked_data", JSON.stringify(cart));
-
-
-
-
-            } else {
-                var cart = JSON.parse(localStorage.getItem('checked_data')) || [];
-                var idToDelete = data_id[2];
-                removeById(cart, idToDelete);
-                localStorage.removeItem("checked_data");
-                localStorage.setItem("checked_data", JSON.stringify(cart));
+        //     if ($('#' + $(this).attr('id')).is(":checked")) {
+        //         var cart = JSON.parse(localStorage.getItem('checked_data')) || [];
+        //         cart.push({
+        //             sku1: data_id[0],
+        //             name1: data_id[1],
+        //             id1: data_id[2],
+        //             create_arc_item_manual: 'create_arc_item_manual',
+        //             arc_user: data_id[3]
+        //         });
+        //         localStorage.setItem("checked_data", JSON.stringify(cart));
 
 
 
-            }
 
-            var checked_data1 = JSON.parse(localStorage.getItem('checked_data')) || [];
-            console.log("checked_data1:");
-            console.log(checked_data1);
+        //     } else {
+        //         var cart = JSON.parse(localStorage.getItem('checked_data')) || [];
+        //         var idToDelete = data_id[2];
+        //         removeById(cart, idToDelete);
+        //         localStorage.removeItem("checked_data");
+        //         localStorage.setItem("checked_data", JSON.stringify(cart));
 
-            var arc_user2 =
-                '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
-            var data = {
-                create_arc_item_all_slow: 'create_arc_item_all_slow',
-                arc_user: arc_user2,
-                checked_data: checked_data1
-            };
-            $.ajax({
-                type: "POST",
-                url: "ajaxrequest.php",
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function(response) {
-                    console.log(response);
 
-                }
-            });
 
-            var arr = $('.sync_product').map((i, el) => el.checked).get();
-            console.log(arr);
-            localStorage.setItem("checked", JSON.stringify(arr));
-        });
+        //     }
+
+        //     var checked_data1 = JSON.parse(localStorage.getItem('checked_data')) || [];
+        //     console.log("checked_data1:");
+        //     console.log(checked_data1);
+
+        //     var arc_user2 =
+        //         '<?php if(isset($_GET["user"])){ if(!empty($_GET["user"])){ echo $_GET["user"]; } } ?>';
+        //     var data = {
+        //         create_arc_item_all_slow: 'create_arc_item_all_slow',
+        //         arc_user: arc_user2,
+        //         checked_data: checked_data1
+        //     };
+        //     $.ajax({
+        //         type: "POST",
+        //         url: "ajaxrequest.php",
+        //         contentType: 'application/json',
+        //         data: JSON.stringify(data),
+        //         success: function(response) {
+        //             console.log(response);
+
+        //         }
+        //     });
+
+        //     var arr = $('.sync_product').map((i, el) => el.checked).get();
+        //     console.log(arr);
+        //     localStorage.setItem("checked", JSON.stringify(arr));
+        // });
+
+
+
         var arr1 = JSON.parse(localStorage.getItem('sync_product1')) || [];
         console.log("arr11:" + arr1);
         arr1.forEach((c, i) => $('.sync_product1').eq(i).prop('checked', c));

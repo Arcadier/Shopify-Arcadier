@@ -338,7 +338,8 @@ foreach($result['Orders'] as $order) {
                 'total_changed' => '-',
                 'total_unchanged' => '-',
                 'total_created' => 1,
-                'status' => 'Sync successful'
+                'status' => 'Sync successful',
+                'merchant_guid' => $userId
             ];
 
 

@@ -1,0 +1,27 @@
+{
+  "name": "asyncphp/doorman",
+  "description": "Child process management",
+  "license": "MIT",
+  "require": {
+    "php": ">=5.5.9",
+    "opis/closure": "^3.6"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^4.8.36|^5.7.27"
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "3.x-dev"
+    }
+  },
+  "autoload": {
+    "psr-4": {
+      "AsyncPHP\\Doorman\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "AsyncPHP\\Doorman\\Tests\\": "tests"
+    }
+  }
+}

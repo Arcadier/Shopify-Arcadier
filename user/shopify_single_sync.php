@@ -63,6 +63,10 @@ foreach($categories as $category) {
 
 //get the variant
 $images = shopify_get_images($access_token, $shop, $product_id);
+
+error_log(json_encode($images));
+
+
 $product_details = shopify_product_details($access_token, $shop, ltrim($product_id,"gid://shopify/Product/"));   // shopify_get_variants($access_token, $shop, $product_id);
 
 $product_name = $product_details['product']['title'];
@@ -77,7 +81,13 @@ $variant_id = $variants[0]['id'];
 $inventory = $variants[0]['inventory_quantity'];
 $sku = $variants[0]['sku'];
 
-$image =  $images[0]['node']['originalSrc'];
+$allimages = [];
+
+foreach($images  as $image) {
+    $allimages[] = array('MediaUrl' => $image['node']['originalSrc']) ;
+}
+
+//$image =  $images[0]['node']['originalSrc'];
 
 
 if ($has_variants) {
@@ -86,6 +96,8 @@ if ($has_variants) {
 
 
     $images = $product_details['product']['images'];
+    
+
 
    
     //count the options array
@@ -117,8 +129,8 @@ if ($has_variants) {
 $item_details = array(
       'SKU' =>  'sku',
       'Name' =>  $product_name,
-      'BuyerDescription' => $description,
-      'SellerDescription' => $description,
+      'BuyerDescription' => strip_tags($description),
+      'SellerDescription' => strip_tags($description),
       'Price' => (float)$price,
       'PriceUnit' => null,
       'StockLimited' => true,
@@ -130,10 +142,7 @@ $item_details = array(
       'Categories' =>   $all_categories,
       'ShippingMethods'  => null,
       'PickupAddresses' => null,
-      'Media' => [
-          array( "MediaUrl" => $image)
-           
-         ],
+      'Media' => $allimages,
       'Tags' => null,
       'CustomFields' => null,
       'ChildItems' => $allvariants

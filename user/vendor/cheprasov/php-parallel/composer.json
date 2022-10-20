@@ -1,0 +1,26 @@
+{
+    "name": "cheprasov/php-parallel",
+    "version": "1.2.0",
+    "description": "The class allows you to run multiple operations parallel in different processes and send results to the main process. Useful if you need to run multiple independent operations simultaneously, instead of sequential execution, or if you run several independent queries, for example, queries to different data bases",
+    "homepage": "http://github.com/cheprasov/php-parallel",
+    "minimum-stability": "stable",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alexander Cheprasov",
+            "email": "cheprasov.84@ya.ru"
+        }
+    ],
+    "autoload": {
+        "psr-0": {
+            "Parallel\\": "src"
+        }
+    },
+    "require": {
+        "php": ">=5.5",
+        "cheprasov/php-redis-client": "^1.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "4.8.*"
+    }
+}
