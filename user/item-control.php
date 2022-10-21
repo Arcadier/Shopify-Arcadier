@@ -1071,6 +1071,21 @@ if($isMerchant){
 
                 vm = this;
                 var DT1 = $("#logTable").DataTable();
+
+
+
+
+                $('.selectAll').on('click', function() {
+                    // Get all rows with search applied
+
+                });
+
+
+
+
+
+
+
                 $(".selectAll").on("click", function(e) {
                     if ($(this).is(":checked")) {
                         // DT1.rows().select();
@@ -1079,6 +1094,13 @@ if($isMerchant){
                         DT1.rows({
                             search: 'applied'
                         }).select();
+
+
+                        var rows = DT1.rows({
+                            'search': 'applied'
+                        }).nodes();
+                        // Check/uncheck checkboxes for all rows in the table
+                        $('.sync_product', rows).prop('checked', true);
 
                         var ids = $.map(DT1.rows('.selected').data(), function(item) {
                             return item[10]
@@ -1105,6 +1127,13 @@ if($isMerchant){
                         DT1.rows({
                             search: 'applied'
                         }).deselect();
+
+
+                        var rows = DT1.rows({
+                            'search': 'applied'
+                        }).nodes();
+                        // Check/uncheck checkboxes for all rows in the table
+                        $('.sync_product', rows).prop('checked', false);
 
                         var ids = $.map(DT1.rows('.selected').data(), function(item) {
                             return item[10]

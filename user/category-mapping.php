@@ -314,7 +314,6 @@ if($isMerchant){
                         <input type="hidden" id="package-id" value="<?php echo $plugin_id ?>" />
 
 
-
                         <div class="sc-caegory-flex">
                             <div class="sc-category-list">
                                 <ul class="list">
@@ -328,7 +327,6 @@ if($isMerchant){
                                     </li>
                                 </ul>
                             </div>
-
 
 
                             <div class="sc-sub-category-list-content"
@@ -420,8 +418,7 @@ if($isMerchant){
                                                                                                 :for="level1.ID + indexTop"></label>
                                                                                             <span>{{level1.Name}}</span>
 
-                                                                                            <ul class="sub-sub-cat"
-                                                                                                v-for="level2 in level1.ChildCategories">
+                                                                                            <ul class="sub-sub-cat">
                                                                                                 <li class="check-category parent-sub-sub-cat has-child-sub"
                                                                                                     v-for="level2 in level1.ChildCategories">
                                                                                                     <input
@@ -1064,19 +1061,19 @@ if($isMerchant){
                             "checked", false);
                     });
 
-                    $(document.body).on("click", '.check-category input[type="checkbox"]',
-                        function() {
-                            // jQuery('.check-category input[type="checkbox"]').click(function() {
-                            if (jQuery(this).is(":checked")) {
-                                jQuery(this).closest('li').find('input[type="checkbox"]').prop(
-                                    "checked",
-                                    true);
-                            } else {
-                                jQuery(this).closest('li').find('input[type="checkbox"]').prop(
-                                    "checked",
-                                    false);
-                            }
-                        });
+                    // $(document.body).on("click", '.check-category input[type="checkbox"]',
+                    //     function() {
+                    //         // jQuery('.check-category input[type="checkbox"]').click(function() {
+                    //         if (jQuery(this).is(":checked")) {
+                    //             jQuery(this).closest('li').find('input[type="checkbox"]').prop(
+                    //                 "checked",
+                    //                 true);
+                    //         } else {
+                    //             jQuery(this).closest('li').find('input[type="checkbox"]').prop(
+                    //                 "checked",
+                    //                 false);
+                    //         }
+                    //     });
 
 
                     $(document.body).on("click", '.cat-toggle > .up', function() {
@@ -1108,23 +1105,23 @@ if($isMerchant){
                             var cat_val = $(this).closest('.sc-sub-category-list').attr(
                                 'data-sub-category');
 
-                            if ($(
-                                    '.sc-sub-category-list.active .shopify_product_sub_cat:checked'
-                                )
-                                .length >
-                                0) {
+                            // if ($(
+                            //         '.sc-sub-category-list.active .shopify_product_sub_cat:checked'
+                            //     )
+                            //     .length >
+                            //     0) {
 
-                                $(".sc-category-list ul").find(
-                                    '.shopify_product_cat[data-category=' +
-                                    cat_val + ']').closest("li").addClass("select");
+                            //     $(".sc-category-list ul").find(
+                            //         '.shopify_product_cat[data-category=' +
+                            //         cat_val + ']').closest("li").addClass("select");
 
-                            } else {
+                            // } else {
 
-                                $(".sc-category-list ul").find('[data-category=' + cat_val +
-                                    ']').closest(
-                                    "li").removeClass("select");
+                            //     $(".sc-category-list ul").find('[data-category=' + cat_val +
+                            //         ']').closest(
+                            //         "li").removeClass("select");
 
-                            }
+                            // }
 
                         });
 
