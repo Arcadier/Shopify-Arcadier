@@ -314,6 +314,84 @@ if($isMerchant){
         animation: load8 3s infinite;
     }
 
+
+    /*loader*/
+    .data-loader {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        background: rgba(0, 0, 0, .5);
+        overflow: hidden;
+        z-index: 11;
+    }
+
+    .data-loader.position-fixed {
+        position: fixed;
+    }
+
+    .data-loader.active {
+        display: flex;
+    }
+
+    .round-load {
+        height: 150px;
+        width: 150px;
+        border-radius: 100%;
+        border-width: 7px;
+        border-color: #51c8ff transparent;
+        border-style: solid;
+        -webkit-animation: rotation 2s infinite linear;
+    }
+
+    @-webkit-keyframes rotation {
+        from {
+            -webkit-transform: rotate(0deg);
+        }
+
+        to {
+            -webkit-transform: rotate(359deg);
+        }
+    }
+
+    @-webkit-keyframes spin {
+        0% {
+            -webkit-transform: rotate(0deg);
+        }
+
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    #brnd_preloader {
+        border: 5px solid #ddd;
+        border-radius: 50%;
+        border-top: 5px solid #50C8FE;
+        border-bottom: 5px solid #50c8ff;
+        width: 35px;
+        height: 35px;
+        -webkit-animation: spin 2s linear infinite;
+        animation: spin 1.5s linear infinite;
+        display: inline-block;
+        vertical-align: middle;
+        margin-left: 10px;
+    }
+
     @-webkit-keyframes load8 {
         0% {
             -webkit-transform: rotate(0deg);
@@ -526,6 +604,11 @@ if($isMerchant){
                             <div class="col-sm-6" id="flash_message">
                                 <h4 class="page-title">Item Control</h4>
 
+                                <div class="loading-message active">
+
+                                    <h5>We're loading your data...</h5>
+                                </div>
+
 
                             </div>
                             <div id="dialog" title="Alert message" style="display: none">
@@ -551,7 +634,9 @@ if($isMerchant){
                         <div class="col-12 p-3 bg-white shadow rounded">
                             <div class="table-responsive">
                                 <!--<table class="table table-bordered table-striped" id="logTable" >-->
-
+                                <div class="data-loader active">
+                                    <div class="round-load"></div>
+                                </div>
 
                                 <table class="table hover" id="logTable">
                                     <thead>
@@ -622,7 +707,8 @@ if($isMerchant){
                 total: "",
                 autoSyncList: "",
                 currentCount: 0,
-                existingMaps: ""
+                existingMaps: "",
+                isExisting: ""
 
 
 
@@ -667,6 +753,7 @@ if($isMerchant){
                                 var total = lines.length - 1;
                                 vm.total = total;
                                 $.each(lines, function(key, model) {
+
                                     // $('body').append(
                                     //     `<div id="loadingDiv2"><div style="position: absolute; top: 45%;left: 45%;">Loading ${key} ${total} items </div><div class="loader"></div></div>`
                                     // );
@@ -676,11 +763,15 @@ if($isMerchant){
                                         // vm.addLoader(key, total);
                                         vm.parseJSON(model, total, key);
                                     } else {
+
                                         console.log('not json')
+                                        var promises = []
 
                                         var table = $("#logTable").DataTable()
                                         table.rows().every(function(rowIdx, tableLoop,
                                             rowLoop) {
+
+
 
                                             var data = this.data();
                                             id = data[10];
@@ -694,36 +785,46 @@ if($isMerchant){
                                                 "Value": id
                                             }]
 
-                                            const isExisting = axios({
-                                                    method: "POST",
-                                                    url: `${vm.protocol}//${vm.baseURL}/api/v2/plugins/${vm.packageId}/custom-tables/synced_items/`,
-                                                    headers: {
-                                                        "Content-Type": "application/json"
-                                                    },
 
-                                                    data: JSON.stringify(
-                                                        data)
-                                                })
+                                            vm.isExisting = $.ajax({
 
-                                                .then(res => {
 
-                                                    const items = res.data
-                                                    const itemsDetails =
-                                                        items.Records[0]
+                                                method: "POST",
+                                                url: `${vm.protocol}//${vm.baseURL}/api/v2/plugins/${vm.packageId}/custom-tables/synced_items/`,
+                                                headers: {
+                                                    "Content-Type": "application/json"
+                                                },
+
+                                                data: JSON.stringify(
+                                                    data),
+                                                success: function(res) {
+
+
+
+                                                    const items =
+                                                        res
+                                                    const
+                                                        itemsDetails =
+                                                        items
+                                                        .Records[0]
                                                     //if existing user, verify the status
                                                     if (items
-                                                        .TotalRecords == 1
+                                                        .TotalRecords ==
+                                                        1
                                                     ) {
                                                         console.log(
-                                                            'mapped');
+                                                            'mapped'
+                                                        );
 
-                                                        table.cell(rowIdx,
+                                                        table.cell(
+                                                                rowIdx,
                                                                 3)
                                                             .data(
                                                                 new Date(
                                                                     itemsDetails[
                                                                         'synced_date'
-                                                                    ] * 1000
+                                                                    ] *
+                                                                    1000
                                                                 )
                                                                 .format(
                                                                     "dd/mm/yyyy"
@@ -735,18 +836,88 @@ if($isMerchant){
                                                         console.log(
                                                             'not mapped'
                                                         );
-                                                        table.cell(rowIdx,
+                                                        table.cell(
+                                                                rowIdx,
                                                                 3)
-                                                            .data('No')
+                                                            .data(
+                                                                'No'
+                                                            )
                                                             .draw();
                                                     }
-                                                    // this.data(data)
-                                                });
-                                            //$('#loadingDiv2').remove();
+
+
+
+
+
+                                                },
+
+
+
+
+
+
+
+
+                                            })
+
+                                            promises.push(vm.isExisting);
 
                                         })
 
+                                        // $.when.apply($, promises)
+                                        //     .done(function() {
+                                        //         console.log(
+                                        //             "All done!"
+                                        //         )
+
+                                        //     }).fail(function() {
+                                        //         // something went wrong here, handle it
+                                        //         $(".data-loader")
+                                        //             .removeClass(
+                                        //                 "active"
+
+                                        //             ) // do other stuff
+                                        //     });
+
+
+
                                         $('#loadingDiv3').remove();
+
+                                        if (vm.total > 5000) {
+                                            setTimeout(function() {
+                                                $(".data-loader")
+                                                    .removeClass(
+                                                        "active"
+
+                                                    )
+                                                $(".loading-message").remove();
+
+                                            }, 30000);
+
+                                        } else if (vm.total < 100) {
+                                            setTimeout(function() {
+                                                $(".data-loader")
+                                                    .removeClass(
+                                                        "active"
+
+                                                    )
+                                                $(".loading-message").remove();
+
+                                            }, 5000);
+                                        } else {
+
+                                            setTimeout(function() {
+                                                $(".data-loader")
+                                                    .removeClass(
+                                                        "active"
+
+                                                    )
+                                                $(".loading-message").remove();
+
+                                            }, 15000);
+
+                                        }
+
 
 
                                         //$('#loadingDiv2').remove();
@@ -754,6 +925,10 @@ if($isMerchant){
                                     }
 
                                 })
+
+
+
+
                                 // removeClass('loadingDiv2', 500);
                             }
 
@@ -941,6 +1116,8 @@ if($isMerchant){
             async checkIfExist(prodId) {
 
 
+
+
                 // isExisting = "";
                 var data = [{
                     'Name': 'product_id',
@@ -948,14 +1125,15 @@ if($isMerchant){
                     "Value": prodId
                 }]
 
-                const isExisting = await axios({
+                $.ajax({
                         method: "POST",
                         url: `${vm.protocol}//${vm.baseURL}/api/v2/plugins/${vm.packageId}/custom-tables/synced_items/`,
                         headers: {
                             "Content-Type": "application/json"
                         },
 
-                        data: JSON.stringify(data)
+                        data: JSON.stringify(data),
+                        async: true,
                     })
 
                     .then(res => {
@@ -989,6 +1167,7 @@ if($isMerchant){
                             var Row = this.data(); //store every row data in a variable
 
                             console.log(Row[3]); //show Row + Cell index
+                            $(".data-loader").removeClass("active");
 
                         });
 
@@ -1071,19 +1250,6 @@ if($isMerchant){
 
                 vm = this;
                 var DT1 = $("#logTable").DataTable();
-
-
-
-
-                $('.selectAll').on('click', function() {
-                    // Get all rows with search applied
-
-                });
-
-
-
-
-
 
 
                 $(".selectAll").on("click", function(e) {
@@ -1302,16 +1468,51 @@ if($isMerchant){
 
         },
 
-        // watch: {
-        //     // messages: function(val, oldVal) {
-        //     //     $(".table").find("tbody tr:last").hide();
-        //     //     //Scroll to bottom
-        //     // },
-        // },
+        watch: {
+            messages: function(val, oldVal) {
+                $.when(vm.isExisting).done(function(a1, a2, a3, a4) {
+
+                    console.log('ajax stop')
+
+                    $(".data-loader")
+                        .removeClass(
+                            "active")
+                    // the code here will be executed when all four ajax requests resolve.
+                    // a1, a2, a3 and a4 are lists of length 3 containing the response text,
+                    // status, and jqXHR object for each of the four ajax calls respectively.
+                });
+            },
+        },
     });
 
 
     $(document).ready(function() {
+
+
+        // $.when(shopify.isExisting).done(function(a1, a2, a3, a4) {
+
+        //     console.log('ajax stop')
+
+        //     $(".data-loader")
+        //         .removeClass(
+        //             "active")
+        //     // the code here will be executed when all four ajax requests resolve.
+        //     // a1, a2, a3 and a4 are lists of length 3 containing the response text,
+        //     // status, and jqXHR object for each of the four ajax calls respectively.
+        // });
+
+        // $(document).ajaxStop(function() {
+        //     // place code to be executed on completion of last outstanding ajax call here
+
+
+        // });
+
+
+        // setTimeout(function() {
+        //     $(".loading-message").removeClass("active");
+
+        // }, 2500);
+
 
         var selectedProducts = [];
         var confirmModal =
@@ -1363,6 +1564,24 @@ if($isMerchant){
         });
         myDialog.dialog("close");
 
+        $('#logTable tbody').on('change', '.sync_product', function() {
+
+
+            if ($(this).is(":checked")) {
+                $(this).parents('tr').addClass('selected');
+            } else {
+                //DT1.$('tr.selected').removeClass('selected');
+
+                $(this).parents('tr').removeClass('selected');
+
+            }
+
+
+            // var data = table.row(this).data();
+            //  $(this).parents('tr').addClass('selected');
+            //  alert('You clicked on ' + data[0] + "'s row");
+        });
+
         //select / unselect each item to be sync
         document.querySelector("tbody").addEventListener("change", function(e) {
             if (e.target.type === 'checkbox') {
@@ -1374,30 +1593,7 @@ if($isMerchant){
 
                 //do something with the product ID or get everything that's been checked,
 
-
-
-
-
                 var DT1 = $("#logTable").DataTable();
-
-
-                $('#logTable tbody').on('change', '.sync_product', function() {
-
-
-                    if ($(this).is(":checked")) {
-                        $(this).parents('tr').addClass('selected');
-                    } else {
-                        //DT1.$('tr.selected').removeClass('selected');
-
-                        $(this).parents('tr').removeClass('selected');
-
-                    }
-
-
-                    // var data = table.row(this).data();
-                    //  $(this).parents('tr').addClass('selected');
-                    //  alert('You clicked on ' + data[0] + "'s row");
-                });
 
                 var ids = $.map(DT1.rows('.selected').data(), function(item) {
                     return item[10]

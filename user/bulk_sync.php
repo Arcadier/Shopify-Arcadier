@@ -1,5 +1,12 @@
 <?php
+//ini_set('max_execution_time', 0); // 0 = Unlimited
+ini_set('memory_limit','1024000000');
+ini_set('max_input_time', 0);
 ini_set('max_execution_time', 0); // 0 = Unlimited
+
+
+ignore_user_abort(True);
+set_time_limit(0);
 include 'callAPI.php';
 require 'api.php';
 require_once("shopify_functions.php");
@@ -208,6 +215,15 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
         $image =  $product_details['product']['images'][0]['src'];
 
 
+        $images1 = $product_details['product']['images'];
+               // error_log(json_encode($images1));
+                
+                $allimages = [];
+
+                    foreach($images1  as $image) {
+                        $allimages[] = array('MediaUrl' => $image['src']);
+                    }
+
         if ($has_variants) {
 
             $images = $product_details['product']['images'];
@@ -220,10 +236,10 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                 $id = $variant['id'];
                 $variant_image =  findItem($images, $id);
             
-                count($product_details['product']['options']) == 1 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name'])], 'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => array( "MediaUrl" => $variant_image['src']), 'Tags' => array("gid://shopify/ProductVariant/" . $variant_id), 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
-                count($product_details['product']['options']) == 2 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'],'Media' => array("MediaUrl" => $variant_image['src']), 'Tags' => array("gid://shopify/ProductVariant/" . $variant_id), 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '' ;
+                count($product_details['product']['options']) == 1 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name'])], 'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => array(array( "MediaUrl" => $variant_image['src'])), 'Tags' => array("gid://shopify/ProductVariant/" . $variant_id), 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
+                count($product_details['product']['options']) == 2 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'],'Media' => array(array("MediaUrl" => $variant_image['src'])), 'Tags' => array("gid://shopify/ProductVariant/" . $variant_id), 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '' ;
                 
-                count($product_details['product']['options']) == 3 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name']),array('ID' => '', 'Name' => $variant['option3'], 'GroupName' => $product_details['product']['options'][2]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => array( "MediaUrl" => $variant_image['src']),'Tags' => array("gid://shopify/ProductVariant/" . $variant_id), 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
+                count($product_details['product']['options']) == 3 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name']),array('ID' => '', 'Name' => $variant['option3'], 'GroupName' => $product_details['product']['options'][2]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => array(array( "MediaUrl" => $variant_image['src'])),'Tags' => array("gid://shopify/ProductVariant/" . $variant_id), 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
                 $total_variants++;
             }
 
@@ -307,8 +323,8 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                     $item_details = array(
                         'SKU' =>  $sku,
                         'Name' =>  $product_name,
-                        'BuyerDescription' => $description,
-                        'SellerDescription' => $description,
+                        'BuyerDescription' => strip_tags($description),
+                        'SellerDescription' => strip_tags($description),
                         'Price' => (float)$price,
                         'PriceUnit' => null,
                         'StockLimited' => true,
@@ -320,10 +336,7 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                         'Categories' =>   $all_categories,
                         'ShippingMethods'  => null,
                         'PickupAddresses' => null,
-                        'Media' => [
-                            array( "MediaUrl" =>  $image)
-                            
-                            ],
+                        'Media' => $allimages,
                         'Tags' => null,
                         'CustomFields' => null,
                         'ChildItems' => $allvariants,
@@ -430,7 +443,7 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                 $category_map  =  callAPI("POST", $admin_token, $url, $data); 
 
 
-                if($category_map['TotalRecords'] == 1){
+                if($category_map['TotalRecords'] == 1) {
 
                     $category_maps = $category_map['Records'][0]['map'];
                         if($product_type == null){
@@ -460,8 +473,8 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                         array(
                         'SKU' =>  $sku,
                         'Name' =>  $product_name,
-                        'BuyerDescription' => $description,
-                        'SellerDescription' => $description,
+                        'BuyerDescription' => strip_tags($description),
+                        'SellerDescription' => strip_tags($description),
                         'Price' => (float)$price,
                         'PriceUnit' => null,
                         'StockLimited' => true,
@@ -473,10 +486,7 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                         'Categories' =>   $all_categories,
                         'ShippingMethods'  => null,
                         'PickupAddresses' => null,
-                        'Media' => [
-                            array( "MediaUrl" => $image)
-                            
-                            ],
+                        'Media' => $allimages,
                         'Tags' => null,
                         'CustomFields' => null,
                         'ChildItems' => $allvariants,
@@ -506,8 +516,8 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                     $field_changed = [];
 
                     //check each properties 
-                    $product['title'] != $item_details['Name'] ? ($changed++). ($field_changed[]='Title')  : $unchanged++;
-                    $product['body_html'] != $item_details['SellerDescription'] ? ($changed++). ($field_changed[]='Description')  : $unchanged++;
+                    $product_name != $item_details['Name'] ? ($changed++). ($field_changed[]='Title')  : $unchanged++;
+                    strip_tags($description) != $item_details['SellerDescription'] ? ($changed++). ($field_changed[]='Description')  : $unchanged++;
                     (float)$product['variants'][0]['price'] != $item_details['Price'] ? ($changed++). ($field_changed[]='Price')  : $unchanged++;
                     $product['variants'][0]['inventory_quantity'] != $item_details['StockQuantity'] ? ($changed++). ($field_changed[]='Total Inventory')  : $unchanged++;
                     

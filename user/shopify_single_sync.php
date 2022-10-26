@@ -71,6 +71,7 @@ $product_details = shopify_product_details($access_token, $shop, ltrim($product_
 
 $product_name = $product_details['product']['title'];
 $description = $product_details['product']['body_html'];
+$description = strip_tags(html_entity_decode($description));
 
 $variants = $product_details['product']['variants'];
 
@@ -98,8 +99,6 @@ if ($has_variants) {
     $images = $product_details['product']['images'];
     
 
-
-   
     //count the options array
 
     foreach($variants as $variant){
@@ -107,6 +106,10 @@ if ($has_variants) {
     error_log('variant ' .  json_encode($variant));
     $id = $variant['id'];
     $variant_image =  findItem($images, $id);
+
+    if ($variant_image['src'] == null) {
+        $variant_image['src'] = "https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg";
+    }
       
       
     //   array_filter($images, function($image) use ($id) {
@@ -122,15 +125,14 @@ if ($has_variants) {
         count($product_details['product']['options']) == 2 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'],'Media' => array(array("MediaUrl" => $variant_image['src'])),'Tags' => array("gid://shopify/ProductVariant/" . $id), 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
         count($product_details['product']['options']) == 3 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name']),array('ID' => '', 'Name' => $variant['option3'], 'GroupName' => $product_details['product']['options'][2]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => array(array( "MediaUrl" => $variant_image['src'])), 'Tags' => array("gid://shopify/ProductVariant/" . $id), 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
     
-
     }
 }
 
 $item_details = array(
       'SKU' =>  'sku',
       'Name' =>  $product_name,
-      'BuyerDescription' => strip_tags($description),
-      'SellerDescription' => strip_tags($description),
+      'BuyerDescription' => $description,
+      'SellerDescription' => $description,
       'Price' => (float)$price,
       'PriceUnit' => null,
       'StockLimited' => true,
@@ -170,7 +172,7 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
                 //error_log($result['ID']);
                 //after syncing the product on arcadier, update the tags on shopify to 'synced'
 
-                shopify_add_tag($access_token, $shop, $product_id, "synced");
+                //shopify_add_tag($access_token, $shop, $product_id, "synced");
 
                 //if 0 - not exist yet, create a new row on synced_items table
 
@@ -216,9 +218,18 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
 }else {
     
     echo json_encode('This item has been updated');
+    error_log(json_encode($item_details));
+    
 
     $url =  $baseUrl . '/api/v2/merchants/'. $userId.'/items/' . $isItemSyncResult['Records'][0]['arc_item_guid'];
-    $updateItem =  callAPI("PUT", $admin_token, $url, $item_details); 
+
+    error_log('url '. $url);
+   // $updateItem =  callAPI("PUT", $admin_token, $url, $item_details); 
+
+   $updateItem =  $arc->editItem($item_details, $userId, $isItemSyncResult['Records'][0]['arc_item_guid']);
+
+    error_log('updated ' . json_encode($updateItem));
+    
 }
 
  function findItem(array $variants, int $id)

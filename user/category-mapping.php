@@ -402,7 +402,7 @@ if($isMerchant){
                                                                                     <input type="checkbox"
                                                                                         :id="arcadier_cats.ID + indexTop"
                                                                                         :arc-cat-id="arcadier_cats.ID"
-                                                                                        class="shopify_product_sub_cat">
+                                                                                        class="shopify_product_sub_cat parent_category">
                                                                                     <label
                                                                                         :for="arcadier_cats.ID + indexTop"></label>
                                                                                     <span>{{arcadier_cats.Name}}</span>
@@ -1061,19 +1061,20 @@ if($isMerchant){
                             "checked", false);
                     });
 
-                    // $(document.body).on("click", '.check-category input[type="checkbox"]',
-                    //     function() {
-                    //         // jQuery('.check-category input[type="checkbox"]').click(function() {
-                    //         if (jQuery(this).is(":checked")) {
-                    //             jQuery(this).closest('li').find('input[type="checkbox"]').prop(
-                    //                 "checked",
-                    //                 true);
-                    //         } else {
-                    //             jQuery(this).closest('li').find('input[type="checkbox"]').prop(
-                    //                 "checked",
-                    //                 false);
-                    //         }
-                    //     });
+                    $(document.body).on("click", '.shopify_product_sub_cat',
+                        function() {
+                            // jQuery('.check-category input[type="checkbox"]').click(function() {
+                            if (jQuery(this).is(":checked")) {
+                                jQuery(this).parents('.parent-cat').find('.parent_category').prop(
+                                    "checked",
+                                    true);
+                            }
+                            //  else {
+                            //       jQuery(this).parents('parent-cat').prop(
+                            //         "checked",
+                            //         false);
+                            // }
+                        });
 
 
                     $(document.body).on("click", '.cat-toggle > .up', function() {
