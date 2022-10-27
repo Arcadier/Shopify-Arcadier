@@ -235,11 +235,20 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
 
                 $id = $variant['id'];
                 $variant_image =  findItem($images, $id);
+
+
+
+                $media = '';
+                if ($variant_image['src'] != null) {
+
+                    $media = array(array( "MediaUrl" => $variant_image['src']));
+                // $variant_image['src'] = "https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg";
+                }
             
-                count($product_details['product']['options']) == 1 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name'])], 'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => array(array( "MediaUrl" => $variant_image['src'])), 'Tags' => array("gid://shopify/ProductVariant/" . $variant_id), 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
-                count($product_details['product']['options']) == 2 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'],'Media' => array(array("MediaUrl" => $variant_image['src'])), 'Tags' => array("gid://shopify/ProductVariant/" . $variant_id), 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '' ;
+                count($product_details['product']['options']) == 1 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name'])], 'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => $media,  'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
+                count($product_details['product']['options']) == 2 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'],'Media' => $media,  'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '' ;
                 
-                count($product_details['product']['options']) == 3 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name']),array('ID' => '', 'Name' => $variant['option3'], 'GroupName' => $product_details['product']['options'][2]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => array(array( "MediaUrl" => $variant_image['src'])),'Tags' => array("gid://shopify/ProductVariant/" . $variant_id), 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
+                count($product_details['product']['options']) == 3 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name']),array('ID' => '', 'Name' => $variant['option3'], 'GroupName' => $product_details['product']['options'][2]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => $media, 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
                 $total_variants++;
             }
 
@@ -562,7 +571,6 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
             $total_changed =  $total_changed ?  $total_changed  : 0;
             error_log('total variants ' .  $total_variants);
 
-            
             //send edm here instead
     
             $html = "<html><body> <h2>Import Completed</h2> <p style=\"background-color: white\"> Hi $userEmail !</p> <br> 
@@ -581,7 +589,6 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
             
     
     }
-
 
  function findItem(array $variants, int $id)
 {
