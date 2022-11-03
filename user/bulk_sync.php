@@ -189,6 +189,21 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
         //get the shopify id
         $allvariants = [];
         $product_id =  $product; //;$buffer['id'];
+
+          //check if the item has been sync
+        $time_start = microtime(true);
+        $syncItems = array(array('Name' => 'product_id', "Operator" => "equal",'Value' => $product_id), array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
+        $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/synced_items';
+        $isItemSyncResult =  callAPI("POST", $admin_token, $url, $syncItems);
+        $time_end = microtime(true);
+        $execution_time = ($time_end - $time_start);
+        //execution time of the script
+       // error_log('<b>Total Execution Time of checking if the product exists:</b> '.$execution_time.' seconds');
+        
+        error_log('exist check ' . $isItemSyncResult['TotalRecords']);
+
+
+
         
         $time_start = microtime(true);
         $product_details = shopify_product_details($access_token, $shop, ltrim($product_id,"gid://shopify/Product/"));   // shopify_get_variants($access_token, $shop, $product_id);
@@ -259,17 +274,7 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
 
     // echo $product_id;
 
-        //check if the item has been sync
-        $time_start = microtime(true);
-        $syncItems = array(array('Name' => 'product_id', "Operator" => "equal",'Value' => $product_id), array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
-        $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/synced_items';
-        $isItemSyncResult =  callAPI("POST", $admin_token, $url, $syncItems);
-        $time_end = microtime(true);
-        $execution_time = ($time_end - $time_start);
-        //execution time of the script
-       // error_log('<b>Total Execution Time of checking if the product exists:</b> '.$execution_time.' seconds');
-        
-        error_log('exist check ' . $isItemSyncResult['TotalRecords']);
+      
         
         if ($isItemSyncResult['TotalRecords'] == 0) {
 
@@ -478,6 +483,67 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                             
                     }
 
+                      $item_details =  $arc->getItemInfo($isItemSyncResult['Records'][0]['arc_item_guid']);
+
+                      $childItems = $item_details['ChildItems']; 
+
+
+                        if ($has_variants) {
+
+                                $allvariants = [];
+
+
+                                $images = $product_details['product']['images'];
+                                
+
+                                //count the options array
+
+                                foreach($variants as $variant){
+
+                                error_log('variant ' .  json_encode($variant));
+                                $id = $variant['id'];
+                                $variant_image =  findItem($images, $id);
+                                $media = '';
+                                if ($variant_image['src'] != null) {
+
+                                    $media = array(array( "MediaUrl" => $variant_image['src']));
+                                // $variant_image['src'] = "https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg";
+                                }
+                            
+                                
+                                //   array_filter($images, function($image) use ($id) {
+                                //   $filtered =  in_array($id, $image['variant_ids']);
+                                //   return $filtered;
+                                
+                                // });
+
+                                error_log('child items ' . json_encode($childItems));
+                                // found variant {"ID":"afe964cc-458f-408f-8b66-f5c460741eb7","Name":"Medium","GroupID":"e77aca82-598f-4ce9-bb33-f310a14578e6","Description":null,"GroupName":"Size","PriceChange":null,"SortOrder":null,"MultipleAllowed":null,"Mandatory":null,"Active":true}
+                            
+                                if ( $variant['option1'] != null) {
+                                    $ex_variant_details_1 = findVariant($childItems, $variant['option1']);
+                                }
+
+                                if ( $variant['option2'] != null) {
+                                    $ex_variant_details_2 = findVariant($childItems, $variant['option2']);
+                                }
+                                
+                                if ( $variant['option3'] != null) {
+                            
+                                    $ex_variant_details_3 = findVariant($childItems, $variant['option3']);
+                                }
+                                
+                                    count($product_details['product']['options']) == 1 ?  $allvariants[] = array('Variants' => [array('ID' =>  $ex_variant_details_1['ID'], 'GroupID' => $ex_variant_details_1['GroupID'],  'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name'])], 'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => $media, 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
+                                    count($product_details['product']['options']) == 2 ?  $allvariants[] = array('Variants' => [array('ID' =>  $ex_variant_details_1['ID'], 'GroupID' => $ex_variant_details_1['GroupID'], 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' =>  $ex_variant_details_2['ID'], 'GroupID' => $ex_variant_details_2['GroupID'],'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => $media, 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
+                                    count($product_details['product']['options']) == 3 ?  $allvariants[] = array('Variants' => [array('ID' =>  $ex_variant_details_1['ID'], 'GroupID' => $ex_variant_details_1['GroupID'], 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' =>  $ex_variant_details_2['ID'], 'GroupID' => $ex_variant_details_2['GroupID'], 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name']),array('ID' =>  $ex_variant_details_3['ID'], 'GroupID' => $ex_variant_details_3['GroupID'], 'Name' => $variant['option3'], 'GroupName' => $product_details['product']['options'][2]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'],'Media' => $media,  'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
+                                
+                                }
+                        }
+
+                            $allvariants = !empty($allvariants) ? $allvariants : null;
+
+                    
+
                     $data = 
                         array(
                         'SKU' =>  $sku,
@@ -518,7 +584,7 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                     //register any changes on the update
                     //1. retrieve the item details
 
-                    $item_details =  $arc->getItemInfo($isItemSyncResult['Records'][0]['arc_item_guid']);
+                  
 
                     $changed = 0;
                     $unchanged = 0;
@@ -597,6 +663,30 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
         {
             return $variant;
         }
+
+        //return null;
+    }
+}
+
+
+ function findVariant(array $variants, string $name)
+{
+    foreach ($variants as $variant) {
+
+        foreach($variant['Variants'] as $childvariant) {
+
+            error_log('name '  . $childvariant['Name']);
+            if  ($name == $childvariant['Name'])
+
+            {
+                error_log('found variant ' . json_encode($childvariant));
+                    
+            
+                return $childvariant;
+            }
+
+        }
+             
 
         //return null;
     }

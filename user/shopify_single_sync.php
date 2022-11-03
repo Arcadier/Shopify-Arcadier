@@ -52,11 +52,19 @@ $images = $content['images'];
 $price = $content['price'];
 $stock = $content['qty'];
 
+
+
+$syncItems = array(array('Name' => 'product_id', "Operator" => "equal",'Value' => $product_id));
+$url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/synced_items';
+$isItemSyncResult =  callAPI("POST", $admin_token, $url, $syncItems);
+
+
+
 //1.  save the items on arc using merchant API,
 
 $all_categories = [];
 
-foreach($categories as $category) {
+foreach($categories as $category) { 
     $all_categories[] = array("ID" => $category);
     
 }
@@ -68,6 +76,9 @@ error_log(json_encode($images));
 
 
 $product_details = shopify_product_details($access_token, $shop, ltrim($product_id,"gid://shopify/Product/"));   // shopify_get_variants($access_token, $shop, $product_id);
+
+
+    
 
 $product_name = $product_details['product']['title'];
 $description = $product_details['product']['body_html'];
@@ -93,7 +104,7 @@ foreach($images  as $image) {
 
 if ($has_variants) {
 
-    $all_variants = [];
+    $allvariants = [];
 
 
     $images = $product_details['product']['images'];
@@ -120,15 +131,15 @@ if ($has_variants) {
     
     // });
 
-
-    error_log('variant image ' . json_encode($variant_image));
-        
-        count($product_details['product']['options']) == 1 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name'])], 'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => $media, 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
-        count($product_details['product']['options']) == 2 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => $media, 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
-        count($product_details['product']['options']) == 3 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name']),array('ID' => '', 'Name' => $variant['option3'], 'GroupName' => $product_details['product']['options'][2]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'],'Media' => $media,  'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
+    
+        count($product_details['product']['options']) == 1 ?  $allvariants[] = array('Variants' => [array('ID' =>  '',  'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name'])], 'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => $media, 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
+        count($product_details['product']['options']) == 2 ?  $allvariants[] = array('Variants' => [array('ID' =>  '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' =>  '','Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => $media, 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
+        count($product_details['product']['options']) == 3 ?  $allvariants[] = array('Variants' => [array('ID' =>  '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' =>  '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name']),array('ID' =>  '', 'Name' => $variant['option3'], 'GroupName' => $product_details['product']['options'][2]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'],'Media' => $media,  'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
     
     }
 }
+
+$allvariants = !empty($allvariants) ? $allvariants : null;
 
 $item_details = array(
       'SKU' =>  'sku',
@@ -149,14 +160,14 @@ $item_details = array(
       'Media' => $allimages,
       'Tags' => null,
       'CustomFields' => null,
-      'ChildItems' => $allvariants
+      'ChildItems' =>  $allvariants
 
 );
 
 
-$syncItems = array(array('Name' => 'product_id', "Operator" => "equal",'Value' => $product_id));
-$url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/synced_items';
-$isItemSyncResult =  callAPI("POST", $admin_token, $url, $syncItems);
+
+
+
 
 
 
@@ -166,7 +177,7 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
     $url =  $baseUrl . '/api/v2/merchants/' . $userId . '/items';
     $result =  callAPI("POST", $admin_token, $url, $item_details);
     $result1 = json_encode(['err' => $result]);
-    error_log(json_encode($item_details));
+   // error_log(json_encode($item_details));
     ///error_log(json_encode($result1));
 
       if ($result['ID']){
@@ -206,7 +217,7 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
 
                 $response = $arc->createRowEntry($packageId, 'synced_items', $sync_details);
 
-                error_log(json_encode($response));
+               // error_log(json_encode($response));
 
                 
                 //add counter to the total created 
@@ -218,9 +229,103 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
           echo json_encode('success');
 
 }else {
+
+
+    $itemInfo =  $arc->getItemInfo($isItemSyncResult['Records'][0]['arc_item_guid']);
+
+    $childItems =  $itemInfo['ChildItems']; 
+
+
+
+    if ($has_variants) {
+
+    $allvariants = [];
+
+
+    $images = $product_details['product']['images'];
+    
+
+    //count the options array
+
+    foreach($variants as $variant){
+
+    error_log('variant ' .  json_encode($variant));
+    $id = $variant['id'];
+    $variant_image =  findItem($images, $id);
+    $media = '';
+    if ($variant_image['src'] != null) {
+
+        $media = array(array( "MediaUrl" => $variant_image['src']));
+       // $variant_image['src'] = "https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg";
+    }
+   
+      
+    //   array_filter($images, function($image) use ($id) {
+    //   $filtered =  in_array($id, $image['variant_ids']);
+    //   return $filtered;
+    
+    // });
+
+    error_log('child items ' . json_encode($childItems));
+    // found variant {"ID":"afe964cc-458f-408f-8b66-f5c460741eb7","Name":"Medium","GroupID":"e77aca82-598f-4ce9-bb33-f310a14578e6","Description":null,"GroupName":"Size","PriceChange":null,"SortOrder":null,"MultipleAllowed":null,"Mandatory":null,"Active":true}
+   
+    if ( $variant['option1'] != null) {
+          $ex_variant_details_1 = findVariant($childItems, $variant['option1']);
+    }
+
+    if ( $variant['option2'] != null) {
+          $ex_variant_details_2 = findVariant($childItems, $variant['option2']);
+    }
+    
+     if ( $variant['option3'] != null) {
+   
+         $ex_variant_details_3 = findVariant($childItems, $variant['option3']);
+     }
+    
+        count($product_details['product']['options']) == 1 ?  $allvariants[] = array('Variants' => [array('ID' =>  $ex_variant_details_1['ID'], 'GroupID' => $ex_variant_details_1['GroupID'],  'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name'])], 'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => $media, 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
+        count($product_details['product']['options']) == 2 ?  $allvariants[] = array('Variants' => [array('ID' =>  $ex_variant_details_1['ID'], 'GroupID' => $ex_variant_details_1['GroupID'], 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' =>  $ex_variant_details_2['ID'], 'GroupID' => $ex_variant_details_2['GroupID'],'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => $media, 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
+        count($product_details['product']['options']) == 3 ?  $allvariants[] = array('Variants' => [array('ID' =>  $ex_variant_details_1['ID'], 'GroupID' => $ex_variant_details_1['GroupID'], 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' =>  $ex_variant_details_2['ID'], 'GroupID' => $ex_variant_details_2['GroupID'], 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name']),array('ID' =>  $ex_variant_details_3['ID'], 'GroupID' => $ex_variant_details_3['GroupID'], 'Name' => $variant['option3'], 'GroupName' => $product_details['product']['options'][2]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'], 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'],'Media' => $media,  'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
+    
+    }
+}
+
+$allvariants = !empty($allvariants) ? $allvariants : null;
+
+
+$item_details = array(
+      'SKU' =>  'sku',
+      'Name' =>  $product_name,
+      'BuyerDescription' => $description,
+      'SellerDescription' => $description,
+      'Price' => (float)$price,
+      'PriceUnit' => null,
+      'StockLimited' => true,
+      'StockQuantity' =>  $inventory,
+      'IsVisibleToCustomer' => true,
+      'Active' => true,
+      'IsAvailable' => '',
+      'CurrencyCode' =>  'AUD',
+      'Categories' =>   $all_categories,
+      'ShippingMethods'  => null,
+      'PickupAddresses' => null,
+      'Media' => $allimages,
+      'Tags' => null,
+      'CustomFields' => null,
+      'ChildItems' =>  $allvariants
+
+);
+
+    
     
     echo json_encode('This item has been updated');
-    error_log(json_encode($item_details));
+
+    //get the current variants
+
+   
+    
+
+    
+   // error_log(json_encode($item_details));
     
 
     $url =  $baseUrl . '/api/v2/merchants/'. $userId.'/items/' . $isItemSyncResult['Records'][0]['arc_item_guid'];
@@ -230,13 +335,14 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
 
    $updateItem =  $arc->editItem($item_details, $userId, $isItemSyncResult['Records'][0]['arc_item_guid']);
 
-    error_log('updated ' . json_encode($updateItem));
+  //  error_log('updated ' . json_encode($updateItem));
     
 }
 
  function findItem(array $variants, int $id)
 {
     foreach ($variants as $variant) {
+ 
         if  (in_array($id, $variant['variant_ids']))
         {
             return $variant;
@@ -245,5 +351,29 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
         //return null;
     }
 }
+
+ function findVariant(array $variants, string $name)
+{
+    foreach ($variants as $variant) {
+
+        foreach($variant['Variants'] as $childvariant) {
+
+            error_log('name '  . $childvariant['Name']);
+            if  ($name == $childvariant['Name'])
+
+            {
+                error_log('found variant ' . json_encode($childvariant));
+                    
+            
+                return $childvariant;
+            }
+
+        }
+             
+
+        //return null;
+    }
+}
+
 
 ?>
