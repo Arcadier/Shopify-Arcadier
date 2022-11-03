@@ -411,7 +411,7 @@ if($isMerchant){
                                                                                         <li v-for="level1 in arcadier_cats.ChildCategories"
                                                                                             class="check-category parent-sub-cat has-child-sub">
                                                                                             <input type="checkbox"
-                                                                                                class="shopify_product_sub_cat"
+                                                                                                class="shopify_product_sub_cat parent_category_sub"
                                                                                                 :id="level1.ID + indexTop"
                                                                                                 :arc-cat-id="level1.ID">
                                                                                             <label
@@ -1068,6 +1068,13 @@ if($isMerchant){
                                 jQuery(this).parents('.parent-cat').find('.parent_category').prop(
                                     "checked",
                                     true);
+
+                                jQuery(this).closest('.parent-sub-cat').find('.parent_category_sub')
+                                    .prop(
+                                        "checked",
+                                        true);
+
+
                             }
                             //  else {
                             //       jQuery(this).parents('parent-cat').prop(
