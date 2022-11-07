@@ -195,6 +195,66 @@
 
               
         }
+
+
+        //disabling the item edit page
+
+        if (url.indexOf("/merchants/edit") >= 0) {
+
+            $('#listing_name').addClass('disabled');
+
+            $('#categorySearch').addClass('disabled');
+
+            $('.checkbox-content').find('input').attr('disabled', 'disabled'); 
+
+
+            $('#itemNewPrice').addClass('disabled');
+
+            $('#btn-browse').attr('data-toggle', '');
+
+    
+
+            //$('.variants-section').prepend(`<div class="disabled-overlay"></div>`); 
+
+
+             
+        }
+
+
+
+        //merchant item list
+        
+        if (url.indexOf("/merchants/items") >= 0) {
+
+            $.ajaxPrefilter(function (options, originalOptions, jqXHR)
+            {
+                if (options.type.toLowerCase() === "delete" &&
+                    options.url.toLowerCase().indexOf('/merchants/items/delete') >= 0) {
+                    let success = options.success;
+                    options.success = function (data, textStatus, jqXHR)
+                    {
+                        // override success handling
+
+                         let itemId = data.ID;
+                            console.log({ itemId })
+                            
+                            deleteItemSyncDetails(itemId, data.MerchantDetail.ID)
+                     
+                        if (data.Success) {
+                           
+
+                        } else {
+                            if (typeof (success) === "function") return success(data, textStatus, jqXHR);
+                        }
+
+
+                    };
+                }
+            });
+
+
+        }
+
     });
 
     function saveShopifyData(){
@@ -262,6 +322,34 @@
             }
         });
     }
+
+    
+
+      function deleteItemSyncDetails(itemId, merchantId) {
+        // console.log(result);
+        var apiUrl = packagePath + '/delete_item_synced.php';
+        var data = {
+            itemId, merchantId
+
+        }
+        
+        $.ajax({
+            url: apiUrl,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(result) {
+            result =  JSON.parse(result);
+                console.log(`result  ${result}`);
+
+            },
+            error: function(jqXHR, status, err) {
+            //	toastr.error('Error!');
+            }
+        });
+    }
+
+
 
 
     function syncOrderShopifyManual(orderId, invoiceId,userId)

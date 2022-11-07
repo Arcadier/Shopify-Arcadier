@@ -419,7 +419,7 @@ if($isMerchant){
                                                                                             <span>{{level1.Name}}</span>
 
                                                                                             <ul class="sub-sub-cat">
-                                                                                                <li class="check-category parent-sub-sub-cat has-child-sub"
+                                                                                                <li class="check-category parent-sub-sub-cat"
                                                                                                     v-for="level2 in level1.ChildCategories">
                                                                                                     <input
                                                                                                         class="shopify_product_sub_cat"
@@ -483,9 +483,7 @@ if($isMerchant){
                                                                                                             </div>
                                                                                                         </li>
                                                                                                     </ul> -->
-                                                                                                    <div
-                                                                                                        class="cat-line">
-                                                                                                    </div>
+
                                                                                                 </li>
 
                                                                                             </ul>
