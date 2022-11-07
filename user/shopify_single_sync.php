@@ -414,7 +414,7 @@ $item_details = array(
 
 }
 
-   error_log('updated ' . json_encode($updateItem));
+  // error_log('updated ' . json_encode($updateItem));
     
 }
 
