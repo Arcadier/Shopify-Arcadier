@@ -429,26 +429,93 @@ if($isMerchant){
                                                                                                     <label
                                                                                                         :for="level2.ID + indexTop"></label>
                                                                                                     <span>{{level2.Name}}</span>
-                                                                                                    <!-- <ul
+                                                                                                    <ul
                                                                                                         class="sub-sub-cat">
                                                                                                         <li class="check-category parent-sub-sub-cat"
-                                                                                                            style="display: none;">
+                                                                                                            v-for="level3 in level2.ChildCategories">
                                                                                                             <input
+                                                                                                                class="shopify_product_sub_cat"
                                                                                                                 type="checkbox"
-                                                                                                                id="checkSubSubCat2a">
+                                                                                                                :id="level3.ID + indexTop"
+                                                                                                                :arc-cat-id="level3.ID">
                                                                                                             <label
-                                                                                                                for="checkSubSubCat2a"></label>
-                                                                                                            <span>Catgeory1-sub-sub</span>
+                                                                                                                :for="level3.ID + indexTop"></label>
+                                                                                                            <span>{{level3.Name}}</span>
+                                                                                                            <ul
+                                                                                                                class="sub-sub-cat">
+                                                                                                                <li class="check-category parent-sub-sub-cat"
+                                                                                                                    v-for="level4 in level3.ChildCategories">
+                                                                                                                    <input
+                                                                                                                        class="shopify_product_sub_cat"
+                                                                                                                        type="checkbox"
+                                                                                                                        :id="level4.ID + indexTop"
+                                                                                                                        :arc-cat-id="level4.ID">
+                                                                                                                    <label
+                                                                                                                        :for="level4.ID + indexTop"></label>
+                                                                                                                    <span>{{level4.Name}}</span>
+
+                                                                                                                    <ul
+                                                                                                                        class="sub-sub-cat">
+                                                                                                                        <li class="check-category parent-sub-sub-cat"
+                                                                                                                            v-for="level5 in level4.ChildCategories">
+                                                                                                                            <input
+                                                                                                                                class="shopify_product_sub_cat"
+                                                                                                                                type="checkbox"
+                                                                                                                                :id="level5.ID + indexTop"
+                                                                                                                                :arc-cat-id="level5.ID">
+                                                                                                                            <label
+                                                                                                                                :for="level5.ID + indexTop"></label>
+                                                                                                                            <span>{{level5.Name}}</span>
+
+                                                                                                                            <ul
+                                                                                                                                class="sub-sub-cat">
+                                                                                                                                <li class="check-category parent-sub-sub-cat"
+                                                                                                                                    v-for="level6 in level5.ChildCategories">
+                                                                                                                                    <input
+                                                                                                                                        class="shopify_product_sub_cat"
+                                                                                                                                        type="checkbox"
+                                                                                                                                        :id="level6.ID + indexTop"
+                                                                                                                                        :arc-cat-id="level6.ID">
+                                                                                                                                    <label
+                                                                                                                                        :for="level6.ID + indexTop"></label>
+                                                                                                                                    <span>{{level6.Name}}</span>
+
+                                                                                                                                </li>
+
+                                                                                                                                <div
+                                                                                                                                    class="cat-line">
+                                                                                                                                </div>
+
+                                                                                                                            </ul>
+
+
+
+
+                                                                                                                        </li>
+
+                                                                                                                        <div
+                                                                                                                            class="cat-line">
+                                                                                                                        </div>
+
+                                                                                                                    </ul>
+
+
+
+                                                                                                                </li>
+
+                                                                                                                <div
+                                                                                                                    class="cat-line">
+                                                                                                                </div>
+
+                                                                                                            </ul>
+
+                                                                                                            <div
+                                                                                                                class="cat-line">
+                                                                                                            </div>
+
+
                                                                                                         </li>
-                                                                                                        <li class="check-category parent-sub-sub-cat"
-                                                                                                            style="display: none;">
-                                                                                                            <input
-                                                                                                                type="checkbox"
-                                                                                                                id="checkSubSubCat2b">
-                                                                                                            <label
-                                                                                                                for="checkSubSubCat2b"></label>
-                                                                                                            <span>Catgeory2-sub-sub</span>
-                                                                                                        </li>
+                                                                                                        <!-- 
                                                                                                         <li class="check-category parent-sub-sub-cat has-child-sub"
                                                                                                             style="display: none;">
                                                                                                             <input
@@ -481,8 +548,11 @@ if($isMerchant){
                                                                                                             <div
                                                                                                                 class="cat-line">
                                                                                                             </div>
-                                                                                                        </li>
-                                                                                                    </ul> -->
+                                                                                                        </li> -->
+                                                                                                    </ul>
+                                                                                                    <div
+                                                                                                        class="cat-line">
+                                                                                                    </div>
 
                                                                                                 </li>
 
