@@ -411,7 +411,7 @@ if($isMerchant){
                                                                                         <li v-for="level1 in arcadier_cats.ChildCategories"
                                                                                             class="check-category parent-sub-cat has-child-sub">
                                                                                             <input type="checkbox"
-                                                                                                class="shopify_product_sub_cat parent_category_sub"
+                                                                                                class="shopify_product_sub_cat level2 parent_category_sub"
                                                                                                 :id="level1.ID + indexTop"
                                                                                                 :arc-cat-id="level1.ID">
                                                                                             <label
@@ -419,10 +419,10 @@ if($isMerchant){
                                                                                             <span>{{level1.Name}}</span>
 
                                                                                             <ul class="sub-sub-cat">
-                                                                                                <li class="check-category parent-sub-sub-cat"
+                                                                                                <li class="check-category parent-sub-cat has-child-sub"
                                                                                                     v-for="level2 in level1.ChildCategories">
                                                                                                     <input
-                                                                                                        class="shopify_product_sub_cat"
+                                                                                                        class="shopify_product_sub_cat parent_category_sub"
                                                                                                         type="checkbox"
                                                                                                         :id="level2.ID + indexTop"
                                                                                                         :arc-cat-id="level2.ID">
@@ -431,10 +431,10 @@ if($isMerchant){
                                                                                                     <span>{{level2.Name}}</span>
                                                                                                     <ul
                                                                                                         class="sub-sub-cat">
-                                                                                                        <li class="check-category parent-sub-sub-cat"
+                                                                                                        <li class="check-category parent-sub-cat-3 has-child-sub"
                                                                                                             v-for="level3 in level2.ChildCategories">
                                                                                                             <input
-                                                                                                                class="shopify_product_sub_cat"
+                                                                                                                class="shopify_product_sub_cat level3"
                                                                                                                 type="checkbox"
                                                                                                                 :id="level3.ID + indexTop"
                                                                                                                 :arc-cat-id="level3.ID">
@@ -443,7 +443,7 @@ if($isMerchant){
                                                                                                             <span>{{level3.Name}}</span>
                                                                                                             <ul
                                                                                                                 class="sub-sub-cat">
-                                                                                                                <li class="check-category parent-sub-sub-cat"
+                                                                                                                <li class="check-category parent-sub-cat has-child-sub"
                                                                                                                     v-for="level4 in level3.ChildCategories">
                                                                                                                     <input
                                                                                                                         class="shopify_product_sub_cat"
@@ -456,7 +456,7 @@ if($isMerchant){
 
                                                                                                                     <ul
                                                                                                                         class="sub-sub-cat">
-                                                                                                                        <li class="check-category parent-sub-sub-cat"
+                                                                                                                        <li class="check-category parent-sub-cat has-child-sub"
                                                                                                                             v-for="level5 in level4.ChildCategories">
                                                                                                                             <input
                                                                                                                                 class="shopify_product_sub_cat"
@@ -1129,27 +1129,71 @@ if($isMerchant){
                             "checked", false);
                     });
 
+                    // $(document.body).on("click", '.shopify_product_sub_cat',
+                    //     function() {
+                    //         // jQuery('.check-category input[type="checkbox"]').click(function() {
+                    //         if (jQuery(this).is(":checked")) {
+                    //             jQuery(this).parents('.parent-cat').find('.parent_category').prop(
+                    //                 "checked",
+                    //                 true);
+
+                    //             jQuery(this).closest('.parent-sub-cat').find('.parent_category_sub')
+                    //                 .prop(
+                    //                     "checked",
+                    //                     true);
+
+                    //         }
+                    //         //  else {
+                    //         //       jQuery(this).parents('parent-cat').prop(
+                    //         //         "checked",
+                    //         //         false);
+                    //         // }
+                    //     });
+
+
                     $(document.body).on("click", '.shopify_product_sub_cat',
+
                         function() {
                             // jQuery('.check-category input[type="checkbox"]').click(function() {
-                            if (jQuery(this).is(":checked")) {
-                                jQuery(this).parents('.parent-cat').find('.parent_category').prop(
-                                    "checked",
-                                    true);
-
-                                jQuery(this).closest('.parent-sub-cat').find('.parent_category_sub')
-                                    .prop(
+                            var $this = $(this);
+                            var allParents = $this.parents(".has-child-sub");
+                            if ($this.is(":checked")) {
+                                for (var i = 0; i < allParents.length; i++) {
+                                    console.log($(allParents[i]).attr('class'));
+                                    $(allParents[i]).find('>.shopify_product_sub_cat').prop(
                                         "checked",
                                         true);
 
 
+                                }
+                                $this.parents('.parent-cat').find('.parent_category').prop(
+                                    "checked",
+                                    true);
+
                             }
-                            //  else {
-                            //       jQuery(this).parents('parent-cat').prop(
-                            //         "checked",
-                            //         false);
-                            // }
+
                         });
+
+
+
+                    // $(document.body).on("click", '.shopify_product_sub_cat:has(".level3")',
+                    //     function() {
+                    //         // jQuery('.check-category input[type="checkbox"]').click(function() {
+                    //         if (jQuery(this).is(":checked")) {
+                    //             jQuery(this).parents('.parent-cat').find('.parent_category').prop(
+                    //                 "checked",
+                    //                 true);
+                    //             jQuery(this).closest('.parent-sub-cat-3').find('.parent_category_sub')
+                    //                 .prop(
+                    //                     "checked",
+                    //                     true);
+                    //         }
+                    //         //  else {
+                    //         //       jQuery(this).parents('parent-cat').prop(
+                    //         //         "checked",
+                    //         //         false);
+                    //         // }
+                    //     });
 
 
                     $(document.body).on("click", '.cat-toggle > .up', function() {
