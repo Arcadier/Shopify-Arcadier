@@ -26,6 +26,9 @@ $result = callAPI("GET", $userToken, $url, false);
 $userId = $result['ID'];
 
 
+//$result = callAPI("GET", $admin_token, $url, false);
+
+
 $userEmail = $result['Email'];
 $userDisplayName = $result['DisplayName'];
 
@@ -75,6 +78,12 @@ $url = $baseUrl . '/api/developer-packages/custom-fields?packageId=' . $packageI
 $packageCustomFields = callAPI("GET", null, $url, false);
 
 $is_shopify_code = '';
+
+
+
+
+
+
 
 foreach ($packageCustomFields as $cf) {
     if ($cf['Name'] == 'is_shopify_item' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
@@ -178,6 +187,43 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
 
 
     //error_log('prods list ' . json_encode($products));
+
+        $admin_id = $arc->getAdminId();
+
+
+        //get merchant's shipping method
+
+        //$url =  $baseUrl . '/api/v2/merchants/' . $userId . '/shipping-methods/';
+        $merchant_shippingMethods =  $arc->getShippingMethods($userId); //callAPI("GET", $admin_token, $url, false);
+        $admin_shippingMethods =  $arc->getShippingMethods($admin_id);
+
+        error_log('shipping methods ' . json_encode($merchant_shippingMethods));
+
+
+        $all_shipping_methods = [];
+
+        if (!empty($shippingMethods)) {
+
+            foreach($merchant_shippingMethods as $shipping) { 
+                $all_shipping_methods[] = array("ID" => $shipping['ID']);
+            
+            }
+
+        }
+        else {
+
+            foreach($admin_shippingMethods as $shipping) { 
+                $all_shipping_methods[] = array("ID" => $shipping['ID']);
+            
+            }
+            
+        }
+
+
+
+
+
+
     $total_variants = 0;
     foreach($products as $product) {
         // while (($buffer = fgets($fp)) !== false) {
@@ -363,7 +409,7 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                         'IsAvailable' => '',
                         'CurrencyCode' =>  'AUD',
                         'Categories' =>   $all_categories,
-                        'ShippingMethods'  => null,
+                        'ShippingMethods'  => $all_shipping_methods,
                         'PickupAddresses' => null,
                         'Media' => $allimages,
                         'Tags' => null,
@@ -515,7 +561,7 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                         'IsAvailable' => '',
                         'CurrencyCode' =>  'AUD',
                         'Categories' =>   $all_categories,
-                        'ShippingMethods'  => null,
+                        'ShippingMethods'  => $all_shipping_methods,
                         'PickupAddresses' => null,
                         'Media' => $allimages,
                         'Tags' => null,
@@ -604,14 +650,14 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                     $category_map = '<b>Not Mapped</b>';
                 }
 
-                
-
-
+            
              }
 
         }
         else {
+                error_log('====================================================================');
 
+                
                  error_log('exist item found in arc '. $product_name);
                 //update the item
                 $arcadier_categories = $arc->getCategories(1000, 1);
@@ -729,7 +775,7 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                         'IsAvailable' => '',
                         'CurrencyCode' =>  'AUD',
                         'Categories' =>   $all_categories,
-                        'ShippingMethods'  => null,
+                        'ShippingMethods'  =>  $all_shipping_methods,
                         'PickupAddresses' => null,
                         'Media' => $allimages,
                         'Tags' => null,

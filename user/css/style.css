@@ -22344,3 +22344,16 @@ check-category span {
     padding: 5px 10px;
     padding-top: 1px;
 }
+
+.disabled-overlay {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(200, 200, 200, 0.7);
+    z-index: 1;
+    cursor: not-allowed;
+    transition: all .4s ease;
+    -webkit-transition: all .4s ease;
+}

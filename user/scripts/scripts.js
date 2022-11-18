@@ -201,23 +201,13 @@
 
         if (url.indexOf("/merchants/edit") >= 0) {
 
-            $('#listing_name').addClass('disabled');
-
-            $('#categorySearch').addClass('disabled');
-
-            $('.checkbox-content').find('input').attr('disabled', 'disabled'); 
 
 
-            $('#itemNewPrice').addClass('disabled');
+           // var url = window.location.href;
+            var itemGuid = url.substring(url.lastIndexOf('/') + 1);
+            console.log({itemGuid})
 
-            $('#btn-browse').attr('data-toggle', '');
-
-    
-
-            //$('.variants-section').prepend(`<div class="disabled-overlay"></div>`); 
-
-
-             
+            getItemInfo(itemGuid);
         }
 
 
@@ -256,6 +246,101 @@
         }
 
     });
+
+
+
+    function getItemInfo(itemId) {
+         let apiUrl = `${baseUrl}/api/v2/items/${itemId}`;   
+        $.ajax({
+            url: apiUrl,
+          
+            contentType: 'application/json',
+            method: 'GET',
+            beforeSend: function (xhr)
+                {
+                        
+                        xhr.setRequestHeader("url", apiUrl);
+                },
+
+            success: function(item) {
+                if (item.CustomFields != null) {
+                    $.each(item.CustomFields, function(index, cf) {
+
+                        if (cf.Name == 'is_shopify_item' && cf.Values[0] == "1") {
+
+                            if($('[data-toggle="tooltip"]').length){
+                             $('[data-toggle="tooltip"]').tooltip();
+                              }
+
+
+                        let spanTooltip = `<span data-toggle="tooltip" data-original-title="This information is editable through Shopify">
+                                                    
+                                            </span>`
+                        let divTooltip = `<div class="cat-search pos_space" data-toggle="tooltip" data-original-title="This information is editable through Shopify">
+                                                                            
+                                        </div>`
+                    
+                        $('#listing_name').wrap(spanTooltip);
+
+                        $('#listing_name').addClass('disabled');
+
+                        //$('input[name="item-description"]').addClass('disabled');
+                        $('textarea[name="item-description"]').addClass('disabled');
+                    // $('input[name="item-description"]').wrap(spanTooltip);
+                        $('textarea[name="item-description"]').wrap(divTooltip);
+
+
+                        $("input[name='SKU']").addClass('disabled');
+                        $("input[name='SKU']").wrap(spanTooltip);
+                        
+                        $('input[name="item-quantity"]').addClass('disabled');
+                        $("input[name='item-quantity']").wrap(spanTooltip);
+
+
+                        $('#categorySearch').addClass('disabled');
+
+                        $('#categorySearch').wrap(divTooltip);
+                        $('.checkbox-content').find('input').attr('disabled', 'disabled'); 
+                        $('#selectAll').attr('disabled', 'disabled'); 
+                        $('#selectNow').attr('disabled', 'disabled'); 
+
+
+
+
+                        $('#toggle-variants').attr('disabled', 'disabled'); 
+
+                        $('.checkbox-content').attr('data-toggle', 'tooltip');
+                        $('.checkbox-content').attr('data-original-title', 'This information is editable through Shopify');
+
+
+
+                        $('#itemNewPrice').addClass('disabled');
+                        $('#itemNewPrice').wrap(spanTooltip)
+
+                        $('#btn-browse').attr('data-toggle', '');
+                        $('#btn-browse').addClass('disabled-overlay');
+                                
+                        $('.browse-image').attr('data-toggle', 'tooltip');
+                        $('.browse-image').attr('data-original-title', 'This information is editable through Shopify');
+
+
+
+                        $('#btn-browse').wrap(divTooltip);
+
+                    
+                        $('.variants-section').prepend(`<div class="disabled-overlay"></div>`); 
+
+                        $('.variants-section').wrap(divTooltip);
+
+
+                           
+
+                        }
+                    });
+                }
+            }
+        });
+    }
 
     function saveShopifyData(){
         var apiUrl = packagePath + '/shopify-token.php';

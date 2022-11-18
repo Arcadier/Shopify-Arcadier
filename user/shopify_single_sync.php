@@ -19,6 +19,10 @@ $url = $baseUrl . '/api/v2/users/';
 $result = callAPI("GET", $userToken, $url, false);
 $userId = $result['ID'];
 
+$result = callAPI("GET", $admin_token, $url, false);
+
+$admin_id = $result['ID'];
+
 $packageId = getPackageID();
 
 $auth = array(array('Name' => 'merchant_guid', "Operator" => "in",'Value' => $userId));
@@ -29,6 +33,38 @@ $url = $baseUrl . '/api/developer-packages/custom-fields?packageId=' . $packageI
 $packageCustomFields = callAPI("GET", null, $url, false);
 
 $is_shopify_code = '';
+
+
+//get merchant's shipping method
+
+//$url =  $baseUrl . '/api/v2/merchants/' . $userId . '/shipping-methods/';
+$merchant_shippingMethods =  $arc->getShippingMethods($userId); //callAPI("GET", $admin_token, $url, false);
+$admin_shippingMethods =  $arc->getShippingMethods($admin_id);
+
+error_log('shipping methods ' . json_encode($merchant_shippingMethods));
+
+
+$all_shipping_methods = [];
+
+if (!empty($shippingMethods)) {
+
+    foreach($merchant_shippingMethods as $shipping) { 
+        $all_shipping_methods[] = array("ID" => $shipping['ID']);
+    
+    }
+
+}
+else {
+
+    foreach($admin_shippingMethods as $shipping) { 
+         $all_shipping_methods[] = array("ID" => $shipping['ID']);
+    
+    }
+    
+}
+
+
+
 
 foreach ($packageCustomFields as $cf) {
     if ($cf['Name'] == 'is_shopify_item' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
@@ -164,7 +200,7 @@ $item_details = array(
       'IsAvailable' => '',
       'CurrencyCode' =>  'AUD',
       'Categories' =>   $all_categories,
-      'ShippingMethods'  => null,
+      'ShippingMethods'  => $all_shipping_methods,
       'PickupAddresses' => null,
       'Media' => $allimages,
       'Tags' => null,
@@ -385,7 +421,7 @@ $item_details = array(
       'IsAvailable' => '',
       'CurrencyCode' =>  'AUD',
       'Categories' =>   $all_categories,
-      'ShippingMethods'  => null,
+      'ShippingMethods'  => $all_shipping_methods,
       'PickupAddresses' => null,
       'Media' => $allimages,
       'Tags' => null,

@@ -721,7 +721,7 @@ class ApiSdk
             $this->adminToken = get_admin_token();
         }
         $url = $this->baseUrl . '/api/v2/merchants/' . $merchantId . '/shipping-methods';
-        $methods = $this->callAPI("GET", $this->adminToken['access_token'], $url, null);
+        $methods = $this->callAPI("GET", $this->adminToken['access_token'], $url, false);
         return $methods;
     }
 
