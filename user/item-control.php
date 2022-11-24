@@ -1706,31 +1706,50 @@ if($isMerchant){
             if ($(`#override_default_category-${shortId}`).is(":checked")) {
 
                 //loop through override choices, which are the Arcadier category names
-                $("#override_default_category_select_" + shortId +
-                        "_chosen > div.chosen-drop > ul.chosen-results > li")
-                    .each(function(index, element) {
-                        if ($(element).attr("class") == "result-selected") {
-                            category_names.push($(element).context.innerHTML);
-                        }
-                    });
-                console.log("Category Names: ", category_names);
+                // $("#override_default_category_select_" + shortId +
+                //         "_chosen > div.chosen-drop > ul.chosen-results > li")
+                //     .each(function(index, element) {
+                //         if ($(element).attr("class") == "result-selected") {
+                //             category_names.push($(element).context.innerHTML);
+                //         }
+                //     });
 
-                $(category_names).each(function(index1, element1) { //for each category name
-                    //get Arcadier all category ids
-                    var category_ids = <?php echo json_encode($arcadier_categories); ?>;
+                // $(`#override_default_category_select_${shortId} option:selected`).map(function(i, e) {
+                //     override_category_array.push(e.value);
+                // })
+                // console.log("Category Names: ", override_category_array);
 
 
-                    $(category_ids).each(function(index, element) { //for all category IDs
-                        if (element.Name ==
-                            element1
-                        ) { //if chosen category names are found, pull their ID
-                            override_category_array.push(element.ID);
-                            console.log(override_category_array);
-                        }
-                    });
-                });
+                // // var override_category_array = [];
+                // var options = $(`#override_default_category_select_${shortId}`).selectedOptions;
 
-                category = override_category_array;
+                // var values = Array.from(options).map(({
+                //     value
+                // }) => value);
+                // console.log(values);
+
+                selectedOptions = Array.from(document.getElementById(`override_default_category_select-${shortId}`)
+                    .selectedOptions).map(({
+                    value
+                }) => value);
+                //console.log("Category Names: ", category_names);
+
+                // $(category_names).each(function(index1, element1) { //for each category name
+                //     //get Arcadier all category ids
+                //     var category_ids = <?php echo json_encode($arcadier_categories); ?>;
+
+
+                //     $(category_ids).each(function(index, element) { //for all category IDs
+                //         if (element.Name ==
+                //             element1
+                //         ) { //if chosen category names are found, pull their ID
+                //             override_category_array.push(element.ID);
+                //             console.log(override_category_array);
+                //         }
+                //     });
+                // });
+
+                category = selectedOptions; //override_category_array;
             } else {
                 category = $(`#cat-${shortId}`).attr('cat-id').split(',');
             }
