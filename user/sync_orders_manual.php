@@ -10,7 +10,7 @@ $content = json_decode($contentBodyJson, true);
 ///$userId = $content['userId'];
 $invoice_id = $content['invoice-id'];
 $order_id = $content['order-id'];
-$user_id = $content['user-id'];
+$user_id = $content['user-id']; //buyer id now
 
 $baseUrl = getMarketplaceBaseUrl();
 $admin_token = $arc->AdminToken();
@@ -23,15 +23,6 @@ $url = $baseUrl . '/api/v2/users/';
 $result = $arc->getUserInfo($user_id);
 $userId = $result['ID'];
 
-$auth = array(array('Name' => 'merchant_guid', "Operator" => "in",'Value' => $userId));
-$url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
-$authDetails =  callAPI("POST", $admin_token, $url, $auth);
-
-$shop_secret_key = $authDetails['Records'][0]['secret_key'];
-$shop_api_key = $authDetails['Records'][0]['api_key'];
-$shop = $authDetails['Records'][0]['shop'];
-$auth_id = $authDetails['Records'][0]['Id'];
-$access_token= $authDetails['Records'][0]['access_token'];
 
 
 $url = $baseUrl . '/api/v2/users/'; 
@@ -71,10 +62,24 @@ foreach($result['Orders'] as $order) {
 
     $orderId = $order['ID'];
 
-    if ($order_id == $orderId) {
+   // if ($order_id == $orderId) {
+
+        $merchant_id = $order['MerchantDetail']['ID'];
+
+        $auth = array(array('Name' => 'merchant_guid', "Operator" => "in",'Value' => $merchant_id));
+        $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
+        $authDetails =  callAPI("POST", $admin_token, $url, $auth);
+
+        $shop_secret_key = $authDetails['Records'][0]['secret_key'];
+        $shop_api_key = $authDetails['Records'][0]['api_key'];
+        $shop = $authDetails['Records'][0]['shop'];
+        $auth_id = $authDetails['Records'][0]['Id'];
+        $access_token= $authDetails['Records'][0]['access_token'];
+
+
 
         //check if the order has already been synced
-        $syncOrders = array(array('Name' => 'order_id', "Operator" => "equal",'Value' => $orderId), array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
+        $syncOrders = array(array('Name' => 'order_id', "Operator" => "equal",'Value' => $orderId), array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $merchant_id));
         $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/synced_orders';
         $isOrderSyncResult =  callAPI("POST", $admin_token, $url, $syncOrders);
 
@@ -177,6 +182,7 @@ foreach($result['Orders'] as $order) {
 
                 //checking if the item is a variant or not
                 if ($cartItem['ItemDetail']['ParentID'] == null) {
+                    
                     $itemId =  $cartItem['ItemDetail']['ID'];
                 
                     $syncItems = array(array('Name' => 'arc_item_guid', "Operator" => "equal",'Value' => $itemId));
@@ -197,6 +203,7 @@ foreach($result['Orders'] as $order) {
                     $url = $baseUrl . '/api/v2/items/' . $parentId;
                     $item = callAPI("GET", $admin_token, $url, false);
                     $childItems = $item['ChildItems'];
+                    error_log('variant id ' . $variantId);
                     error_log('ChildItems: '.json_encode($childItems));
 
                     // $filtered = array_filter($childItems, function($value) use ($variantId) {
@@ -205,9 +212,21 @@ foreach($result['Orders'] as $order) {
 
 
                     foreach ($childItems as $child) { 
-                        if ($child['ID'] ==  $variantId) {
+
+                        $isthere =  strpos($child['AdditionalDetails'], "gid://shopify/ProductVariant/");
+                        error_log($isthere);
+
+                        
+                        if ( ($child['ID'] ==  $variantId) && (strstr($child['AdditionalDetails'], "gid://shopify/ProductVariant/") !== false) ) {
+                            error_log('yes');
+
+                         //   if (strpos($child['AdditionalDetails'], "gid://shopify/ProductVariant/") == true) {
+                               // echo 'true';
                                $variant_id = ltrim($child['AdditionalDetails'], "gid://shopify/ProductVariant/");
                                break;
+                          //  }
+
+
                         }
                     }
 
@@ -350,7 +369,7 @@ foreach($result['Orders'] as $order) {
             $sync_details = [
 
                 "order_id" => $orderId,
-                "merchant_guid" => $userId,
+                "merchant_guid" => $merchant_id,
             
             ];
                 
@@ -362,7 +381,7 @@ foreach($result['Orders'] as $order) {
         // } else {
         //     echo json_encode('This order has been sync');
         // }
-    }        
+  //  }        
 }
 
 function status_mapping($fulfilment, $payment){
