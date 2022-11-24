@@ -104,94 +104,94 @@
         if (url.indexOf("/merchants/order/history") >= 0) {
          
             //append new header for sync
-            $('.order-list-tit-sec ').append('<div class="order-status-sec">Shopify Sync</div>');
+            // $('.order-list-tit-sec ').append('<div class="order-status-sec">Shopify Sync</div>');
 
 
-            waitForElement(".refund-icon", function ()
-            {
+            // waitForElement(".refund-icon", function ()
+            // {
                 
-                $("#order-list .order-un-read-box:not(.loadedstatus)").each(function ()
-                {
+            //     $("#order-list .order-un-read-box:not(.loadedstatus)").each(function ()
+            //     {
              
-                $(this).append(`<div class="order-status-sec">
-                <button class="form-control shop-sync">Sync Order</button>
-                </div>`);
+            //     $(this).append(`<div class="order-status-sec">
+            //     <button class="form-control shop-sync">Sync Order</button>
+            //     </div>`);
                     
-                $(this).addClass("loadedstatus");
+            //     $(this).addClass("loadedstatus");
                      
-                })
+            //     })
              
-            })
+            // })
 
             //api template
-            $('.order-data1 thead tr').append('<th class="order-status-sec">Shopify Sync</th>')
+            // $('.order-data1 thead tr').append('<th class="order-status-sec">Shopify Sync</th>')
 
-            waitForElement(".order-data1", function ()
-            {
-                $('.order-data1 tbody tr:not(.loadedstatus)').each(function ()
-                {
-                     $(this).append(`<td class="order-status-sec">
-                    <button class="form-control shop-sync">Sync Order</button>
-                    </td>`);
+            // waitForElement(".order-data1", function ()
+            // {
+            //     $('.order-data1 tbody tr:not(.loadedstatus)').each(function ()
+            //     {
+            //          $(this).append(`<td class="order-status-sec">
+            //         <button class="form-control shop-sync">Sync Order</button>
+            //         </td>`);
                     
-                    $(this).addClass("loadedstatus");
-                })
-            })
+            //         $(this).addClass("loadedstatus");
+            //     })
+            // })
 
             
 
             //get order details via order id https://{{your-marketplace}}.arcadier.io/api/v2/users/{{merchantID}}/orders/{{orderID}} ---? 
             //this endpoint do not get cf for cartitems, reference invoice id instead then validate the order id
 
-            $('body').on('click', '.shop-sync', function ()
-            {
+            // $('body').on('click', '.shop-sync', function ()
+            // {
                 
 
-                var orderList = REDUX_DATA.orderReducer.history.Records;
-                var userId = REDUX_DATA.userReducer.user.ID;
+            //     var orderList = REDUX_DATA.orderReducer.history.Records;
+            //     var userId = REDUX_DATA.userReducer.user.ID;
                     
-                    //var records = orderList.Orders.filter(x => x.PurchaseOrderNo == "PO125");
+            //         //var records = orderList.Orders.filter(x => x.PurchaseOrderNo == "PO125");
 
                 
 
-                const res = orderList.filter(x =>
-                    x.Orders.some(y => y.PurchaseOrderNo == $(this).parents('.loadedstatus').find('td:first a').text())
+            //     const res = orderList.filter(x =>
+            //         x.Orders.some(y => y.PurchaseOrderNo == $(this).parents('.loadedstatus').find('td:first a').text())
                     
                     
-                );
-                console.table(res);
-                console.log(res[0].InvoiceNo)
-                console.log(res[0].Orders[0].ID)
+            //     );
+            //     console.table(res);
+            //     console.log(res[0].InvoiceNo)
+            //     console.log(res[0].Orders[0].ID)
 
 
-                // const invoiceId = $(this).parents('.order-un-read-box').find('.invoice-number').text();
-                // const orderId = $(this).parents('.order-un-read-box').attr('data-order-guid');
+            //     // const invoiceId = $(this).parents('.order-un-read-box').find('.invoice-number').text();
+            //     // const orderId = $(this).parents('.order-un-read-box').attr('data-order-guid');
                 
-                syncOrderShopifyManual(res[0].Orders[0].ID, res[0].InvoiceNo,userId)
+            //     syncOrderShopifyManual(res[0].Orders[0].ID, res[0].InvoiceNo,userId)
 
-            })
+            // })
 
 
-             window.onscroll = function (ev){
-              waitForElement(".refund-icon", function ()
-                {
+            //  window.onscroll = function (ev){
+            //   waitForElement(".refund-icon", function ()
+            //     {
                 
-               // $('.order-list-tit-sec ').append('<div class="order-status-sec">Shopify Sync</div>');
+            //    // $('.order-list-tit-sec ').append('<div class="order-status-sec">Shopify Sync</div>');
 
 
-                $("#order-list .order-un-read-box:not(.loadedstatus)").each(function ()
-                {
+            //     $("#order-list .order-un-read-box:not(.loadedstatus)").each(function ()
+            //     {
              
-                $(this).append(`<div class="order-status-sec">
-                <button class="form-control shop-sync">Sync Order</button>
-                </div>`);
+            //     $(this).append(`<div class="order-status-sec">
+            //     <button class="form-control shop-sync">Sync Order</button>
+            //     </div>`);
                     
-                $(this).addClass("loadedstatus");
+            //     $(this).addClass("loadedstatus");
                      
-                })
+            //     })
              
-            })
-            };
+            // })
+            // };
 
               
         }
@@ -244,6 +244,27 @@
 
 
         }
+
+
+
+        if (url.indexOf("/checkout/transaction-complete") >= 0) {
+
+            var userId = REDUX_DATA.userReducer.user.ID;
+            var invoiceNo = $('.inv-text').text();
+
+            syncOrderShopifyManual(0, invoiceNo, userId);
+
+
+
+
+
+
+        }
+
+
+
+
+
 
     });
 
