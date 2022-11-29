@@ -58,7 +58,7 @@ foreach ($packageCustomFields as $cf) {
 //loop through each orders, assuming there are multiple merchants / invoice , since this is bespoke
 
 
-foreach($result['Orders'] as $order) {
+foreach($result['Orders'] as $order) { 
 
     $orderId = $order['ID'];
 
@@ -85,7 +85,7 @@ foreach($result['Orders'] as $order) {
 
         error_log('Check if order was in synced_orders table: '.json_encode($isOrderSyncResult));
         
-        // if ($isOrderSyncResult['TotalRecords'] == 0) {    
+        if ($isOrderSyncResult['TotalRecords'] == 0) {    
 
             //check if the customer already exist,if exist, get the shopify customer id
             //if not, create a new customer, shopify validates duplicate customer via email
@@ -218,6 +218,7 @@ foreach($result['Orders'] as $order) {
 
                         
                         if ( ($child['ID'] ==  $variantId) && (strstr($child['AdditionalDetails'], "gid://shopify/ProductVariant/") !== false) ) {
+                            
                             error_log('yes');
 
                          //   if (strpos($child['AdditionalDetails'], "gid://shopify/ProductVariant/") == true) {
@@ -381,7 +382,7 @@ foreach($result['Orders'] as $order) {
         // } else {
         //     echo json_encode('This order has been sync');
         // }
-  //  }        
+   }        
 }
 
 function status_mapping($fulfilment, $payment){
