@@ -62,19 +62,33 @@
 			$response = shopifyAPI("GET", $shopify_access_token, $url, false);
 			error_log(json_encode($response));
 
+			//calculate total quantity of all variants
+			$variants = $response['product']['variants'];
+			$total_quantity = 0;
+			$minimum_price = (float)$response['product']['variants'][0]['price'];
+			foreach($variants as $element){
+				$total_quantity = $total_quantity + $element['inventory_quantity'];
+				if($element['price'] < $minimum_price){
+					$minimum_price = $element['price'];
+				}
+			}
+
+			
+
+			//edit parent item
 			$item_details = array(
 				'SKU' =>  $response['product']['variants'][0]['sku'],
 				'Name' =>  $response['product']['title'],
-				'BuyerDescription' => $response['product']['body_html'],
-				'SellerDescription' => $response['product']['body_html'],
-				'Price' => (float)$response['product']['variants'][0]['price'],
+				'BuyerDescription' => strip_tags($response['product']['body_html']),
+				'SellerDescription' => strip_tags($response['product']['body_html']),
+				'Price' => $minimum_price,
 				'PriceUnit' => null,
 				'StockLimited' => true,
-				'StockQuantity' =>  $response['product']['variants'][0]['inventory_quantity'],
+				'StockQuantity' =>  $total_quantity,
 				'IsVisibleToCustomer' => $response['product']['status'],
 				'Active' => true,
 				'IsAvailable' => '',
-				'CurrencyCode' =>  'SGD',
+				'CurrencyCode' =>  'AUD',
 				'Media' => [
 					array( "MediaUrl" => $response['product']['image']['src'])	
 				]
@@ -83,6 +97,78 @@
 			//update Arcadier Item
 			$url =  $baseUrl . '/api/v2/merchants/'. $merchant .'/items/'. $id;
     		$updateItem =  callAPI("PUT", $admin_token, $url, $item_details); 
+
+			////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+			//edit children
+
+			//find changes in variants
+			$variants = $response['product']['variants'];
+			$child_items_array = [];
+			foreach($variants as $element){
+				//get variant ID
+				$variant_ID = $element['id'];
+				
+				//get price of variant
+				$variant_price = $element['price'];
+
+				//get variant stock
+				$variant_stock = $element['inventory_quantity'];
+
+				//get images
+				$variant_picture = "";
+				$variants_images = $response['product']['images'];
+				foreach($variants_images as $images){
+					if(count($images['variant_ids']) !== 0){
+						if($images['variant_ids'][0] == $variant_ID){
+							$variant_picture = $images['src'];
+						}
+					}
+				}
+
+				//get Arcadier item details
+				$url =  $baseUrl . '/api/v2/items/'. $id;
+				$item =  callAPI("GET", $admin_token, $url, false); 
+
+				//apply changes to existing variants
+				foreach($item['ChildItems'] as $arcadier_item){
+					$shopify_variant_ID = str_replace("gid://shopify/ProductVariant/", "", $arcadier_item['AdditionalDetails']);
+					if($shopify_variant_ID == $variant_ID){
+						$details = [
+							'SKU' => $element['sku'],
+							'Price' => $variant_price - $minimum_price,
+							'StockQuantity' => $variant_stock,
+							'Media' => [
+								[
+									'MediaUrl'=> $variant_picture
+								]
+							]
+						];
+						array_push($child_items_array, $details);
+						//update Arcadier Item
+						$url =  $baseUrl . '/api/v2/merchants/'. $merchant .'/items/'. $arcadier_item['ID'];
+						$updateItem =  callAPI("PUT", $admin_token, $url, $details); 
+					}
+					
+					$child_items_array = [];
+					$details = [];
+				}
+			}
+
+			//find new or deleted variants
+			if(count($item['ChildItems']) !== count($variants)){
+
+				//find new variants
+				if(count($item['ChildItems']) < count($variants)){
+
+				}
+
+				//find deleted variants
+				if(count($item['ChildItems']) > count($variants)){
+					
+				}
+
+			}
 
 			if($updateItem['Name'] == $response['product']['title']){
 				echo "success";
