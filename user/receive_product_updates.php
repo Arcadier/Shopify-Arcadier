@@ -68,8 +68,8 @@
 			$minimum_price = (float)$response['product']['variants'][0]['price'];
 			foreach($variants as $element){
 				$total_quantity = $total_quantity + $element['inventory_quantity'];
-				if($element['price'] < $minimum_price){
-					$minimum_price = $element['price'];
+				if((float)$element['price'] < $minimum_price){
+					$minimum_price = (float)$element['price'];
 				}
 			}
 
