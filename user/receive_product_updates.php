@@ -73,7 +73,16 @@
 				}
 			}
 
-			
+			//get all images
+			$all_images = $response['product']['images'];
+			$image_array = [];
+			foreach($all_images as $variant_image){
+				$data = [
+					'MediaURL' => $variant_image['src']
+				];
+				array_push($image_array, $data);
+				$data = [];
+			}
 
 			//edit parent item
 			$item_details = array(
@@ -89,9 +98,7 @@
 				'Active' => true,
 				'IsAvailable' => '',
 				'CurrencyCode' =>  'AUD',
-				'Media' => [
-					array( "MediaUrl" => $response['product']['image']['src'])	
-				]
+				'Media' => $image_array
 			);
 
 			//update Arcadier Item
