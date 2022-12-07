@@ -20,7 +20,7 @@
 	$data = array(array('Name' => 'product_id', "Operator" => "eq",'Value' => 'gid://shopify/Product/'.$product_id));
 	$url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/synced_items';
 	$arcadier_item =  callAPI("POST", $admin_token, $url, $data);
-	error_log(json_encode($arcadier_item));
+	// error_log(json_encode($arcadier_item));
 
 
 	//if item is found are found
@@ -60,7 +60,7 @@
 			//get shopify item details
 			$url = 'https://'. $shopify_store . '.myshopify.com/admin/api/2022-07/products/' . $GLOBALS['product_id'] . '.json';
 			$response = shopifyAPI("GET", $shopify_access_token, $url, false);
-			error_log(json_encode($response));
+			// error_log(json_encode($response));
 
 			//calculate total quantity of all variants
 			$variants = $response['product']['variants'];
@@ -97,6 +97,11 @@
 			//update Arcadier Item
 			$url =  $baseUrl . '/api/v2/merchants/'. $merchant .'/items/'. $id;
     		$updateItem =  callAPI("PUT", $admin_token, $url, $item_details); 
+			if($updateItem['Name'] == $response['product']['title']){
+				echo "Parent item success";
+			} else {
+				echo "Arcadier Parent Item Update failed";
+			}
 
 			////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -148,6 +153,11 @@
 						//update Arcadier Item
 						$url =  $baseUrl . '/api/v2/merchants/'. $merchant .'/items/'. $arcadier_item['ID'];
 						$updateItem =  callAPI("PUT", $admin_token, $url, $details); 
+						if($updateItem['Name'] == $response['product']['title']){
+							echo "Existing variants item success";
+						} else {
+							echo "Arcadier Existing Variant Item Update failed";
+						}
 					}
 					
 					$child_items_array = [];
@@ -155,26 +165,115 @@
 				}
 			}
 
-			//find new or deleted variants
-			if(count($item['ChildItems']) !== count($variants)){
+			/////////////////////////////////////////
+			//find new variants
 
-				//find new variants
-				if(count($item['ChildItems']) < count($variants)){
+			//get Arcadier item details
+			$url =  $baseUrl . '/api/v2/items/'. $id;
+			$item =  callAPI("GET", $admin_token, $url, false); 
 
-				}
+			foreach($response['product']['variants'] as $shopify_variant){
+				$shopify_combination = [ $shopify_variant['option1'], $shopify_variant['option2'], $shopify_variant['option3'] ];
+				sort($shopify_combination);
 
-				//find deleted variants
-				if(count($item['ChildItems']) > count($variants)){
+				$arcadier_combination = [];
+				$found_match = false;
+				foreach($item['ChildItems'] as $arcadier_variant){
+
+					$found_new_variant_combination = false;
+					foreach($arcadier_variant['Variants'] as $arcadier_variant_names){
+						array_push($arcadier_combination, $arcadier_variant_names['Name']);
+					}
 					
+					
+					if(count($arcadier_combination) == 1){
+						array_push($arcadier_combination, null);
+						array_push($arcadier_combination, null);
+					}
+					
+					if(count($arcadier_combination) == 2){
+						array_push($arcadier_combination, null);
+						
+					}
+					sort($arcadier_combination);
+
+					//no new variant found
+					error_log('Arcadier options: '.json_encode($arcadier_combination));
+					error_log('Shopify options: '.json_encode($shopify_combination));
+					if($shopify_combination == $arcadier_combination){
+						$found_match = true;
+						break;
+					}
 				}
+				//new variant found
+				if($found_match == false){
 
+					//get variant image
+					$variant_picture = "";
+					$variants_images = $response['product']['images'];
+					foreach($variants_images as $images){
+						if(count($images['variant_ids']) !== 0){
+							if($images['variant_ids'][0] == $shopify_variant['id']){
+								$variant_picture = $images['src'];
+							}
+						}
+					}
+					//build 'Variants' object for Arcadier API
+					$shopify_combination = [ $shopify_variant['option1'], $shopify_variant['option2'], $shopify_variant['option3'] ];
+					$variant_object = [];
+					foreach($shopify_combination as $key => $combination){
+						if($combination !== null){
+							$data = [
+								'ID' => '',
+								'GroupID' => '',
+								'Name' => $shopify_combination[$key],
+								'GroupName' => $response['product']['options'][$key]['name']
+							];
+
+							foreach($item['ChildItems'] as $child){
+								foreach($child['Variants'] as $variant_groups){
+									if($variant_groups['GroupName'] == $data['GroupName']){
+										$data['GroupID'] = $variant_groups['GroupID'];
+										break 2;
+									}
+								}
+							}
+							array_push($variant_object, $data);
+						}
+					}
+
+					$data = [
+						'ChildItems' => [
+							[
+								'ID' => null,
+								'CurrencyCode' => 'AUD',
+								'Variants' => $variant_object,
+								'SKU' => $shopify_variant['sku'],
+								'Price' => $shopify_variant['price'] - $item['Price'],
+								'StockLimited' => true,
+								'StockQuantity' => $shopify_variant['inventory_quantity'],
+								'Media' => [
+									[
+										'MediaUrl' => $variant_picture
+									]
+								],
+								'AdditionalDetails' => $shopify_variant['admin_graphql_api_id']
+							]
+						]
+					];
+
+					//update Arcadier Item
+					$url =  $baseUrl . '/api/v2/merchants/'. $merchant .'/items/'. $id;
+					$updateItem =  callAPI("PUT", $admin_token, $url, $data); 
+					if($updateItem['Name'] == $response['product']['title']){
+						echo "New variant added success";
+					} else {
+						echo "New variant addition failed";
+					}
+				}
 			}
 
-			if($updateItem['Name'] == $response['product']['title']){
-				echo "success";
-			} else {
-				echo "Arcadier Item Update failed";
-			}
+			
 		}
 		//
 		else{
