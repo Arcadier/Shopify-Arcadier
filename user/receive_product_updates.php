@@ -115,7 +115,7 @@
 			//edit children
 
 			//find changes in variants
-			$variants = $response['product']['variants'];
+			$variants = $response['product']['variants'];  //from shopify product API (get one product)
 			$child_items_array = [];
 			foreach($variants as $element){
 				//get variant ID
