@@ -181,43 +181,46 @@
 
 			//get Arcadier item details
 			$url =  $baseUrl . '/api/v2/items/'. $id;
-			$item =  callAPI("GET", $admin_token, $url, false); 
+			$item =  callAPI("GET", $admin_token, $url, false);              //get the main item details stored in $id
 
-			foreach($response['product']['variants'] as $shopify_variant){
-				$shopify_combination = [ $shopify_variant['option1'], $shopify_variant['option2'], $shopify_variant['option3'] ];
-				sort($shopify_combination);
+			foreach($response['product']['variants'] as $shopify_variant){   //loop through all shopify variants
+				$shopify_combination = [ $shopify_variant['option1'], $shopify_variant['option2'], $shopify_variant['option3'] ];  //for each shopify variant, create array of variant option names "Small", "Black", "Metal". Option2 and Option3 can be null
+				sort($shopify_combination); //sort them for later
 
 				$arcadier_combination = [];
 				$found_match = false;
-				foreach($item['ChildItems'] as $arcadier_variant){
+				foreach($item['ChildItems'] as $arcadier_variant){           //loop through each arcadier variant
 
-					$found_new_variant_combination = false;
+					$found_new_variant_combination = false;   //changes value on line 218, in if condition
 					foreach($arcadier_variant['Variants'] as $arcadier_variant_names){
-						array_push($arcadier_combination, $arcadier_variant_names['Name']);
+						array_push($arcadier_combination, $arcadier_variant_names['Name']);   //create an array with variant option names "Small", "Black", "Metal"
 					}
 					
 					
-					if(count($arcadier_combination) == 1){
+					if(count($arcadier_combination) == 1){         //in case there's only 1 variant option, add 2 nulls to make the array the same size as the shopify array (array size 3)
 						array_push($arcadier_combination, null);
 						array_push($arcadier_combination, null);
 					}
 					
-					if(count($arcadier_combination) == 2){
+					if(count($arcadier_combination) == 2){         //in case there's only 2 variant options, add 1 null to make the array the same size as the shopify array (array size 3)
 						array_push($arcadier_combination, null);
 						
 					}
-					sort($arcadier_combination);
+					sort($arcadier_combination);  //sort the array
+
+					//after sorting, if the arrays are equal, it means that this iteration of the foreach loops found the matching variants. If not, the iteration is looking at definitely not the same variant
+					//matching variants means that shopify variant exists on Arcadier, so it does not need to be created
 
 					//no new variant found
 					error_log('Arcadier options: '.json_encode($arcadier_combination));
 					error_log('Shopify options: '.json_encode($shopify_combination));
-					if($shopify_combination == $arcadier_combination){
+					if($shopify_combination == $arcadier_combination){   //if the sorted arrays are equal, that shopify variant already exists. no need to create it. break out of loop
 						$found_match = true;
 						break;
 					}
 				}
 				//new variant found
-				if($found_match == false){
+				if($found_match == false){     //this will only occur if the SHopify variant's match was never found. meaning its a new variant. Time to create it
 
 					//get variant image
 					$variant_picture = "";
@@ -230,37 +233,39 @@
 						}
 					}
 					//build 'Variants' object for Arcadier API
-					$shopify_combination = [ $shopify_variant['option1'], $shopify_variant['option2'], $shopify_variant['option3'] ];
+					$shopify_combination = [ $shopify_variant['option1'], $shopify_variant['option2'], $shopify_variant['option3'] ];   //get the variant options in an array
 					$variant_object = [];
-					foreach($shopify_combination as $key => $combination){
+					foreach($shopify_combination as $key => $combination){   //lopp through the above array, making sure to ignore nulls
 						if($combination !== null){
 							$data = [
 								'ID' => '',
-								'GroupID' => '',
-								'Name' => $shopify_combination[$key],
-								'GroupName' => $response['product']['options'][$key]['name']
+								'GroupID' => '',											 //kept empty for now, changes on line 251
+								'Name' => $shopify_combination[$key],                        //variant options
+								'GroupName' => $response['product']['options'][$key]['name'] //variant group name from the SHopify Get one product API
 							];
 
-							foreach($item['ChildItems'] as $child){
-								foreach($child['Variants'] as $variant_groups){
-									if($variant_groups['GroupName'] == $data['GroupName']){
-										$data['GroupID'] = $variant_groups['GroupID'];
-										break 2;
+							
+							foreach($item['ChildItems'] as $child){                           //loop through Arcadier variants
+								foreach($child['Variants'] as $variant_groups){               //loop the the variant options of 1 variant
+									if($variant_groups['GroupName'] == $data['GroupName']){   //when the variant group is found matching the variant group of Shopify, get its ID
+										$data['GroupID'] = $variant_groups['GroupID'];		  //put that ID back into line 242
+										break 2;                                              //break the 2 loops because we already got the groupID we wanted.
 									}
 								}
 							}
-							array_push($variant_object, $data);
+							array_push($variant_object, $data); //create this object for use on line 265, for the API call to create a new variant
 						}
 					}
 
+					//request body for creating new variant
 					$data = [
 						'ChildItems' => [
 							[
 								'ID' => null,
 								'CurrencyCode' => 'AUD',
-								'Variants' => $variant_object,
-								'SKU' => $shopify_variant['sku'],
-								'Price' => $shopify_variant['price'] - $item['Price'],
+								'Variants' => $variant_object,                          //from line 256
+								'SKU' => $shopify_variant['sku'],                       
+								'Price' => $shopify_variant['price'] - $item['Price'],  //surcharge
 								'StockLimited' => true,
 								'StockQuantity' => $shopify_variant['inventory_quantity'],
 								'Media' => [
@@ -268,13 +273,13 @@
 										'MediaUrl' => $variant_picture
 									]
 								],
-								'AdditionalDetails' => $shopify_variant['admin_graphql_api_id']
+								'AdditionalDetails' => $shopify_variant['admin_graphql_api_id']  //include this mandatory
 							]
 						]
 					];
 
 					//update Arcadier Item
-					$url =  $baseUrl . '/api/v2/merchants/'. $merchant .'/items/'. $id;
+					$url =  $baseUrl . '/api/v2/merchants/'. $merchant .'/items/'. $id;           //the Arcadier parent item ID 
 					$updateItem =  callAPI("PUT", $admin_token, $url, $data); 
 					if($updateItem['Name'] == $response['product']['title']){
 						echo "New variant added success";
