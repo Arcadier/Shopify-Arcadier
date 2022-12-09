@@ -118,16 +118,16 @@
 			$variants = $response['product']['variants'];  //from shopify product API (get one product)
 			$child_items_array = [];
 			foreach($variants as $element){
-				//get variant ID
+				//get Shopify variant ID
 				$variant_ID = $element['id'];
 				
-				//get price of variant
+				//get price of Shopify variant
 				$variant_price = $element['price'];
 
-				//get variant stock
+				//get Shopify variant stock
 				$variant_stock = $element['inventory_quantity'];
 
-				//get images
+				//get all images of Shopify variant
 				$variant_picture = "";
 				$variants_images = $response['product']['images'];
 				foreach($variants_images as $images){
@@ -143,22 +143,26 @@
 				$item =  callAPI("GET", $admin_token, $url, false); 
 
 				//apply changes to existing variants
+				//loop through Arcadier's variants and find the variant which is equivalent to the above Shopify variant 
 				foreach($item['ChildItems'] as $arcadier_item){
-					$shopify_variant_ID = str_replace("gid://shopify/ProductVariant/", "", $arcadier_item['AdditionalDetails']);
+					$shopify_variant_ID = str_replace("gid://shopify/ProductVariant/", "", $arcadier_item['AdditionalDetails']);  //contains the Shopify variant ID
 					if($shopify_variant_ID == $variant_ID){
+						//get the details from the SHopify variant
 						$details = [
-							'SKU' => $element['sku'],
-							'Price' => $variant_price - $minimum_price,
-							'StockQuantity' => $variant_stock,
+							'SKU' => $element['sku'],                     //Shopify variant SKU
+							'Price' => $variant_price - $minimum_price,   //Shopify variant surcharge calculation
+							'StockQuantity' => $variant_stock,            //Shopify variant stock
 							'Media' => [
 								[
-									'MediaUrl'=> $variant_picture
+									'MediaUrl'=> $variant_picture         //the image of that Shopify variant
 								]
 							]
 						];
-						array_push($child_items_array, $details);
-						//update Arcadier Item
-						$url =  $baseUrl . '/api/v2/merchants/'. $merchant .'/items/'. $arcadier_item['ID'];
+						array_push($child_items_array, $details);         //ignore this
+						//update the Arcadier Variant
+						$url =  $baseUrl . '/api/v2/merchants/'. $merchant .'/items/'. $arcadier_item['ID'];   //this item is the Arcadier Variant ID from the loop -> ChildItems[i].ID  (NOT ChildItems[i].Variants[j].ID)
+						
+						//API call
 						$updateItem =  callAPI("PUT", $admin_token, $url, $details); 
 						if($updateItem['Name'] == $response['product']['title']){
 							echo "Existing variants item success";
@@ -167,8 +171,8 @@
 						}
 					}
 					
-					$child_items_array = [];
-					$details = [];
+					$child_items_array = [];   //ignore this
+					$details = [];   //reset the details object to update the next variant
 				}
 			}
 
