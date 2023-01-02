@@ -434,6 +434,8 @@ if($isMerchant){
     var $j = jQuery.noConflict();
     $(document).ready(function() {
 
+        console.log('new zip on staging')
+
         var min_sync_limit1 =
             '<?php if(!empty($configRowByMerchantGuid["min_sync_limit"])){echo $configRowByMerchantGuid["min_sync_limit"]; } ?>';
         $("#min_sync_limit").val(min_sync_limit1);
