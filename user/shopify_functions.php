@@ -294,11 +294,11 @@ function shopify_get_all_products_unstable($token, $shop, $page, $all){
 			}
 		}');
 	}
-//do {
+	//do {
 	//sleep(1);
 	$api_call  = graphql($token, $shop, $query);   
 	$products = json_decode($api_call['body'], true);
-//}
+	//}
 	echo json_encode($api_call);
 
 	//while ($api_call['errors'][0]['message'] == 'Throttled');
@@ -442,16 +442,16 @@ function shopify_categories($token, $shop) {
     // }} }');
 
 	$query = array('query' => "{
-	shop {
-		products(first:250, query: \"-product_type:''\") {
-			edges {
-    			node {
-    				productType
+		shop {
+			products(first:250, query: \"-product_type:''\") {
+				edges {
+					node {
+						productType
+					}
 				}
 			}
 		}
-	}
-}");
+	}");
 
 	$cats  = graphql($token, $shop, $query);   //shopify_call($token, $shop, "/admin/api/2022-07/graphql.json", $query, 'POST');
     //$cats = $cats;
@@ -556,121 +556,121 @@ function shopify_add_tag($token, $shop, $product_id, $tags) {
 function shopify_get_bulk_item($token, $shop){
 
 
-$mutation = array('query' => "mutation {
-  bulkOperationRunQuery(
-   query: \"\"\"
-    { 
-      products {
-        edges {
-          node {
-		   id
-           title
-			description
-			customProductType
-			productType
-			tags
-			createdAt
-			updatedAt
-          }
-        }
-      }
-    }
-    \"\"\"
-	)
-  {
-    bulkOperation {
-      id
-      status
-    }
-    userErrors {
-      field
-      message
-    }
-  }
-}
-");
+	$mutation = array('query' => "mutation {
+	bulkOperationRunQuery(
+	query: \"\"\"
+		{ 
+		products {
+			edges {
+			node {
+			id
+			title
+				description
+				customProductType
+				productType
+				tags
+				createdAt
+				updatedAt
+			}
+			}
+		}
+		}
+		\"\"\"
+		)
+	{
+		bulkOperation {
+		id
+		status
+		}
+		userErrors {
+		field
+		message
+		}
+	}
+	}
+	");
 
-$bulkCall = graphql($token, $shop, $mutation);
-	//error_log('tags create ' .json_encode($tagsCreate));
-	//return $bulkCall;
+	$bulkCall = graphql($token, $shop, $mutation);
+		//error_log('tags create ' .json_encode($tagsCreate));
+		//return $bulkCall;
 
-$poll =  array('query' => "query {
-  currentBulkOperation {
-    id
-    status
-    errorCode
-    createdAt
-    completedAt
-    objectCount
-    fileSize
-    url
-    partialDataUrl
-  }
-}
-");
+	$poll =  array('query' => "query {
+	currentBulkOperation {
+		id
+		status
+		errorCode
+		createdAt
+		completedAt
+		objectCount
+		fileSize
+		url
+		partialDataUrl
+	}
+	}
+	");
 
-do {
+	do {
 
-$pollResult = graphql($token, $shop, $poll);
+	$pollResult = graphql($token, $shop, $poll);
 
-//error_log('poll ' . json_encode($pollResult));
-
-
-$status_data = json_decode($pollResult['body'], true);
-$status = $status_data['data']['currentBulkOperation']['status'];
-$url = $status_data['data']['currentBulkOperation']['url'];
-//echo $status_data['data']['currentBulkOperation']['status'];
-
-}
-
-while ($url === null);
-//echo $url;
-
-//error_log($status_data['data']['currentBulkOperation']['status']);
-//read json file from url in php
-$readJSONFile = file_get_contents($url);
+	//error_log('poll ' . json_encode($pollResult));
 
 
+	$status_data = json_decode($pollResult['body'], true);
+	$status = $status_data['data']['currentBulkOperation']['status'];
+	$url = $status_data['data']['currentBulkOperation']['url'];
+	//echo $status_data['data']['currentBulkOperation']['status'];
+
+	}
+
+	while ($url === null);
+	//echo $url;
+
+	//error_log($status_data['data']['currentBulkOperation']['status']);
+	//read json file from url in php
+	$readJSONFile = file_get_contents($url);
 
 
 
- //if ($readJSONFile) {
-        // $print = '';
 
-        //     // for each line
-        //     while (($line = $readJSONFile) !== false) {
-        //         $Output = json_decode($line);
-        //         $print .= "Action: ".$Output->id."<br/>";
-        //         $print .= "User: ".$Output->title."<br/>";
-        //        // $print .= "When: ".$Output->Timestamp."<br/>";
-        //        // $print .= "Location: ".$Output->URL."<hr>";
-        //     }
 
-		// 	echo $print;
+	//if ($readJSONFile) {
+			// $print = '';
 
-            // close file
-       // fclose($Path);
-    // } else {
-    //     $print = 'Error, File not found';
-    // }
+			//     // for each line
+			//     while (($line = $readJSONFile) !== false) {
+			//         $Output = json_decode($line);
+			//         $print .= "Action: ".$Output->id."<br/>";
+			//         $print .= "User: ".$Output->title."<br/>";
+			//        // $print .= "When: ".$Output->Timestamp."<br/>";
+			//        // $print .= "Location: ".$Output->URL."<hr>";
+			//     }
 
-// $file = fopen($url,'r');
-// while (!feof($file)){
-//     $line = fgets($file);
-//     $obj = json_decode($line);
-//     echo $obj;
-//     echo "<hr>";
-// }
+			// 	echo $print;
 
-//$products = json_decode($readJSONFile,true);
-//path = realpath("downloads/products.json");
+				// close file
+		// fclose($Path);
+		// } else {
+		//     $print = 'Error, File not found';
+		// }
 
-///file_put_contents($path, json_decode($readJSONFile));
+	// $file = fopen($url,'r');
+	// while (!feof($file)){
+	//     $line = fgets($file);
+	//     $obj = json_decode($line);
+	//     echo $obj;
+	//     echo "<hr>";
+	// }
 
-//$all = file_get_contents($path);
-//echo json_encode(['result' =>  $readJSONFile]); // display contents
-//echo json_encode($json);
-return $url;
+	//$products = json_decode($readJSONFile,true);
+	//path = realpath("downloads/products.json");
+
+	///file_put_contents($path, json_decode($readJSONFile));
+
+	//$all = file_get_contents($path);
+	//echo json_encode(['result' =>  $readJSONFile]); // display contents
+	//echo json_encode($json);
+	return $url;
 }
 
 function shopify_remove_tag($token, $shop, $product_id, $tag){
