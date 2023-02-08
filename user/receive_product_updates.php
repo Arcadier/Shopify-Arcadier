@@ -14,6 +14,7 @@
 
 	//get the product id from the webhook response
 	$product_id = $content['id'];
+	$webhook_event = $content['event'];
 	error_log(json_encode('Product ID from webhook: '.$product_id));
 
 	//search for the equivalent arcadier item guid
@@ -35,8 +36,17 @@
 
 		//----------------------------------------------------------------------->//check if item is flagged for syncing <-------------------------------------------------------------------------------
 
-		//resync item details from shopify
-		resync_item($arcadier_item_guid, $arcadier_merchant_guid, $baseUrl, $admin_token, $packageId);
+		//check if webhook event is for "updates"
+		if($webhook_event == "update"){
+			//resync item details from shopify
+			resync_item($arcadier_item_guid, $arcadier_merchant_guid, $baseUrl, $admin_token, $packageId);
+		}
+
+		if($webhook_event == "delete"){
+			//call Arcadier API to delete item
+		}
+		
+		
 	}
 	//if results are not found
 	else {
