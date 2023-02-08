@@ -44,6 +44,7 @@
 
 		if($webhook_event == "delete"){
 			//call Arcadier API to delete item
+			error_log(json_encode($webhook_event));
 		}
 		
 		
