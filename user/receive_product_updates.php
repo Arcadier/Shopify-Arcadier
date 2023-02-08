@@ -32,8 +32,6 @@
 		//----------------------------------------------------------------------->//check if item is flagged for syncing <-------------------------------------------------------------------------------
 
 
-
-
 		//----------------------------------------------------------------------->//check if item is flagged for syncing <-------------------------------------------------------------------------------
 
 		//check if webhook event is for "updates"
@@ -45,6 +43,8 @@
 		if($webhook_event == "delete"){
 			//call Arcadier API to delete item
 			error_log(json_encode($webhook_event));
+			delete_item($arcadier_item_guid, $arcadier_merchant_guid, $baseUrl, $admin_token, $packageId);
+
 		}
 		
 		
@@ -306,6 +306,15 @@
 		else{
 			echo ("Something fucked up. Check the \"auth\" custom table.");
 		}
+	}
+
+	function delete_item($id, $merchant, $baseUrl, $admin_token, $packageId){
+
+		$url =  $baseUrl . '/api/v2/merchants/'. $merchant .'/items/'. $id;
+    	$deleteItem =  callAPI("DELETE", $admin_token, $url, null); 
+
+
+
 	}
 	
 ?>
