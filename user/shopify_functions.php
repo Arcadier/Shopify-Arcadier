@@ -424,6 +424,26 @@ function shopify_products($token, $shop){
 
 }
 
+function shopify_order($token, $shop, $order_id){
+	//$page = $i + 1;
+    $order = shopify_call($token, $shop, "/admin/api/2022-10/orders/" .  $order_id . ".json", array(), 'GET');
+	//$order =  json_decode($order, TRUE);
+   
+    return $order;
+
+}
+
+
+function shopify_get_location($token, $shop){
+	//$page = $i + 1;
+    $location = shopify_call($token, $shop, "/admin/api/2022-10/locations.json", array(), 'GET');
+	//$location =  json_decode($location, TRUE);
+   
+    return $location;
+
+}
+
+
 function shopify_product_details($token, $shop, $prod_id){
 	$products = shopify_call($token, $shop, "/admin/api/2022-04/products/" . $prod_id .".json", array(), 'GET');
 	//echo json_encode('prods '. $products);
@@ -491,6 +511,39 @@ function shopify_get_variants($token, $shop, $product_id){
 	$variants_list =  json_decode($variants,true);
 
 	$variants_list = $variants_list['data']['product']['variants']['edges'];
+
+	return $variants_list;
+
+}
+
+
+function shopify_get_variant_location($token, $shop, $variant_id){
+	$query = array('query' => "{ productVariant ( id: \"$variant_id)\"){
+		id
+		inventoryItem {
+		  id
+		  inventoryLevels(first: 10) {
+			edges {
+			  node {
+				id
+				available
+				location {
+				  id
+				}
+			  }
+			}
+		  }
+		}
+	  }
+   	}}");
+
+	$variants = graphql($token, $shop, $query);	
+
+	$variants = $variants['body'];
+
+	$variants_list =  json_decode($variants,true);
+
+	//$variants_list = $variants_list['data']['product']['variants']['edges'];
 
 	return $variants_list;
 
@@ -848,8 +901,6 @@ function graphql($token, $shop, $query = array()) {
 	}
 
 }
-
-
 
 function shopify_get_all_products_unstable_test($token, $shop, $page, $all){
 	/*
