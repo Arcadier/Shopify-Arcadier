@@ -35,7 +35,30 @@ $packageId = getPackageID();
 //echo json_encode($synced_details);
 
 foreach($synced_details['Records']  as $log) {
-    $arc->deleteRowEntry($packageId, "synced_items", $log['Id']);
+   $deleteItem =  $arc->deleteRowEntry($packageId, "synced_items", $log['Id']);
+
+    $product_id = $deleteItem['product_id'];
+
+    $data = [
+        [
+        'Name'=> 'merchant_guid',
+        'Operator'=> 'equal',
+        'Value'=> $merchant_id
+        ],
+        [
+            'Name'=> 'product_id',
+            'Operator'=> 'equal',
+            'Value'=> $product_id
+        ]
+    ];
+    
+    $product_details = $arc->searchTable($packageId, 'synced_items', $data);
+
+        foreach($product_details['Records']  as $log) {
+
+            $deleteItem =  $arc->deleteRowEntry($packageId, "synced_items", $log['Id']);
+
+        }
 }
 
 echo json_encode($synced_details['TotalRecords']);
