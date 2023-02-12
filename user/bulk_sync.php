@@ -69,7 +69,7 @@ if ($result['CustomFields'] != null)  {
 
 }
 
-//error_log(json_encode($sync_items_list));
+error_log(" sync_list " . json_encode($sync_items_list));
 
 
 // get the custom field id to tag that the items are from shopify
@@ -139,7 +139,7 @@ $arc->sendEmail($userEmail, $html, $subject);
     $execution_time = ($time_end - $time_start);
 
     //execution time of the script
-    error_log('<b>Total Execution Time of getting bulk sync products:</b> '.$execution_time.' seconds');
+   // error_log('<b>Total Execution Time of getting bulk sync products:</b> '.$execution_time.' seconds');
 //}
 
 function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $admin_token, $packageId, $arc, $is_shopify_code,$arcadier_categories,$category_map,$userEmail) {
@@ -152,19 +152,17 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
     $execution_time = ($time_end - $time_start);
 
 //execution time of the script
-    error_log('<b>Total Execution Time of getting paginated products:</b> '.$execution_time.' seconds');
+   // error_log('<b>Total Execution Time of getting paginated products:</b> '.$execution_time.' seconds');
         $fp = @fopen($productsLink, "r");
 
         $admin_id = $arc->getAdminId();
-
-
         //get merchant's shipping method
 
         //$url =  $baseUrl . '/api/v2/merchants/' . $userId . '/shipping-methods/';
         $merchant_shippingMethods =  $arc->getShippingMethods($userId); //callAPI("GET", $admin_token, $url, false);
         $admin_shippingMethods =  $arc->getShippingMethods($admin_id);
 
-        error_log('shipping methods ' . json_encode($merchant_shippingMethods));
+       // error_log('shipping methods ' . json_encode($merchant_shippingMethods));
 
 
         $all_shipping_methods = [];
@@ -204,14 +202,14 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
         //execution time of the script
        // error_log('<b>Total Execution Time of checking if the product exists:</b> '.$execution_time.' seconds');
         
-        error_log('exist check ' . $isItemSyncResult['TotalRecords']);
+       // error_log("exist check " . $isItemSyncResult['TotalRecords']);
 
         $time_start = microtime(true);
         $product_details = shopify_product_details($access_token, $shop, ltrim($product_id,"gid://shopify/Product/"));   // shopify_get_variants($access_token, $shop, $product_id);
         $time_end = microtime(true);
         $execution_time = ($time_end - $time_start);
         //execution time of the script
-        error_log('<b>Total Execution Time of getting product details:</b> '.$execution_time.' seconds');
+       // error_log('<b>Total Execution Time of getting product details:</b> '.$execution_time.' seconds');
 
         $product_name = $product_details['product']['title'];
         $description = $product_details['product']['body_html'];
@@ -284,19 +282,44 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
             
         }
 
+        $allvariants = !empty($allvariants) ? $allvariants : null;
+
+        $item_details = array(
+            'SKU' =>  $sku,
+            'Name' =>  $product_name,
+            'BuyerDescription' => strip_tags($description),
+            'SellerDescription' => strip_tags($description),
+            'Price' => (float)$price,
+            'PriceUnit' => null,
+            'StockLimited' => true,
+            'StockQuantity' =>  $inventory,
+            'IsVisibleToCustomer' => true,
+            'Active' => true,
+            'IsAvailable' => '',
+            'CurrencyCode' =>  'AUD',
+            'Categories' =>   $all_categories,
+            'ShippingMethods'  => $all_shipping_methods,
+            'PickupAddresses' => null,
+            'Media' => $allimages,
+            'Tags' => null,
+            'CustomFields' => null,
+            'ChildItems' => $allvariants,
+
+        );
+
 
     // echo $product_id;
-
+    //error_log("CATEGORY MAP " . json_encode($category_map));
       
         //if the item doesnt exist yet
-        if ($isItemSyncResult['TotalRecords'] == 0) {
+        if ($isItemSyncResult['TotalRecords'] == 0 && $product_details['product']['status'] == 'active') {
 
                 //create a new item on arcadier 
                 
                 //check if the shopify category has been mapped
 
                 //Load arcadier categories
-        
+
             if($category_map['TotalRecords'] == 1){
 
                 $category_maps = $category_map['Records'][0]['map'];
@@ -325,28 +348,28 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                 }
         
                 $time_start = microtime(true);
-                $item_details = array(
-                    'SKU' =>  $sku,
-                    'Name' =>  $product_name,
-                    'BuyerDescription' => strip_tags($description),
-                    'SellerDescription' => strip_tags($description),
-                    'Price' => (float)$price,
-                    'PriceUnit' => null,
-                    'StockLimited' => true,
-                    'StockQuantity' =>  $inventory,
-                    'IsVisibleToCustomer' => true,
-                    'Active' => true,
-                    'IsAvailable' => '',
-                    'CurrencyCode' =>  'AUD',
-                    'Categories' =>   $all_categories,
-                    'ShippingMethods'  => $all_shipping_methods,
-                    'PickupAddresses' => null,
-                    'Media' => $allimages,
-                    'Tags' => null,
-                    'CustomFields' => null,
-                    'ChildItems' => $allvariants,
+                // $item_details = array(
+                //     'SKU' =>  $sku,
+                //     'Name' =>  $product_name,
+                //     'BuyerDescription' => strip_tags($description),
+                //     'SellerDescription' => strip_tags($description),
+                //     'Price' => (float)$price,
+                //     'PriceUnit' => null,
+                //     'StockLimited' => true,
+                //     'StockQuantity' =>  $inventory,
+                //     'IsVisibleToCustomer' => true,
+                //     'Active' => true,
+                //     'IsAvailable' => '',
+                //     'CurrencyCode' =>  'AUD',
+                //     'Categories' =>   $all_categories,
+                //     'ShippingMethods'  => $all_shipping_methods,
+                //     'PickupAddresses' => null,
+                //     'Media' => $allimages,
+                //     'Tags' => null,
+                //     'CustomFields' => null,
+                //     'ChildItems' => $allvariants,
 
-                );
+                // );
 
                 //  echo json_encode($item_details);
                 $url =  $baseUrl . '/api/v2/merchants/' . $userId . '/items';
@@ -428,12 +451,14 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
 
         if (array_key_exists('Code', $item_details_exist)) {
             if ($item_details_exist['Code'] == 400){
-
-            error_log('exist but cannot find item in arc '. $product_name);
+                 error_log("exist but cannot find item in arc " . $product_name);
             
                 //do the post process
-                
-                if($category_map['TotalRecords'] == 1){
+                if ($product_details['product']['status'] == 'active'){
+                    error_log("active " . $product_name);
+
+                    if($category_map['TotalRecords'] == 1){
+
                         $category_maps = $category_map['Records'][0]['map'];
                         if($product_type == null){
                             $shopify_product_category =  $product_type;
@@ -542,6 +567,11 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                             $category_map = '<b>Not Mapped</b>';
                         }
 
+
+
+                }
+               
+
         
                 }
 
@@ -550,7 +580,7 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                 error_log('====================================================================');
 
                 
-                 error_log('exist item found in arc '. $product_name);
+                 error_log("exist item found in arc ". $product_name);
                 //update the item
                 $arcadier_categories = $arc->getCategories(1000, 1);
                 $arcadier_categories = $arcadier_categories['Records'];
@@ -560,6 +590,8 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                 $category_map  =  callAPI("POST", $admin_token, $url, $data); 
 
                 if($category_map['TotalRecords'] == 1) {
+
+                    error_log("exist cat record count  ". $category_map['TotalRecords']);
 
                     $category_maps = $category_map['Records'][0]['map'];
                         if($product_type == null){
@@ -584,35 +616,72 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                                 $all_categories[] = array("ID" => $category);
                                 
                         }
+                        $childItems = $item_details_exist['ChildItems']; 
 
-                     
+                        foreach ($childItems as $arc_variant) {
 
-                      $childItems = $item_details['ChildItems']; 
-
-                        if ($has_variants) {
-
-                            foreach ($childItems as $arc_variant) {
-
-                                $child_id = $arc_variant['ID'];
-                
-                                $data =  [
-                                    'ChildItems' => [
-                                            [
-                                                "ID" => $child_id,
-                                                "Active" => false
-                                            ]
+                            $child_id = $arc_variant['ID'];
+            
+                            $data =  [
+                                'ChildItems' => [
+                                        [
+                                            "ID" => $child_id,
+                                            "Active" => false
                                         ]
-                                    ];
-                
-                                    $updateItem =  $arc->editItem($data, $userId, $isItemSyncResult['Records'][0]['arc_item_guid']);
-                
-                            }
-                            $updateItem =  $arc->editItem($item_details, $userId, $isItemSyncResult['Records'][0]['arc_item_guid']);
+                                    ]
+                                ];
+            
+                                $updateItem =  $arc->editItem($data, $userId, $isItemSyncResult['Records'][0]['arc_item_guid']);
+                                //error_log("delete variant " . json_encode($updateItem));
 
+            
                         }
+                        error_log("item id " .$isItemSyncResult['Records'][0]['arc_item_guid']);
 
                         $updateItem =  $arc->editItem($item_details, $userId, $isItemSyncResult['Records'][0]['arc_item_guid']);
-                    }
+                       // error_log("update response " . json_encode($updateItem));
+
+                        //if the shopify item is archived
+
+                        if ($product_details['product']['status'] == 'archived') {
+
+                       
+                                $url =  $baseUrl . '/api/v2/merchants/'. $userId .'/items/'. $isItemSyncResult['Records'][0]['arc_item_guid'];
+                                $deleteItem =  callAPI("DELETE", $admin_token, $url, null); 
+
+
+                                $data = [
+                                    [
+                                    'Name'=> 'merchant_guid',
+                                    'Operator'=> 'equal',
+                                    'Value'=> $userId
+                                    ],
+                                    [
+                                        'Name'=> 'product_id',
+                                        'Operator'=> 'equal',
+                                        'Value'=> $product_id
+                                    ]
+                                ];
+                        
+                                $synced_details = $arc->searchTable($packageId, 'synced_items', $data);
+                        
+                                    foreach($synced_details['Records']  as $log) {
+                            
+                                        $deleteItem =  $arc->deleteRowEntry($packageId, "synced_items", $log['Id']);
+                                    }
+                            
+                
+                        }
+
+                        // if ($has_variants) {
+
+                          
+                        //     $updateItem =  $arc->editItem($item_details, $userId, $isItemSyncResult['Records'][0]['arc_item_guid']);
+
+                        // }
+
+                        //$updateItem =  $arc->editItem($item_details, $userId, $isItemSyncResult['Records'][0]['arc_item_guid']);
+                }
 
 
 
@@ -632,24 +701,24 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
 
                   
 
-                    $changed = 0;
-                    $unchanged = 0;
-                    $field_changed = [];
+                //     $changed = 0;
+                //     $unchanged = 0;
+                //     $field_changed = [];
 
-                    //check each properties 
-                    $product_name != $item_details['Name'] ? ($changed++). ($field_changed[]='Title')  : $unchanged++;
-                    strip_tags($description) != $item_details['SellerDescription'] ? ($changed++). ($field_changed[]='Description')  : $unchanged++;
-                    (float)$product['variants'][0]['price'] != $item_details['Price'] ? ($changed++). ($field_changed[]='Price')  : $unchanged++;
-                    $product['variants'][0]['inventory_quantity'] != $item_details['StockQuantity'] ? ($changed++). ($field_changed[]='Total Inventory')  : $unchanged++;
+                //     //check each properties 
+                //     $product_name != $item_details['Name'] ? ($changed++). ($field_changed[]='Title')  : $unchanged++;
+                //     strip_tags($description) != $item_details['SellerDescription'] ? ($changed++). ($field_changed[]='Description')  : $unchanged++;
+                //     (float)$product['variants'][0]['price'] != $item_details['Price'] ? ($changed++). ($field_changed[]='Price')  : $unchanged++;
+                //     $product['variants'][0]['inventory_quantity'] != $item_details['StockQuantity'] ? ($changed++). ($field_changed[]='Total Inventory')  : $unchanged++;
                     
                     
-                // echo 'total changed ' . $changed;
-                // echo 'total unchanged ' . $unchanged;
-                // echo json_encode($field_changed);
+                // // echo 'total changed ' . $changed;
+                // // echo 'total unchanged ' . $unchanged;
+                // // echo json_encode($field_changed);
 
-                    $changed !== 0 ?  $total_changed++ : $total_unchanged++;
+                //     $changed !== 0 ?  $total_changed++ : $total_unchanged++;
 
-                    $response = $arc->editRowEntry($packageId, 'synced_items', $synced_item_id, $sync_details);
+                //     $response = $arc->editRowEntry($packageId, 'synced_items', $synced_item_id, $sync_details);
 
                 }
             }

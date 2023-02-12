@@ -433,7 +433,6 @@ function shopify_order($token, $shop, $order_id){
 
 }
 
-
 function shopify_get_location($token, $shop){
 	//$page = $i + 1;
     $location = shopify_call($token, $shop, "/admin/api/2022-10/locations.json", array(), 'GET');
@@ -443,11 +442,9 @@ function shopify_get_location($token, $shop){
 
 }
 
-
 function shopify_product_details($token, $shop, $prod_id){
 	$products = shopify_call($token, $shop, "/admin/api/2022-04/products/" . $prod_id .".json", array(), 'GET');
 	//echo json_encode('prods '. $products);
-	
     $products = json_decode($products['response'], TRUE);
     //echo json_encode($products);
     return $products;
@@ -792,21 +789,19 @@ function createCustomer($token, $shop, $first_name, $last_name, $email){
 	//error_log('mutation '. json_encode($mutation));
 
     $customerCreate = graphql($token, $shop, $mutation);
-
+	
+	
 	$customerCreate  = $customerCreate['body'];
 
 	$customer =  json_decode($customerCreate,true);
 
 	$customer_details = $customer['data']['customerCreate']['customer']['id'];
 
-	//error_log('customer ' . json_encode($customerCreate));
+	error_log('customer ' . json_encode($customerCreate));
 	//error_log('customer ' . $customer_details);
 
+	return $customer_details;  //$customer_details; //return the ID
 
-
-	return $customer_details; //return the ID
-
-	
 
 }
 

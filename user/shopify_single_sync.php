@@ -186,7 +186,7 @@ $item_details = array(
 
 );
 
-if ($isItemSyncResult['TotalRecords'] == 0) {
+if ($isItemSyncResult['TotalRecords'] == 0 && $product_details['product']['status'] == 'active' )  {
 
     $url =  $baseUrl . '/api/v2/merchants/' . $userId . '/items';
     $result =  callAPI("POST", $admin_token, $url, $item_details);
@@ -222,14 +222,15 @@ if ($isItemSyncResult['TotalRecords'] == 0) {
             $response = $arc->createRowEntry($packageId, 'synced_items', $sync_details);
             //add counter to the total created 
             //$total_created++;
-
+            echo json_encode('success');
                         
         }
 
-        echo json_encode('success');
+       
 
 }       
 else {
+
 
     error_log('exists!');
     $itemInfo =  $arc->getItemInfo($isItemSyncResult['Records'][0]['arc_item_guid']);
@@ -243,11 +244,17 @@ else {
             error_log('in 400');
 
             //if the item is on synced details and does not exist on arcadier, add it as new one
+            if ($product_details['product']['status'] == 'active'){
 
-            $url =  $baseUrl . '/api/v2/merchants/' . $userId . '/items';
-            $result =  callAPI("POST", $admin_token, $url, $item_details);
-            $result1 = json_encode(['err' => $result]);
-            error_log('details ' . json_encode($item_details));
+                $url =  $baseUrl . '/api/v2/merchants/' . $userId . '/items';
+                $result =  callAPI("POST", $admin_token, $url, $item_details);
+                $result1 = json_encode(['err' => $result]);
+                error_log('details ' . json_encode($item_details));
+                echo json_encode('success');
+            }else {
+                echo json_encode('Cannot sync archived item');
+            }
+         
             ///error_log(json_encode($result1));
 
                 if ($result['ID']){
@@ -296,44 +303,89 @@ else {
                                 
                 }
 
-            echo json_encode('success');
+            
         }
 
 
 
     }
     else {
-        error_log('not code cond');
-
+        //make all the variants inactive
         $childItems =  $itemInfo['ChildItems']; 
+        foreach ($childItems as $arc_variant) {
 
-        if ($has_variants) {
-        
-            foreach ($childItems as $arc_variant) {
+            $child_id = $arc_variant['ID'];
 
-                $child_id = $arc_variant['ID'];
-
-                $data =  [
-                    'ChildItems' => [
-                            [
-                                "ID" => $child_id,
-                                "Active" => false
-                            ]
+            $data =  [
+                'ChildItems' => [
+                        [
+                            "ID" => $child_id,
+                            "Active" => false
                         ]
-                    ];
+                    ]
+                ];
 
-                    $updateItem =  $arc->editItem($data, $userId, $isItemSyncResult['Records'][0]['arc_item_guid']);
-
-            }
-            $updateItem =  $arc->editItem($item_details, $userId, $isItemSyncResult['Records'][0]['arc_item_guid']);
+                $updateItem =  $arc->editItem($data, $userId, $isItemSyncResult['Records'][0]['arc_item_guid']);
 
         }
+
+        error_log('not code cond');
+        $updateItem =  $arc->editItem($item_details, $userId, $isItemSyncResult['Records'][0]['arc_item_guid']);
+
+        //set active : false if shopify item is archived
+        if ($product_details['product']['status'] == 'archived') {
+
+            $url =  $baseUrl . '/api/v2/merchants/'. $userId .'/items/'. $isItemSyncResult['Records'][0]['arc_item_guid'];
+            $deleteItem =  callAPI("DELETE", $admin_token, $url, null); 
+
+
+            $data = [
+                [
+                'Name'=> 'merchant_guid',
+                'Operator'=> 'equal',
+                'Value'=> $userId
+                ],
+                [
+                    'Name'=> 'product_id',
+                    'Operator'=> 'equal',
+                    'Value'=> $product_id
+                ]
+            ];
+    
+            $synced_details = $arc->searchTable($packageId, 'synced_items', $data);
+    
+                foreach($synced_details['Records']  as $log) {
+        
+                    $deleteItem =  $arc->deleteRowEntry($packageId, "synced_items", $log['Id']);
+                }
+        
+
+        }
+
+        // if ($has_variants) {
+        
+        //     foreach ($childItems as $arc_variant) {
+
+        //         $child_id = $arc_variant['ID'];
+
+        //         $data =  [
+        //             'ChildItems' => [
+        //                     [
+        //                         "ID" => $child_id,
+        //                         "Active" => false
+        //                     ]
+        //                 ]
+        //             ];
+
+        //             $updateItem =  $arc->editItem($data, $userId, $isItemSyncResult['Records'][0]['arc_item_guid']);
+
+        //     }
+          
+
+        // }
+        echo json_encode('This item has been updated');
     }
 
-
-    $updateItem =  $arc->editItem($item_details, $userId, $isItemSyncResult['Records'][0]['arc_item_guid']);
-
-    echo json_encode('This item has been updated');
 
 }
 
