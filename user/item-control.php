@@ -645,6 +645,8 @@ if($isMerchant){
                                             <th>Shopify Created</th>
                                             <th>Shopify Updated</th>
                                             <th>Arcadier Synced</th>
+                                            <th>Archived</th>
+                                            <th>Draft</th>
                                             <th>Shopify Category</th>
                                             <th> <input type="checkbox" @click="onSelect" class="selectAll"
                                                     name="selectAll" value="all"> Select All -
@@ -1020,8 +1022,9 @@ if($isMerchant){
                 let selectedStatus = auto_sync_list.includes(itemDetails.id) ? checked = 'selected' : '';
 
                 //checking if already sync
-
-
+                    
+                let isDraft = itemDetails.status == "DRAFT" ? 'Yes' : 'No'
+                let isArchived = itemDetails.status == "ARCHIVED" ? 'Yes' : 'No'
                 let isExist = '-'; //vm.checkIfExist(itemDetails.id);
 
                 const tr = $(
@@ -1032,7 +1035,9 @@ if($isMerchant){
                     <td>${updatedAt}</td>
 
                     <td>${isExist}</td>
-
+                    <td>${isDraft}</td>
+                    <td>${isArchived}</td>
+                
                     <td>${itemDetails.productType}</td>
 
                     <td> <div class="custom-control custom-checkbox">
@@ -1269,7 +1274,7 @@ if($isMerchant){
                         $('.sync_product', rows).prop('checked', true);
 
                         var ids = $.map(DT1.rows('.selected').data(), function(item) {
-                            return item[10]
+                            return item[12]
                         });
                         console.log(ids)
 
@@ -1302,7 +1307,7 @@ if($isMerchant){
                         $('.sync_product', rows).prop('checked', false);
 
                         var ids = $.map(DT1.rows('.selected').data(), function(item) {
-                            return item[10]
+                            return item[12]
                         });
                         console.log(ids)
 
@@ -1513,6 +1518,8 @@ if($isMerchant){
 
         // }, 2500);
 
+        
+
 
         var selectedProducts = [];
         var confirmModal =
@@ -1555,7 +1562,60 @@ if($isMerchant){
             columnDefs: [{
                 targets: [10],
                 visible: false
-            }]
+            }],
+
+            "initComplete": function() {
+      // Select the column whose header we need replaced using its index(0 based)
+      this.api().column(4).every(function() {
+        var column = this;
+        // Put the HTML of the <select /> filter along with any default options 
+        var select = $('<select class="form-control input-sm"><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></select>')
+          // remove all content from this column's header and 
+          // append the above <select /> element HTML code into it 
+          .appendTo($(column.header()))
+          // execute callback when an option is selected in our <select /> filter
+          .on('change', function() {
+            // escape special characters for DataTable to perform search
+            var val = $.fn.dataTable.util.escapeRegex(
+              $(this).val()
+            );
+            // Perform the search with the <select /> filter value and re-render the DataTable
+            column
+              .search(val ? '^' + val + '$' : '', true, false)
+              .draw();
+          });
+        // fill the <select /> filter with unique values from the column's data
+        column.data().unique().sort().each(function(d, j) {
+          select.append("<option value='" + d + "'>" + d + "</option>")
+        });
+      });
+
+      this.api().column(5).every(function() {
+        var column = this;
+        // Put the HTML of the <select /> filter along with any default options 
+        var select = $('<select class="form-control input-sm"><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></select>')
+          // remove all content from this column's header and 
+          // append the above <select /> element HTML code into it 
+          .appendTo($(column.header()))
+          // execute callback when an option is selected in our <select /> filter
+          .on('change', function() {
+            // escape special characters for DataTable to perform search
+            var val = $.fn.dataTable.util.escapeRegex(
+              $(this).val()
+            );
+            // Perform the search with the <select /> filter value and re-render the DataTable
+            column
+              .search(val ? '^' + val + '$' : '', true, false)
+              .draw();
+          });
+        // fill the <select /> filter with unique values from the column's data
+        column.data().unique().sort().each(function(d, j) {
+          select.append("<option value='" + d + "'>" + d + "</option>")
+        });
+      });
+    },
+
+
         });
         myDialog = $("#dialog").dialog({
             // dialog settings:
@@ -1596,7 +1656,7 @@ if($isMerchant){
                 var DT1 = $("#logTable").DataTable();
 
                 var ids = $.map(DT1.rows('.selected').data(), function(item) {
-                    return item[10]
+                    return item[12]
                 });
 
                 console.log(ids);
