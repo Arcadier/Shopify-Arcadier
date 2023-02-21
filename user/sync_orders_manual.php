@@ -77,7 +77,6 @@ foreach($result['Orders'] as $order) {
         $access_token= $authDetails['Records'][0]['access_token'];
 
 
-
         //check if the order has already been synced
         $syncOrders = array(array('Name' => 'order_id', "Operator" => "equal",'Value' => $orderId), array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $merchant_id));
         $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/synced_orders';
@@ -103,13 +102,15 @@ foreach($result['Orders'] as $order) {
             $url = $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/customers';
             $customerDetails = callAPI("POST", $admin_token, $url,  $customers);
 
+            error_log("customer exist " . json_encode($customerDetails));
+
+
+
              if ($customerDetails['TotalRecords']  ==  1) {
 
                 $shopify_id = ltrim($customerDetails['Records'][0]['shopify_user_id'],"gid://shopify/Customer/");
                 
             }
-           
-
         
             // if ($user['CustomFields'] != null)  {
 
@@ -132,7 +133,7 @@ foreach($result['Orders'] as $order) {
 
                 //create the customer
                 $customer =  createCustomer($access_token, $shop, $consumer_fname, $consumer_lname, $consumer_email);
-                error_log('New Customer created: '. json_encode($customer));
+                //error_log('New Customer created: '. json_encode($customer));
 
                 if ($customer) {
 
@@ -149,11 +150,11 @@ foreach($result['Orders'] as $order) {
                             
                         ];
 
-                    error_log(json_encode($customer_details));
+                 //   error_log(json_encode($customer_details));
                     
 
                     $response = $arc->createRowEntry($packageId, 'customers',  $customer_details);
-                    error_log('customer create ' . json_encode($response));
+                  //  error_log('customer create ' . json_encode($response));
                     
 
                     // $data = [
@@ -180,6 +181,8 @@ foreach($result['Orders'] as $order) {
                 $cartItemId =  $cartItem['ID'];
                 $itemId =  $cartItem['ItemDetail']['ID'];
 
+              
+
                 //checking if the item is a variant or not
                 if ($cartItem['ItemDetail']['ParentID'] == null) {
                     
@@ -189,22 +192,30 @@ foreach($result['Orders'] as $order) {
                     $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/synced_items';
                     $isItemSyncResult =  callAPI("POST", $admin_token, $url, $syncItems);
 
-                    // echo json_encode($syncItems);
+
+                    $product_details = shopify_product_details($access_token, $shop, ltrim($isItemSyncResult['Records'][0]['product_id'],"gid://shopify/Product/"));  
+
+                    //echo json_encode($product_details);
                     
                     // echo json_encode($isItemSyncResult);
                     
                     $variant_id = ltrim($isItemSyncResult['Records'][0]['variant_id'],"gid://shopify/ProductVariant/"); 
+                    $global_variant_id = $isItemSyncResult['Records'][0]['variant_id'];
 
-                    echo 'variant id no variant ' . $variant_id;
+                    //echo 'variant id no variant ' . $variant_id;
                    
                 }else {
+
+                    $product_details = shopify_product_details($access_token, $shop, ltrim($isItemSyncResult['Records'][0]['product_id'],"gid://shopify/Product/"));  
+
+                        //echo json_encode($product_details);
                     $variantId = $cartItem['ItemDetail']['ID'];
                     $parentId = $cartItem['ItemDetail']['ParentID'];
                     $url = $baseUrl . '/api/v2/items/' . $parentId;
                     $item = callAPI("GET", $admin_token, $url, false);
                     $childItems = $item['ChildItems'];
-                    error_log('variant id ' . $variantId);
-                    error_log('ChildItems: '.json_encode($childItems));
+                   // error_log('variant id ' . $variantId);
+                   // error_log('ChildItems: '.json_encode($childItems));
 
                     // $filtered = array_filter($childItems, function($value) use ($variantId) {
                     //     return $value['ID'] == $variantId;
@@ -224,6 +235,7 @@ foreach($result['Orders'] as $order) {
                          //   if (strpos($child['AdditionalDetails'], "gid://shopify/ProductVariant/") == true) {
                                // echo 'true';
                                $variant_id = ltrim($child['AdditionalDetails'], "gid://shopify/ProductVariant/");
+                               $global_variant_id = $child['AdditionalDetails'];
                                break;
                           //  }
 
@@ -303,8 +315,8 @@ foreach($result['Orders'] as $order) {
             $payment_status = $order_statuses['payment_status'];
             $fulfilment_status = $order_statuses['fulfilment_status'];
 
-            error_log('Payment Status:'.json_encode($payment_status));
-            error_log('Payment Status:'.json_encode($fulfilment_status));
+          //  error_log('Payment Status:'.json_encode($payment_status));
+         //   error_log('Payment Status:'.json_encode($fulfilment_status));
 
 
             $api_endpoint = "/admin/api/2022-04/orders.json";
@@ -345,12 +357,69 @@ foreach($result['Orders'] as $order) {
                                 ]
                             ),
             );
-            error_log('SHopify Order query: '.  json_encode($query));
+           // error_log('SHopify Order query: '.  json_encode($query));
+
+           //$location_id =  shopify_get_variant_location($access_token, $shop, $global_variant_id);
+
+          // error_log('location id ' . $location_id);
 
             $orders = shopify_call($access_token, $shop, "/admin/orders.json", json_encode($query), 'POST',array("Content-Type: application/json"));
 
-            error_log('Shopify orders API response ' .  json_encode($orders));
+            //error_log('Shopify orders API response ' .  json_encode($orders['response']));
+            $response = json_encode($orders['response']);
+            error_log($response);
 
+        //     $order_json  = $response['order'];
+            
+        //     $order_id = $order_json['id'];
+        
+        //     error_log('order id ' . $order_id); 
+            
+        //    $order_fulfillment  = shopify_order($access_token, $shop, $order_id);
+        //    echo json_encode($order_fulfillment);
+
+           $locations = shopify_get_location($access_token, $shop);
+           error_log(json_encode($locations));
+
+
+           //verify the store either post code 5000 or 5006
+           $location_id;
+
+           foreach($locations['locations'] as $location) {
+
+            error_log('loc ' . json_encode($location));
+
+            //get the zip
+          
+            // if ( $location['zip'] == "0005") {  //test location
+
+           if ($location['zip'] == "5000"  || $location['zip'] == "5006" ) {  //adelaide location
+
+                    $location_id = $location['id'];
+                
+            }
+
+           }
+
+         //get the inventory item id from variant id
+
+        //test 42815844286623
+         $variants =  shopify_get_variant_details($access_token, $shop, $variant_id);
+
+         $inventory_item_id =  $variants['variant']['inventory_item_id'];
+
+
+         $inventory_details = [
+            "location_id" =>  $location_id,
+            "inventory_item_id" =>  $inventory_item_id,
+            "available_adjustment" => -$quantity
+         ];
+
+         $adjust_inventory =  shopify_update_inventory($access_token, $shop,  $inventory_details);
+
+
+
+    
             $count_details = [
 
                 'sync_type' => 'Manual (Orders)',
@@ -377,7 +446,7 @@ foreach($result['Orders'] as $order) {
             $response = $arc->createRowEntry($packageId, 'synced_orders', $sync_details);
             error_log('Arcadier Custom Table response: '.json_encode($response));
 
-            echo json_encode('success');
+            //echo json_encode('success');
 
         // } else {
         //     echo json_encode('This order has been sync');

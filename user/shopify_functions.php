@@ -436,11 +436,33 @@ function shopify_order($token, $shop, $order_id){
 function shopify_get_location($token, $shop){
 	//$page = $i + 1;
     $location = shopify_call($token, $shop, "/admin/api/2022-10/locations.json", array(), 'GET');
-	//$location =  json_decode($location, TRUE);
+	$location =  json_decode($location['response'], TRUE);
    
     return $location;
 
 }
+
+function shopify_update_inventory($token, $shop, $data){
+	//$page = $i + 1;
+    $adjust_inventory = shopify_call($token, $shop, "/admin/api/2022-10/inventory_levels/adjust.json", $data, 'POST');
+	$adjust_inventory  =  json_encode($adjust_inventory);
+   
+    return $adjust_inventory;
+
+}
+
+
+
+
+function shopify_get_variant_details($token, $shop, $variant_id){
+	//$page = $i + 1;
+    $variants = shopify_call($token, $shop, "/admin/api/2022-01/variants/". $variant_id . ".json", array(), 'GET');
+	$variants = json_decode($variants['response'], TRUE);
+   
+	return $variants;
+
+}
+
 
 function shopify_product_details($token, $shop, $prod_id){
 	$products = shopify_call($token, $shop, "/admin/api/2022-04/products/" . $prod_id .".json", array(), 'GET');
@@ -621,6 +643,7 @@ function shopify_get_bulk_item($token, $shop){
 				tags
 				createdAt
 				updatedAt
+				status
 			}
 			}
 		}

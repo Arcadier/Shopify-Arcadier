@@ -643,7 +643,7 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
 
                         //if the shopify item is archived
 
-                        if ($product_details['product']['status'] == 'archived') {
+                        if ($product_details['product']['status'] == 'archived' $product_details['product']['status'] == 'draft') {
 
                        
                                 $url =  $baseUrl . '/api/v2/merchants/'. $userId .'/items/'. $isItemSyncResult['Records'][0]['arc_item_guid'];

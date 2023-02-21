@@ -254,11 +254,6 @@
 
             syncOrderShopifyManual(0, invoiceNo, userId);
 
-
-
-
-
-
         }
 
 

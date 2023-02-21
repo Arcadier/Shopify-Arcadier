@@ -400,9 +400,8 @@ foreach($synced_details['Records']  as $log) {
 			// 	}
 			// }
 
-	
 			//if item is archived
-			if ($response['product']['status'] == 'archived') {
+			if ($response['product']['status'] == 'archived'  $response['product']['status'] == 'draft') {
 
 
 				delete_item($id, $merchant, $baseUrl, $admin_token, $packageId);

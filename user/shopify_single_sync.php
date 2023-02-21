@@ -333,7 +333,7 @@ else {
         $updateItem =  $arc->editItem($item_details, $userId, $isItemSyncResult['Records'][0]['arc_item_guid']);
 
         //set active : false if shopify item is archived
-        if ($product_details['product']['status'] == 'archived') {
+        if ($product_details['product']['status'] == 'archived' || $product_details['product']['status'] == 'draft' ) {
 
             $url =  $baseUrl . '/api/v2/merchants/'. $userId .'/items/'. $isItemSyncResult['Records'][0]['arc_item_guid'];
             $deleteItem =  callAPI("DELETE", $admin_token, $url, null); 
