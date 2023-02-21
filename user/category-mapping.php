@@ -42,10 +42,10 @@ if($isMerchant){
             $credentials = $authListById['Records'][0];
 
             //get Shopify ProductTypes
-            $shopify_categories = shopify_categories($credentials['access_token'], $credentials['shop']);
-            error_log("Category List: ".json_encode($shopify_categories));
+            // $shopify_categories = shopify_categories($credentials['access_token'], $credentials['shop']);
+            // error_log("Category List: ".json_encode($shopify_categories));
 
-            $count = count($shopify_categories);
+            // $count = count($shopify_categories);
             
             //get Arcadier Categories
             $arcadier_categories = $arcadier->getCategories();
@@ -234,42 +234,42 @@ if($isMerchant){
 
 <body>
     <script>
-    function removeClass(div_id, time) {
-        $("#" + div_id).fadeOut(time, function() {
-            $("#" + div_id).remove();
-        });
-    }
-
-
-    function getCookie(name) {
-        var value = '; ' + document.cookie;
-        var parts = value.split('; ' + name + '=');
-        if (parts.length === 2) {
-            return parts.pop().split(';').shift();
+        function removeClass(div_id, time) {
+            $("#" + div_id).fadeOut(time, function() {
+                $("#" + div_id).remove();
+            });
         }
-    }
 
-    function addLoader() {
-        $('body').append('<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
-    }
 
-    function removeClass(div_id, time) {
-        $("#" + div_id).fadeOut(time, function() {
-            $("#" + div_id).remove();
-        });
-    }
+        function getCookie(name) {
+            var value = '; ' + document.cookie;
+            var parts = value.split('; ' + name + '=');
+            if (parts.length === 2) {
+                return parts.pop().split(';').shift();
+            }
+        }
 
-    function addLoader1() {
-        $('body').append('<div style="" id="loadingDiv1"><div class="loader">Loading...</div></div>');
-    }
+        function addLoader() {
+            $('body').append('<div style="" id="loadingDiv"><div class="loader">Loading...</div></div>');
+        }
 
-    function addLoader2() {
-        // vm = this;
-        $('body').append(
-            '<div style="" id="loadingDiv1"><div class="loader">Successfully mapped category.</div></div>'
-        );
-    }
-    //addLoader1();
+        function removeClass(div_id, time) {
+            $("#" + div_id).fadeOut(time, function() {
+                $("#" + div_id).remove();
+            });
+        }
+
+        function addLoader1() {
+            $('body').append('<div style="" id="loadingDiv1"><div class="loader">Loading...</div></div>');
+        }
+
+        function addLoader2() {
+            // vm = this;
+            $('body').append(
+                '<div style="" id="loadingDiv1"><div class="loader">Successfully mapped category.</div></div>'
+            );
+        }
+        //addLoader1();
     </script>
     <div id="wrapper">
         <div class="left side-menu">

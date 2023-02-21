@@ -474,39 +474,26 @@ function shopify_product_details($token, $shop, $prod_id){
 }
 
 function shopify_categories($token, $shop) {
-	// $query = array("query" => '{ shop { productTypes(first:250){
-    //   edges {
-    //     node
-    //   }
-    // }} }');
+	$query = array("query" => '{ shop { productTypes(first:250){
+      edges {
+        node
+      }
+	  pageInfo {
+		hasNextPage
+		endCursor
+	  }
+    }} }');
 
-	$query = array('query' => "{
-		shop {
-			products(first:250, query: \"-product_type:''\") {
-				edges {
-					node {
-						productType
-					}
-				}
-			}
-		}
-	}");
 
 	$cats  = graphql($token, $shop, $query);   //shopify_call($token, $shop, "/admin/api/2022-07/graphql.json", $query, 'POST');
-    //$cats = $cats;
 	$cats = $cats['body'];
-
 	$cats_list =  json_decode($cats,true);
 
-	$categories = $cats_list['data']['shop']['products']['edges'];
+	$categories = $cats_list['data']['shop']['productTypes']['edges'];
 	$category_list = [];
 	foreach($categories as $category){
-		array_push($category_list, $category['node']['productType']);
+		array_push($category_list, $category['node']);
 	}
-
-	error_log('cat ' . json_encode($categories));
-
-		error_log('cat-uniq ' . json_encode(array_unique($category_list)));
 
 	return array_unique($category_list);
 }
