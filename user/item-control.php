@@ -276,16 +276,18 @@ if($isMerchant){
     <script src="scripts/jquery.min.js"></script>
     <script src="scripts/jquery-2.1.3.min.js"></script>
     <link rel="stylesheet" type="text/css" href="css/jquery.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/searchpanes/2.1.1/css/searchPanes.dataTables.min.css">
     <script type="text/javascript" src="scripts/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/searchpanes/2.1.1/js/dataTables.searchPanes.min.js"> </script>
     <script src="scripts/chosen.jquery.min.js"></script>
     <link rel="stylesheet" href="css/chosen.css" />
     <script src="scripts/jquery-ui.min.js"></script>
     <link rel="stylesheet" href="css/jquery-ui.css" />
     <script src="scripts/bootstrap.bundle.min.js"></script>
-    <link href="https://nightly.datatables.net/select/css/select.dataTables.css?_=766c9ac11eda67c01f759bab53b4774d.css"
+    <!-- <link href="https://nightly.datatables.net/select/css/select.dataTables.css?_=766c9ac11eda67c01f759bab53b4774d.css"
         rel="stylesheet" type="text/css" />
-    <script src="https://nightly.datatables.net/select/js/dataTables.select.js?_=766c9ac11eda67c01f759bab53b4774d">
-    </script>
+    <script src="https://nightly.datatables.net/select/js/dataTables.select.js?_=766c9ac11eda67c01f759bab53b4774d"> -->
+ 
 
     <style>
     .loader,
@@ -517,6 +519,66 @@ if($isMerchant){
     div#logTable_wrapper {
         min-height: 410px;
     }
+
+
+
+    /* table.dataTable th {
+            border-bottom: 1px solid #333;
+            border-right: 1px solid #333;
+        }
+
+        table.dataTable td {
+            border-bottom: 1px solid #333;
+            border-right: 1px solid #333;
+        } */
+
+        .filterIcon {
+            height: 10px;
+            width: 10px;
+            margin-left: 3px;
+        }
+
+        .modalFilter {
+            display: none;
+            height: auto;
+            width: 200px;
+            background: #FFF;
+            border: solid 1px #ccc;
+            padding: 8px;
+            position: absolute;
+            z-index: 1001;
+        }
+
+            .modalFilter .modal-contents {
+                max-height: 250px;
+                width: 200px;
+                overflow-y: auto;
+                width: 250px;
+            }
+
+            .modalFilter .modal-footer {
+                background: #FFF;
+                height: 35px;
+                padding-top: 6px;
+            }
+
+            .modalFilter .btn {
+                padding: 0 1em;
+                height: 28px;
+                line-height: 28px;
+                text-transform: none;
+            }
+
+        #mask {
+            display: none;
+            background: transparent;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+        }
     </style>
 </head>
 
@@ -884,6 +946,17 @@ if($isMerchant){
 
 
                                         $('#loadingDiv3').remove();
+                                        // $("#logTable").dataTable().fnDestroy();         
+                                        //   $("#logTable").DataTable({
+                                            
+
+                                        //     "initComplete": function() {
+
+                                        //         configFilter(this, [4,5]);
+                                        //     }
+                                        // });
+
+                                    
 
                                         if (vm.total > 5000) {
                                             setTimeout(function() {
@@ -1035,8 +1108,10 @@ if($isMerchant){
                     <td>${updatedAt}</td>
 
                     <td>${isExist}</td>
-                    <td>${isDraft}</td>
+                    
                     <td>${isArchived}</td>
+
+                    <td>${isDraft}</td>
                 
                     <td>${itemDetails.productType}</td>
 
@@ -1494,6 +1569,8 @@ if($isMerchant){
     $(document).ready(function() {
 
 
+    
+
         // $.when(shopify.isExisting).done(function(a1, a2, a3, a4) {
 
         //     console.log('ajax stop')
@@ -1518,9 +1595,7 @@ if($isMerchant){
 
         // }, 2500);
 
-        
-
-
+    
         var selectedProducts = [];
         var confirmModal =
             `<div class='popup-area cart-checkout-confirm' id ='plugin-popup'><div class='wrapper'> <div class='title-area text-capitalize'><h1>ARE YOU SURE YOU WANT TO PROCEED?</h1></div><div class='content-area'><span id ='main'>You are about to import <span id="total-items">  </span> products. An email notification will be sent once the import has started and completed.</span> </div><div class='btn-area'> <a href='javascript:void(0)' class='btn-black-cmn' id='btn-cancel'>Cancel</a> <a  class='add-cart-btn' id='btn-sync-all'>Sync</a></div></div></div>`;
@@ -1554,65 +1629,71 @@ if($isMerchant){
         //$('table.table').DataTable();
 
         $('#logTable').DataTable({
+           
             "lengthMenu": [
                 [10, 25, 50, -1],
                 [10, 25, 50, "All"]
             ],
 
             columnDefs: [{
-                targets: [10],
+                targets: [12],
                 visible: false
-            }],
+            
+            }
+          ],
 
             "initComplete": function() {
-      // Select the column whose header we need replaced using its index(0 based)
-      this.api().column(4).every(function() {
-        var column = this;
-        // Put the HTML of the <select /> filter along with any default options 
-        var select = $('<select class="form-control input-sm"><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></select>')
-          // remove all content from this column's header and 
-          // append the above <select /> element HTML code into it 
-          .appendTo($(column.header()))
-          // execute callback when an option is selected in our <select /> filter
-          .on('change', function() {
-            // escape special characters for DataTable to perform search
-            var val = $.fn.dataTable.util.escapeRegex(
-              $(this).val()
-            );
-            // Perform the search with the <select /> filter value and re-render the DataTable
-            column
-              .search(val ? '^' + val + '$' : '', true, false)
-              .draw();
-          });
-        // fill the <select /> filter with unique values from the column's data
-        column.data().unique().sort().each(function(d, j) {
-          select.append("<option value='" + d + "'>" + d + "</option>")
-        });
-      });
 
-      this.api().column(5).every(function() {
-        var column = this;
-        // Put the HTML of the <select /> filter along with any default options 
-        var select = $('<select class="form-control input-sm"><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></select>')
-          // remove all content from this column's header and 
-          // append the above <select /> element HTML code into it 
-          .appendTo($(column.header()))
-          // execute callback when an option is selected in our <select /> filter
-          .on('change', function() {
-            // escape special characters for DataTable to perform search
-            var val = $.fn.dataTable.util.escapeRegex(
-              $(this).val()
-            );
-            // Perform the search with the <select /> filter value and re-render the DataTable
-            column
-              .search(val ? '^' + val + '$' : '', true, false)
-              .draw();
-          });
-        // fill the <select /> filter with unique values from the column's data
-        column.data().unique().sort().each(function(d, j) {
-          select.append("<option value='" + d + "'>" + d + "</option>")
-        });
-      });
+             //  configFilter(this, [4,5]);
+      // Select the column whose header we need replaced using its index(0 based)
+    //   this.api().column(4).every(function() {
+    //     var column = this;
+    //     // Put the HTML of the <select /> filter along with any default options 
+    //     var select = $('<select class="form-control input-sm"><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></select>')
+    //       // remove all content from this column's header and 
+    //       // append the above <select /> element HTML code into it 
+    //       .appendTo($(column.header()))
+    //       // execute callback when an option is selected in our <select /> filter
+    //       .on('change', function() {
+    //         // escape special characters for DataTable to perform search
+    //         var val = $.fn.dataTable.util.escapeRegex(
+    //           $(this).val()
+    //         );
+    //         // Perform the search with the <select /> filter value and re-render the DataTable
+    //         column
+    //           .search(val ? '^' + val + '$' : '', true, false)
+    //           .draw();
+    //       });
+    //     // fill the <select /> filter with unique values from the column's data
+    //     column.data().unique().sort().each(function(d, j) {
+    //      // select.append("<option value='" + d + "'>" + d + "</option>")
+    //     });
+    //   });
+
+    //   this.api().column(5).every(function() {
+    //     var column = this;
+    //     // Put the HTML of the <select /> filter along with any default options 
+    //     var select =  $('<div class="checkbox"><input type="checkbox" class="dt-checkboxes"><label>Select All</label><input type="checkbox" class="dt-checkboxes"><label>Yes</label></div>')
+    //    // var select = $('<select class="form-control input-sm">option value=""></option><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></select>')
+    //       // remove all content from this column's header and 
+    //       // append the above <select /> element HTML code into it 
+    //       .appendTo($(column.header()))
+    //       // execute callback when an option is selected in our <select /> filter
+    //       .on('change', function() {
+    //         // escape special characters for DataTable to perform search
+    //         var val = $.fn.dataTable.util.escapeRegex(
+    //           $(this).val()
+    //         );
+    //         // Perform the search with the <select /> filter value and re-render the DataTable
+    //         column
+    //           .search(val ? '^' + val + '$' : '', true, false)
+    //           .draw();
+    //       });
+    //     // fill the <select /> filter with unique values from the column's data
+    //     column.data().unique().sort().each(function(d, j) {
+    //     //  select.append("<option value='" + d + "'>" + d + "</option>")
+    //     });
+    //   });
     },
 
 
@@ -1680,6 +1761,122 @@ if($isMerchant){
         //     console.log(`selected ${indexes}`)
         // });
     });
+
+
+
+
+    function configFilter($this, colArray) {
+            setTimeout(function () {
+                var tableName = $this[0].id;
+                var columns = $this.api().columns();
+                $.each(colArray, function (i, arg) {
+                    $('#' + tableName + ' th:eq(' + arg + ')').append('<i class="arrow-down filterIcon" onclick="showFilter(event,\'' + tableName + '_' + arg + '\')"></i>');
+                });
+
+                var template = '<div class="modalFilter">' +
+                                 '<div class="modal-contents">' +
+                                 '{0}</div>' +
+                                 '<div class="modal-footer">' +
+                                     '<a href="#!" onclick="clearFilter(this, {1}, \'{2}\');"  class=" btn left waves-effect waves-light">Clear</a>' +
+                                     '<a href="#!" onclick="performFilter(this, {1}, \'{2}\');"  class=" btn right waves-effect waves-light">Ok</a>' +
+                                 '</div>' +
+                             '</div>';
+                $.each(colArray, function (index, value) {
+                    columns.every(function (i) {
+                        if (value === i) {
+                            // <input type="text" class="filterSearchText" onkeyup="filterValues(this)" /> <br/>
+                            var column = this, content = '';
+                            var columnName = $(this.header()).text().replace(/\s+/g, "_");
+                            var distinctArray = [];
+                            content += `<div><input type="checkbox"  id="select_all_${columnName}/><label for="select_all_${columnName}>  Select All</label></div>`;
+                            column.data().each(function (d, j) {
+                                if (distinctArray.indexOf(d) == -1) {
+                                    var id = tableName + "_" + columnName + "_" + j; // onchange="formatValues(this,' + value + ');
+                                    content += `<div><input type="checkbox" value=${d} id= ${ id }/><label for=${id}> ${d}</label></div>`;
+                                    distinctArray.push(d);
+                                }
+                               
+                            });
+                          
+                            var newTemplate = $(template.replace('{0}', content).replace('{1}', value).replace('{1}', value).replace('{2}', tableName).replace('{2}', tableName));
+                            $('body').append(newTemplate);
+                            modalFilterArray[tableName + "_" + value] = newTemplate;
+                           
+                            content = '';
+                        }
+                    });
+                });
+            }, 50);
+        }
+        var modalFilterArray = {};
+        //User to show the filter modal
+        function showFilter(e, index) {
+            $('.modalFilter').hide();
+            $(modalFilterArray[index]).css({ left: 0, top: 0 });
+            var th = $(e.target).parent();
+            var pos = th.offset();
+            console.log(th);
+           // $(modalFilterArray[index]).width(th.width() * 0.75);
+            $(modalFilterArray[index]).css({ 'left': pos.left, 'top': pos.top });
+            $(modalFilterArray[index]).show();
+            $('#mask').show();
+            e.stopPropagation();
+        }
+
+        //This function is to use the searchbox to filter the checkbox
+        function filterValues(node) {
+            var searchString = $(node).val().toUpperCase().trim();
+            var rootNode = $(node).parent();
+            if (searchString == '') {
+                rootNode.find('div').show();
+            } else {
+                rootNode.find("div").hide();
+                rootNode.find("div:contains('" + searchString + "')").show();
+            }
+        }
+
+        //Execute the filter on the table for a given column
+        function performFilter(node, i, tableId) {
+            var rootNode = $(node).parent().parent();
+            var searchString = '', counter = 0;
+
+            rootNode.find('input:checkbox').each(function (index, checkbox) {
+                if (checkbox.checked) {
+                    searchString += (counter == 0) ? checkbox.value : '|' + checkbox.value;
+                    counter++;
+                }
+            });
+            $('#' + tableId).DataTable().column(i).search(
+                
+                searchString,
+                true, false
+            ).draw();
+            rootNode.hide();
+            $('#mask').hide();
+        }
+
+        //Removes the filter from the table for a given column
+        function clearFilter(node, i, tableId) {
+            var rootNode = $(node).parent().parent();
+            rootNode.find(".filterSearchText").val('');
+            rootNode.find('input:checkbox').each(function (index, checkbox) {
+                checkbox.checked = false;
+                $(checkbox).parent().show();
+            });
+            $('#' + tableId).DataTable().column(i).search(
+                '',
+                true, false
+            ).draw();
+            rootNode.hide();
+            $('#mask').hide();
+        }
+
+
+
+
+
+
+
 
     function ShowCustomDialog(dialogtype, dialogmessage) {
         ShowDialogBox(dialogtype, dialogmessage, 'Ok', '', 'GoToAssetList', null);
@@ -1834,11 +2031,12 @@ if($isMerchant){
                 contentType: 'application/json',
                 data: JSON.stringify(data),
                 success: function(response) {
-                    removeClass('loadingDiv', 500);
+                   // removeClass('loadingDiv', 500);
+                    $('#loadingDiv').remove();
                     // console.log(JSON.parse(response));
                     // response = JSON.parse(response);
                     var result = JSON.parse(response);
-                    console.log(`result  ${result}`);
+                   console.log(`result  ${result}`);
                     if (result == 'success') {
                         var message = 'Sync successfully';
                         ShowCustomDialog('Alert', message);
