@@ -273,18 +273,41 @@ if($isMerchant){
     <link href="css/icons.css" rel="stylesheet" type="text/css">
     <link href="css/style.css" rel="stylesheet" type="text/css">
 
-    <script src="scripts/jquery.min.js"></script>
+ <!-- <script src="scripts/jquery.min.js"></script> -->
     <script src="scripts/jquery-2.1.3.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="css/jquery.dataTables.min.css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/searchpanes/2.1.1/css/searchPanes.dataTables.min.css">
-    <script type="text/javascript" src="scripts/jquery.dataTables.min.js"></script>
+
+
+    
+    <!-- <script type="text/javascript" src="https://cdn.datatables.net/1.13.2/js/jquery.dataTables.min.js" defer></script> -->
+
+
+   
+    <!-- <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/searchpanes/2.1.1/css/searchPanes.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/select/1.6.0/css/select.dataTables.min.css" />
+ 
     <script type="text/javascript" src="https://cdn.datatables.net/searchpanes/2.1.1/js/dataTables.searchPanes.min.js"> </script>
+    <script src="https://cdn.datatables.net/searchpanes/2.1.1/js/dataTables.searchPanes.min.js" defer></script>
+    <script src="https://cdn.datatables.net/select/1.6.0/js/dataTables.select.min.js" defer></script> -->
+
     <script src="scripts/chosen.jquery.min.js"></script>
     <link rel="stylesheet" href="css/chosen.css" />
     <script src="scripts/jquery-ui.min.js"></script>
     <link rel="stylesheet" href="css/jquery-ui.css" />
     <script src="scripts/bootstrap.bundle.min.js"></script>
-    <!-- <link href="https://nightly.datatables.net/select/css/select.dataTables.css?_=766c9ac11eda67c01f759bab53b4774d.css"
+
+    <script type="text/javascript" src="scripts/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/searchpanes/2.1.1/js/dataTables.searchPanes.min.js" defer></script>
+
+    <script type="text/javascript" src="https://cdn.datatables.net/select/1.6.0/js/dataTables.select.min.js" defer></script>
+ 
+
+
+    <link rel="stylesheet" type="text/css" href="css/jquery.dataTables.min.css">
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.2/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/searchpanes/2.1.1/css/searchPanes.dataTables.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/select/1.6.0/css/select.dataTables.min.css" />
+ <!-- <link href="https://nightly.datatables.net/select/css/select.dataTables.css?_=766c9ac11eda67c01f759bab53b4774d.css"
         rel="stylesheet" type="text/css" />
     <script src="https://nightly.datatables.net/select/js/dataTables.select.js?_=766c9ac11eda67c01f759bab53b4774d"> -->
  
@@ -578,7 +601,22 @@ if($isMerchant){
             z-index: 1;
             width: 100%;
             height: 100%;
+
         }
+
+        .arrow-down {
+        width: 0;
+        height: 0;
+        border-left: 7px solid transparent;
+        border-right: 7px solid transparent;
+        border-top: 8px solid #201d1e;
+        display: inline-block;
+}
+    label {
+        display: inline-block;
+        margin-bottom: .5rem;
+        margin-left: 4px;
+    }
     </style>
 </head>
 
@@ -946,15 +984,45 @@ if($isMerchant){
 
 
                                         $('#loadingDiv3').remove();
-                                        // $("#logTable").dataTable().fnDestroy();         
-                                        //   $("#logTable").DataTable({
+                                        $("#logTable").dataTable().fnDestroy();         
+                                          $("#logTable").DataTable({
+                                            "lengthMenu": [
+                                                    [10, 25, 50, -1],
+                                                    [10, 25, 50, "All"]
+                                                ],
+                                               dom: 'Plfrtip',
+                                                searchPanes: {
+                                                    clear: false,
+                                                    initCollapsed: true,
+                                                    layout: 'columns-3',
+                                                    threshold: 1
+                                                },
                                             
+                                                columnDefs: [{
+                                                    targets: [12],
+                                                    visible: false
+                                                
+                                                },
+                                                {
+                                                    searchPanes: {
+                                                        show: true
+                                                    },
+                                                    targets: [6,8],
+                                                },
+                                                // {
+                                                //     searchPanes: {
+                                                //         show: false
+                                                //     },
+                                                //     targets: ['_all'],
+                                                // }
+                                                
+                                            ],
+                                                                                
+                                            "initComplete": function() {
 
-                                        //     "initComplete": function() {
-
-                                        //         configFilter(this, [4,5]);
-                                        //     }
-                                        // });
+                                                configFilter(this, [4,5]);
+                                            }
+                                        });
 
                                     
 
@@ -1635,16 +1703,38 @@ if($isMerchant){
                 [10, 25, 50, "All"]
             ],
 
+            dom: 'Plfrtip',
+            // searchPanes: {
+            //     // clear: false,
+            //     // initCollapsed: true,
+            //     // layout: 'columns-3',
+            //     // threshold: 1
+            //     collapse: false
+            // },
+        
             columnDefs: [{
                 targets: [12],
                 visible: false
             
-            }
-          ],
-
+            },
+            {
+                searchPanes: {
+                    //show: true
+                    collapse: false
+                },
+                targets: [6,8],
+            },
+            // {
+            //     searchPanes: {
+            //         show: false
+            //     },
+            //     targets: ['_all'],
+            // }
+            
+        ],
             "initComplete": function() {
 
-             //  configFilter(this, [4,5]);
+             // configFilter(this, [4,5]);
       // Select the column whose header we need replaced using its index(0 based)
     //   this.api().column(4).every(function() {
     //     var column = this;
@@ -1788,11 +1878,11 @@ if($isMerchant){
                             var column = this, content = '';
                             var columnName = $(this.header()).text().replace(/\s+/g, "_");
                             var distinctArray = [];
-                            content += `<div><input type="checkbox"  id="select_all_${columnName}/><label for="select_all_${columnName}>  Select All</label></div>`;
+                            content += `<div><input type="checkbox"  id="select_all_${columnName}"><label for="select_all_${columnName}"> Select All</label></div>`;
                             column.data().each(function (d, j) {
                                 if (distinctArray.indexOf(d) == -1) {
                                     var id = tableName + "_" + columnName + "_" + j; // onchange="formatValues(this,' + value + ');
-                                    content += `<div><input type="checkbox" value=${d} id= ${ id }/><label for=${id}> ${d}</label></div>`;
+                                    content += `<div><input type="checkbox" value=${d} id= ${ id }><label for=${id}> ${d}</label></div>`;
                                     distinctArray.push(d);
                                 }
                                
@@ -2176,6 +2266,33 @@ if($isMerchant){
     };
 
     $(document).ready(function() {
+
+        waitForElement("#select_all_Draft", function() {
+            $("#select_all_Draft").on("click", function(e) {
+                        if ($(this).is(":checked")) {
+                            $(this).parents('.modal-contents').find('input[type=checkbox]').prop("checked", true);
+                        }else {
+                            $(this).parents('.modal-contents').find('input[type=checkbox]').prop("checked", false);
+                        }
+
+            })
+         })
+
+
+
+
+        waitForElement("#select_all_Archived", function() {
+            $("#select_all_Archived").on("click", function(e) {
+                        if ($(this).is(":checked")) {
+                            $(this).parents('.modal-contents').find('input[type=checkbox]').prop("checked", true);
+                        }else {
+                            $(this).parents('.modal-contents').find('input[type=checkbox]').prop("checked", false);
+                        }
+
+            })
+        })
+
+
         var baseUrl = window.location.hostname;
         var token = getCookie('webapitoken');
         var user = $("#userGuid").val();
@@ -2302,6 +2419,16 @@ if($isMerchant){
         if (parts.length === 2) {
             return parts.pop().split(';').shift();
         }
+    }
+
+    function waitForElement(elementPath, callBack) {
+        window.setTimeout(function() {
+            if ($(elementPath).length) {
+                callBack(elementPath, $(elementPath));
+            } else {
+                waitForElement(elementPath, callBack);
+            }
+        }, 700);
     }
 
 
