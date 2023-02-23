@@ -451,6 +451,18 @@ function shopify_update_inventory($token, $shop, $data){
 
 }
 
+function shopify_get_customer_by_email($token, $shop, $email){
+	//$page = $i + 1;
+    $customer= shopify_call($token, $shop, "/admin/api/2022-04/customers/search.json?query=email:" . $email, array(), 'GET');
+	$customer  =  json_decode($customer['response'], TRUE);
+   
+    return $customer;
+
+}
+
+
+//admin/api/2022-04/customers/search.json?query=email:bob.norman@mail.example.com
+
 
 
 
@@ -805,9 +817,10 @@ function createCustomer($token, $shop, $first_name, $last_name, $email){
 
 	$customer =  json_decode($customerCreate,true);
 
-	$customer_details = $customer['data']['customerCreate']['customer']['id'];
+	$customer_details = $customer['data']['customerCreate'];
+	//['customer']['id'];
 
-	error_log('customer ' . json_encode($customerCreate));
+	//error_log('customer ' . json_encode($customerCreate));
 	//error_log('customer ' . $customer_details);
 
 	return $customer_details;  //$customer_details; //return the ID

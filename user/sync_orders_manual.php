@@ -112,15 +112,7 @@ foreach($result['Orders'] as $order) {
                 
             }
         
-            // if ($user['CustomFields'] != null)  {
-
-            //     foreach ($user['CustomFields'] as $cf) {
-            //         if ($cf['Name'] == 'shopify_customer_id' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
-            //             $customer_id = $cf['Values'][0];
-            //             error_log('Customer\'s shopify ID: '.json_encode($customer_id));
-            //         }
-            //     }
-            // }
+          
 
             //if no customer id exists, create a new one
             if (!$shopify_id) {
@@ -133,9 +125,21 @@ foreach($result['Orders'] as $order) {
 
                 //create the customer
                 $customer =  createCustomer($access_token, $shop, $consumer_fname, $consumer_lname, $consumer_email);
-                //error_log('New Customer created: '. json_encode($customer));
+                error_log('New Customer created: '. json_encode($customer));
 
-                if ($customer) {
+                //if customer email exists on shopify store
+
+                if ($customer['userErrors'][0]['message'] == 'Email has already been taken') {
+
+                    $search_email = shopify_get_customer_by_email($access_token, $shop, $order['ConsumerDetail']['Email']);
+
+                    $shopify_id = $search_email['customers'][0]['id'];
+                    error_log('existing ' . $shopify_id);
+                  
+                }
+                  
+        
+                if ($customer['customer']['id']) {
 
                    $shopify_id = ltrim($customer,"gid://shopify/Customer/");
                     
@@ -220,22 +224,31 @@ foreach($result['Orders'] as $order) {
                     // $filtered = array_filter($childItems, function($value) use ($variantId) {
                     //     return $value['ID'] == $variantId;
                     // });
+                    
+                    //search the variant id on item's customfields, 
+                    $variant_ids = '';
+                    foreach($item['CustomFields'] as $customfield){
 
+                        if ($customfield['Name'] == 'shopify_variant_id' && substr($customfield['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+                            $variant_ids = json_decode($customfield['Values'][0],true);
+                        }
+                    }
 
-                    foreach ($childItems as $child) { 
+                   // error_log('variant ids ' . json_encode($variant_ids));
 
-                        $isthere =  strpos($child['AdditionalDetails'], "gid://shopify/ProductVariant/");
-                        error_log($isthere);
+                    foreach ($variant_ids as $child) { 
 
-                        
-                        if ( ($child['ID'] ==  $variantId) && (strstr($child['AdditionalDetails'], "gid://shopify/ProductVariant/") !== false) ) {
+                        //$isthere =  strpos($child['AdditionalDetails'], "gid://shopify/ProductVariant/");
+                        //error_log($isthere);
+
+                        if ($child['variant_id'] ==  $variantId ) {
                             
                             error_log('yes');
 
                          //   if (strpos($child['AdditionalDetails'], "gid://shopify/ProductVariant/") == true) {
                                // echo 'true';
-                               $variant_id = ltrim($child['AdditionalDetails'], "gid://shopify/ProductVariant/");
-                               $global_variant_id = $child['AdditionalDetails'];
+                               $variant_id = ltrim($child['shopify_id'], "gid://shopify/ProductVariant/");
+                               $global_variant_id = $child['shopify_id'];
                                break;
                           //  }
 
@@ -385,21 +398,32 @@ foreach($result['Orders'] as $order) {
            //verify the store either post code 5000 or 5006
            $location_id;
 
-           foreach($locations['locations'] as $location) {
+            if (count($locations['locations']) == 1) {
 
-            error_log('loc ' . json_encode($location));
-
-            //get the zip
-          
-            // if ( $location['zip'] == "0005") {  //test location
-
-           if ($location['zip'] == "5000"  || $location['zip'] == "5006" ) {  //adelaide location
-
-                    $location_id = $location['id'];
+                $location_id = $locations['locations'][0]['id'];
                 
+            }else {
+
+                foreach($locations['locations'] as $location) {
+
+                    //  error_log('loc ' . json_encode($location));
+          
+                      //get the zip
+                    
+                      // if ( $location['zip'] == "0005") {  //test location
+          
+                      if ($location['zip'] == "5000"  || $location['zip'] == "5006" ) {  //adelaide location
+          
+                              $location_id = $location['id'];
+                          
+                      }
+                      break;
+          
+                }
+
             }
 
-           }
+         error_log($location_id);
 
          //get the inventory item id from variant id
 
