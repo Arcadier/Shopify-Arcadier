@@ -64,13 +64,13 @@ if ($result['CustomFields'] != null)  {
                     break;
                    
         }
+
     
     }
 
 }
 
 error_log(" sync_list " . json_encode($sync_items_list));
-
 
 // get the custom field id to tag that the items are from shopify
 
@@ -79,10 +79,13 @@ $packageCustomFields = callAPI("GET", null, $url, false);
 
 $is_shopify_code = '';
 
-
 foreach ($packageCustomFields as $cf) {
     if ($cf['Name'] == 'is_shopify_item' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
         $is_shopify_code = $cf['Code'];
+    }
+
+    if ($cf['Name'] == 'shopify_variant_id' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+        $shopify_variant_id = $cf['Code'];
     }
 }
 
@@ -271,10 +274,10 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                 // $variant_image['src'] = "https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg";
                 }
             
-                count($product_details['product']['options']) == 1 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name'])], 'SKU' => $variant['sku'] , 'Price' => $variant['price'] - $price, 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => $media,  'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
-                count($product_details['product']['options']) == 2 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'] - $price, 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'],'Media' => $media,  'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '' ;
+                count($product_details['product']['options']) == 1 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name'])], 'SKU' => "gid://shopify/ProductVariant/" . $id, 'Price' => $variant['price'] - $price, 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => $media,  'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
+                count($product_details['product']['options']) == 2 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name'])],  'SKU' => "gid://shopify/ProductVariant/" . $id, 'Price' => $variant['price'] - $price, 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'],'Media' => $media,  'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '' ;
                 
-                count($product_details['product']['options']) == 3 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name']),array('ID' => '', 'Name' => $variant['option3'], 'GroupName' => $product_details['product']['options'][2]['name'])],  'SKU' => $variant['sku'] , 'Price' => $variant['price'] - $price, 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => $media, 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
+                count($product_details['product']['options']) == 3 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name']),array('ID' => '', 'Name' => $variant['option3'], 'GroupName' => $product_details['product']['options'][2]['name'])],  'SKU' => "gid://shopify/ProductVariant/" . $id , 'Price' => $variant['price'] - $price, 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => $media, 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
                 $total_variants++;
             }
 
@@ -396,6 +399,17 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                     // error_log('<b>Total Execution Time of updating tags to shopify:</b> '.$execution_time.' seconds');    
                     //if 0 - not exist yet, create a new row on synced_items table
 
+
+                     //get the variant id and shopify id from the child items loop
+                        $variant_details = [];
+                        foreach($result['ChildItems'] as $variant) {
+
+                            $variant_details[] = [ 
+                                "variant_id" => $variant['ID'],
+                                'shopify_id' => $variant['SKU']
+                            ];
+                        }
+
                     
                     $sync_details = [
 
@@ -416,6 +430,10 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                                 'Code' =>  $is_shopify_code,
                                 'Values' => [ 1 ],
                             ],
+                            [
+                                'Code' =>  $shopify_variant_id,
+                                'Values' => [ json_encode($variant_details) ],
+                            ]
                         ],
                     ];
 
@@ -520,6 +538,15 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                     
                             if ($result['ID']){
 
+                                $variant_details = [];
+                                foreach($result['ChildItems'] as $variant) {
+        
+                                    $variant_details[] = [ 
+                                        "variant_id" => $variant['ID'],
+                                        'shopify_id' => $variant['SKU']
+                                    ];
+                                }
+
                                 $sync_details = [
 
                                     "product_id" => $product_id,
@@ -539,6 +566,11 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                                             'Code' =>  $is_shopify_code,
                                             'Values' => [ 1 ],
                                         ],
+
+                                        [
+                                            'Code' =>  $shopify_variant_id,
+                                            'Values' => [ json_encode($variant_details) ],
+                                        ]
                                     ],
                                 ];
 
@@ -639,6 +671,36 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                         error_log("item id " .$isItemSyncResult['Records'][0]['arc_item_guid']);
 
                         $updateItem =  $arc->editItem($item_details, $userId, $isItemSyncResult['Records'][0]['arc_item_guid']);
+
+                        $variant_details = [];
+                        foreach($updateItem['ChildItems'] as $variant) {
+                
+                            if ($variant['Active'] == true) {
+                                $variant_details[] = [ 
+                                    "variant_id" => $variant['ID'],
+                                    'shopify_id' => $variant['SKU']
+                                ];
+                
+                            }
+                        }
+                        $data = [
+                            'CustomFields' => [
+                               
+                                [
+                                    'Code' =>  $shopify_variant_id,
+                                    'Values' => [ json_encode($variant_details) ]
+                                ]
+                
+                            ],
+                        ];
+                
+                        $url = $baseUrl . '/api/v2/merchants/' . $userId . '/items/' . $updateItem['ID'];
+                        $result = callAPI("PUT", $admin_token, $url, $data);
+                
+
+
+
+
                        // error_log("update response " . json_encode($updateItem));
 
                         //if the shopify item is archived
