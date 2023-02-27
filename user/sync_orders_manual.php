@@ -379,71 +379,63 @@ foreach($result['Orders'] as $order) {
             $orders = shopify_call($access_token, $shop, "/admin/orders.json", json_encode($query), 'POST',array("Content-Type: application/json"));
 
             //error_log('Shopify orders API response ' .  json_encode($orders['response']));
-            $response = json_encode($orders['response']);
-            error_log($response);
+            $order_response = json_encode($orders['response']);
+            error_log($order_response);
 
-        //     $order_json  = $response['order'];
-            
-        //     $order_id = $order_json['id'];
-        
-        //     error_log('order id ' . $order_id); 
-            
-        //    $order_fulfillment  = shopify_order($access_token, $shop, $order_id);
-        //    echo json_encode($order_fulfillment);
-
-           $locations = shopify_get_location($access_token, $shop);
-           error_log(json_encode($locations));
+            if ($order_response['order']){
 
 
-           //verify the store either post code 5000 or 5006
-           $location_id;
-
-            if (count($locations['locations']) == 1) {
-
-                $location_id = $locations['locations'][0]['id'];
+                $locations = shopify_get_location($access_token, $shop);
+               
+                 //verify the store either post code 5000 or 5006
+                 $location_id;
+      
+                  if (count($locations['locations']) == 1) {
+      
+                      $location_id = $locations['locations'][0]['id'];
+                      
+                  }else {
+      
+                      foreach($locations['locations'] as $location) {
+      
+                          //  error_log('loc ' . json_encode($location));
                 
-            }else {
-
-                foreach($locations['locations'] as $location) {
-
-                    //  error_log('loc ' . json_encode($location));
-          
-                      //get the zip
-                    
-                      // if ( $location['zip'] == "0005") {  //test location
-          
-                      if ($location['zip'] == "5000"  || $location['zip'] == "5006" ) {  //adelaide location
-          
-                              $location_id = $location['id'];
+                            //get the zip
                           
+                            // if ( $location['zip'] == "0005") {  //test location
+                
+                            if ($location['zip'] == "5000"  || $location['zip'] == "5006" ) {  //adelaide location
+                
+                                    $location_id = $location['id'];
+                                
+                            }
+                            break;
+                
                       }
-                      break;
-          
-                }
+      
+                  }
+      
+               error_log($location_id);
+      
+               //get the inventory item id from variant id
+      
+              //test 42815844286623
+               $variants =  shopify_get_variant_details($access_token, $shop, $variant_id);
+      
+               $inventory_item_id =  $variants['variant']['inventory_item_id'];
+      
+      
+               $inventory_details = [
+                  "location_id" =>  $location_id,
+                  "inventory_item_id" =>  $inventory_item_id,
+                  "available_adjustment" => -$quantity
+               ];
+      
+               $adjust_inventory =  shopify_update_inventory($access_token, $shop,  $inventory_details);
 
             }
 
-         error_log($location_id);
-
-         //get the inventory item id from variant id
-
-        //test 42815844286623
-         $variants =  shopify_get_variant_details($access_token, $shop, $variant_id);
-
-         $inventory_item_id =  $variants['variant']['inventory_item_id'];
-
-
-         $inventory_details = [
-            "location_id" =>  $location_id,
-            "inventory_item_id" =>  $inventory_item_id,
-            "available_adjustment" => -$quantity
-         ];
-
-         $adjust_inventory =  shopify_update_inventory($access_token, $shop,  $inventory_details);
-
-
-
-    
+  
             $count_details = [
 
                 'sync_type' => 'Manual (Orders)',
@@ -464,6 +456,8 @@ foreach($result['Orders'] as $order) {
 
                 "order_id" => $orderId,
                 "merchant_guid" => $merchant_id,
+                'status' => $order_response['order'] ? 'Success' :  'Failed',
+                'status_description' => json_encode($order_response)
             
             ];
                 
