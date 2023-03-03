@@ -305,8 +305,13 @@ if($isMerchant){
 
     <!-- <link rel="stylesheet" href="https://cdn.datatables.net/1.13.2/css/jquery.dataTables.min.css" /> -->
     <link rel="stylesheet" type="text/css" href="css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/select/1.6.0/css/select.dataTables.min.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/searchpanes/2.1.1/css/searchPanes.dataTables.min.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/select/1.6.0/css/select.dataTables.min.css" /> 
+    <script src="https://cdn.datatables.net/responsive/2.4.0/js/dataTables.responsive.min.js"></script>
+    
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.0/css/responsive.dataTables.min.css" /> 
+   
 
     <!-- <script type="text/javascript" src="scripts/jquery.dataTables.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/searchpanes/2.1.1/js/dataTables.searchPanes.min.js" defer></script>
@@ -321,7 +326,49 @@ if($isMerchant){
     <script src="https://nightly.datatables.net/select/js/dataTables.select.js?_=766c9ac11eda67c01f759bab53b4774d"> -->
  
 
-    <style>
+<style>
+
+
+
+
+.fade.in {
+    opacity: 1;
+}
+
+
+
+/* modal */
+
+#chkSync .modal-title {
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: #4D4D4D;
+}
+
+#chkSync .modal-body {
+    font-weight: 400;
+    padding: 20px;
+    padding-bottom: 0;
+}
+
+#chkSync .modal-footer {
+    padding-top: 0;
+}
+
+/* #chkSync .modal-dialog {
+    width: 296px;
+} */
+
+#chkSync .modal-footer>div {
+    width: 100%;
+}
+
+#chkSync .modal-footer button {
+    background: #333547;
+    border: 1px solid #333547;
+    border-radius: 5px;
+    max-width: 130px;
+}
     .loader,
     .loader:after {
         border-radius: 50%;
@@ -626,6 +673,14 @@ if($isMerchant){
         margin-bottom: .5rem;
         margin-left: 4px;
     }
+
+    td.details-control {
+    background: url('https://www.datatables.net/examples/resources/details_open.png') no-repeat left bottom;
+    cursor: pointer;
+}
+tr.shown td.details-control {
+    background: url('https://www.datatables.net/examples/resources/details_close.png') no-repeat left bottom;
+}
     </style>
 </head>
 
@@ -750,7 +805,9 @@ if($isMerchant){
                                 <table class="table hover" id="logTable">
                                     <thead>
                                         <tr>
+                                          
                                             <th>Shopify Item</th>
+                                            <th>Location</th>
                                             <th>Shopify Created</th>
                                             <th>Shopify Updated</th>
                                             <th>Arcadier Synced</th>
@@ -766,6 +823,7 @@ if($isMerchant){
                                             <th>Override Category</th>
                                             <th>Action</th>
                                             <th>ID</th>
+                                            <th>Location ID</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -778,12 +836,33 @@ if($isMerchant){
 
                                     </tbody>
                                 </table>
+
+                                <div id="chkSync" class="modal x-boot-modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-body un-inputs text-center">
+                    <h4 class="modal-title">Unable to select item</h4>
+                    <p>
+                        This item has already been selected from a different location. To proceed, please unselect it
+                        from the previous location before selecting it again."
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <div class="text-center">
+                        <button type="button" class="black-btn" data-dismiss="modal">Okay</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+    
     </div>
 
     <!-- <footer class="footer text-center"> © 2021. </footer> -->
@@ -805,7 +884,9 @@ if($isMerchant){
                 results: "",
                 getbulkApiUrl: "all_products_ajax.php",
                 getAutoSyncList: "auto_sync_list.php",
+                getLocationsUrl: "get_locations.php",
                 bulkUrl: "",
+                locations: "",
                 productsData: "",
                 data: "",
                 categories: [],
@@ -820,6 +901,7 @@ if($isMerchant){
                 currentCount: 0,
                 existingMaps: "",
                 isExisting: ""
+                
 
 
 
@@ -885,7 +967,7 @@ if($isMerchant){
 
 
                                             var data = this.data();
-                                            id = data[10];
+                                            id = data[11];
 
                                             // var cell = table.cell(this);
                                             // table.cell(node).data('40');
@@ -929,7 +1011,7 @@ if($isMerchant){
 
                                                         table.cell(
                                                                 rowIdx,
-                                                                3)
+                                                                4)
                                                             .data(
                                                                 new Date(
                                                                     itemsDetails[
@@ -949,7 +1031,7 @@ if($isMerchant){
                                                         );
                                                         table.cell(
                                                                 rowIdx,
-                                                                3)
+                                                                4)
                                                             .data(
                                                                 'No'
                                                             )
@@ -994,7 +1076,21 @@ if($isMerchant){
 
                                         $('#loadingDiv3').remove();
                                         $("#logTable").dataTable().fnDestroy();         
-                                          $("#logTable").DataTable({
+                                        var dt =  $("#logTable").DataTable({
+
+                                           // processing: true,
+                                           // serverSide: true,
+                                          //  ajax: 'scripts/ids-objects.php',
+                                            // columns: [
+                                            //     {
+                                            //         class: 'details-control',
+                                            //         orderable: false,
+                                                  
+                                            //     },
+                                               
+                                            // ],
+                                                                    
+
                                             "lengthMenu": [
                                                     [10, 25, 50, -1],
                                                     [10, 25, 50, "All"]
@@ -1008,7 +1104,7 @@ if($isMerchant){
                                                 },
                                             
                                                 columnDefs: [{
-                                                    targets: [12],
+                                                    targets: [13,14],
                                                     visible: false
                                                 
                                                 },
@@ -1029,11 +1125,61 @@ if($isMerchant){
                                                                                 
                                             "initComplete": function() {
 
-                                                configFilter(this, [4,5]);
+                                                configFilter(this, [5,6]);
                                             }
                                         });
 
-                                    
+                                                                                
+                                                // Array to track the ids of the details displayed rows
+                                        //     var detailRows = [];
+                                        
+                                        // $('#logTable tbody').on('click', 'tr td.details-control', function () {
+                                        //     var tr = $(this).parents('tr');
+                                        //         var row = table.row( tr );
+                                            
+                                        //         if ( row.child.isShown() ) {
+                                        //             // This row is already open - close it
+                                        //             row.child.hide();
+                                        //             tr.removeClass('shown');
+                                        //         }
+                                        //         else {
+                                        //             // Open this row (the format() function would return the data to be shown)
+                                        //             if(row.child() && row.child().length)
+                                        //             {
+                                        //                 row.child.show();
+                                        //             }
+                                        //             else {
+                                        //                 row.child( vm.format(vm.locations, row.data()) ).show();
+                                        //             }
+                                        //             tr.addClass('shown');
+                                        //         }
+                                        // });
+
+
+                                        // $('#logTable tbody').on('change','.location-select', function() {
+
+                                        // console.log('radio event')
+                                        // $(this).parents('tr').prev('tr').attr('location-id', this.value);
+
+                                        // });
+
+                                        // On each draw, loop over the `detailRows` array and show any child rows
+                                        // var table = $('#logTable').DataTable();
+                                        // table.rows().every( function () {
+                                        //     this
+                                        //         .child(
+                                        //             $(
+                                        //                 '<tr>'+
+                                        //                     '<td>'+''+'.1</td>'+
+                                        //                     '<td>'+''+'.2</td>'+
+                                        //                     '<td>'+''+'.3</td>'+
+                                        //                     '<td>'+''+'.4</td>'+
+                                        //                 '</tr>'
+                                        //             )
+                                        //         )
+                                                
+                                        // } );
+                                                                            
 
                                         if (vm.total > 5000) {
                                             setTimeout(function() {
@@ -1167,9 +1313,11 @@ if($isMerchant){
 
                 }
 
+                //start looping for the locations
+                $.each(vm.locations, function(index, location) {
 
-                let checkStatus = auto_sync_list.includes(itemDetails.id) ? checked = 'checked' : '';
-                let selectedStatus = auto_sync_list.includes(itemDetails.id) ? checked = 'selected' : '';
+                let checkStatus =  checkAutoSyncList(auto_sync_list, itemDetails.id, location.id) ? checked = 'checked' : '';   //auto_sync_list['itemguid'].includes(itemDetails.id) ? checked = 'checked' : '';
+                let selectedStatus = checkAutoSyncList(auto_sync_list, itemDetails.id, location.id) ? checked = 'selected' : '';
 
                 //checking if already sync
                     
@@ -1178,7 +1326,11 @@ if($isMerchant){
                 let isExist = '-'; //vm.checkIfExist(itemDetails.id);
 
                 const tr = $(
-                    `<tr id=${itemDetails.id}><td>${itemDetails.title}</td>
+                    `<tr id=${itemDetails.id}_${index} location-id=${location.id} index=${index}>
+                    
+                    <td>${itemDetails.title} </td>
+
+                    <td>${location.name} ${location.city}</td>
 
                     <td>${createdAt}</td>
 
@@ -1193,8 +1345,8 @@ if($isMerchant){
                     <td>${itemDetails.productType}</td>
 
                     <td> <div class="custom-control custom-checkbox">
-                    <input type="checkbox" name="sync_product" class="sync_product" ${checkStatus}
-                        id="sync_product-${itemDetails.id.replace("gid://shopify/Product/", "")}"
+                    <input type="checkbox" name="sync_product" class="sync_product" data-id="${itemDetails.id.replace("gid://shopify/Product/", "")}" ${checkStatus}
+                        id="sync_product-${itemDetails.id.replace("gid://shopify/Product/", "")}_${index}"
                         data-name="${itemDetails.title}"
                         data-id="${itemDetails.id}">
                         <label class="" for=""><span name="customSpan"></span></label>
@@ -1228,7 +1380,7 @@ if($isMerchant){
                    
                     <td> 
                     <a id="save_map"
-                        onclick="sync_shopify_product('${itemDetails.id}','${itemDetails.id.replace("gid://shopify/Product/", "")}');"
+                        onclick="sync_shopify_product('${itemDetails.id}','${itemDetails.id.replace("gid://shopify/Product/", "")}','${index}');"
                         style="margin-left: 25px;border: #0e77d4;box-sizing: border-box;background-color: #333547;border-radius: 6px;color: white;padding: 5px 10px;font-size: 14px; cursor: pointer;">Sync</a></td>
                         
                     <td> 
@@ -1236,6 +1388,12 @@ if($isMerchant){
                         ${itemDetails.id}
 
                     </td>
+
+                    <td> 
+                    
+                    ${location.id}
+
+                     </td>
                         
                     </tr>`
                 );
@@ -1244,6 +1402,8 @@ if($isMerchant){
                 $(trDOM).addClass(
                     selectedStatus
                 );
+
+            })
                 // $(`"#${itemDetails.id}"`).addClass(selectedStatus);
                 //document.getElementById(`${itemDetails.id}`).classList.add('.selected');
 
@@ -1298,7 +1458,7 @@ if($isMerchant){
                         const items = res.data
                         const itemsDetails = items.Records[0]
                         //if existing user, verify the status
-                        if (items.TotalRecords == 1) {
+                        if (items.TotalRecords >= 1) {
                             console.log('mapped');
 
                             return itemsDetails['synced_date'];
@@ -1313,7 +1473,7 @@ if($isMerchant){
 
 
                             var data = this.data();
-                            data[2] += ' >> updated in loop' //append a string to every col #2
+                            data[4] += ' >> updated in loop' //append a string to every col #2
                             this.data(data)
                         })
 
@@ -1323,7 +1483,7 @@ if($isMerchant){
 
                             var Row = this.data(); //store every row data in a variable
 
-                            console.log(Row[3]); //show Row + Cell index
+                            console.log(Row[4]); //show Row + Cell index
                             $(".data-loader").removeClass("active");
 
                         });
@@ -1375,8 +1535,30 @@ if($isMerchant){
 
 
             },
+            
+            format(d, data) {
+                  vm = this;
 
+                  console.log(data);
 
+                  let location_div = "";
+                  let isChecked;
+                  d.length == 1 ? 'checked' : ''; // auto check if there is only 1 location
+                  $.each(d, function(index, location) {
+                    location  != undefined ?
+                    location_div += `<div class="fancy-radio">
+                        <input type="radio" value="${location.id}_${data[12]}" name="location_${data[12]}" id="${location.id}_${data[12]}" class="location-select" checked=${isChecked}>
+                        <label for="${location.id}_${data[12]}"><span>${location.address1} ${location.city} </span></label>
+                    </div>` : location_div += "";    
+
+                })
+
+                //console.log(`(vm.locations)}`);
+
+                return location_div;
+                
+                
+            },
 
             isJsonString(str) {
                 try {
@@ -1426,7 +1608,7 @@ if($isMerchant){
                         $('.sync_product', rows).prop('checked', true);
 
                         var ids = $.map(DT1.rows('.selected').data(), function(item) {
-                            return item[12]
+                            return { 'itemguid' : item[13], 'locationId' : item[14] }
                         });
                         console.log(ids)
 
@@ -1459,8 +1641,10 @@ if($isMerchant){
                         $('.sync_product', rows).prop('checked', false);
 
                         var ids = $.map(DT1.rows('.selected').data(), function(item) {
-                            return item[12]
+                            return { 'itemguid' : item[13], 'locationId' : item[14] }
                         });
+                       
+                        //});
                         console.log(ids)
 
                         vm.saveAutoSyncProducts(ids);
@@ -1488,32 +1672,7 @@ if($isMerchant){
 
 
             async saveAutoSyncProducts(productIds) {
-                // var data = {
-                //     'product-list': JSON.stringify(productIds),
-                //     'user-id': vm.userId
-                // }
-
-
-
-                // $.ajax({
-                //     method: "POST",
-                //     url: vm.getAutoSyncList,
-                //     headers: {
-                //         "Content-Type": "application/json"
-                //     },
-
-                //     data: JSON.stringify(data),
-
-                //     success: function(response) {
-                //         console.log({
-                //             response
-                //         })
-
-
-
-                //     }
-                // })
-
+              
                 vm = this;
                 var data = {
                     'product-list': JSON.stringify(productIds),
@@ -1581,8 +1740,34 @@ if($isMerchant){
 
 
 
-            }
+            }, 
+            async getLocations()
+            {
+                var vm = this;
+              
+                let locations = await axios({
+                        method: "post",
+                        url: vm.getLocationsUrl,
 
+                    })
+                    .then((response) => {
+                        var data =  JSON.parse(response.data);
+                         vm.locations = data.result.locations;
+
+                        console.log(vm.locations);
+                        //vm.locations = Object.entries(response.data[0].locations);
+                       // console.log(`${vm.locations.locations}`)
+                       // vm.locations =  Object.entries(vm.locations.locations);
+                       // console.log(vm.locations)
+                       // vm.format(vm.locations); 
+                      
+                    })
+                    .catch(function(response) {
+                        //handle error
+                        console.log(response);
+
+                    });
+            }
 
 
         },
@@ -1595,6 +1780,7 @@ if($isMerchant){
                 this.loadCSV();
             this.getCategoryMapping();
             this.getExistingMaps(vm.userId),
+            this.getLocations(),
 
                 //categories
                 axios({
@@ -1674,9 +1860,27 @@ if($isMerchant){
 
     
         var selectedProducts = [];
-        var confirmModal =
-            `<div class='popup-area cart-checkout-confirm' id ='plugin-popup'><div class='wrapper'> <div class='title-area text-capitalize'><h1>ARE YOU SURE YOU WANT TO PROCEED?</h1></div><div class='content-area'><span id ='main'>You are about to import <span id="total-items">  </span> products. An email notification will be sent once the import has started and completed.</span> </div><div class='btn-area'> <a href='javascript:void(0)' class='btn-black-cmn' id='btn-cancel'>Cancel</a> <a  class='add-cart-btn' id='btn-sync-all'>Sync</a></div></div></div>`;
+        var confirmModal =`<div class='popup-area cart-checkout-confirm' id ='plugin-popup'><div class='wrapper'> <div class='title-area text-capitalize'><h1>ARE YOU SURE YOU WANT TO PROCEED?</h1></div><div class='content-area'><span id ='main'>You are about to import <span id="total-items">  </span> products. An email notification will be sent once the import has started and completed.</span> </div><div class='btn-area'> <a href='javascript:void(0)' class='btn-black-cmn' id='btn-cancel'>Cancel</a> <a  class='add-cart-btn' id='btn-sync-all'>Sync</a></div></div></div>`;
+        var validateModal =  `<div id="chkSync" class="modal x-boot-modal fade" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-body un-inputs text-center">
+                    <h4 class="modal-title">Unable to select item</h4>
+                    <p>
+                        This item has already been selected from a different location. To proceed, please unselect it
+                        from the previous location before selecting it again."
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <div class="text-center">
+                        <button type="button" class="black-btn" data-dismiss="modal">Okay</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
         $('.footer').after(confirmModal);
+        $('.footer').after(validateModal);
 
         // loadAllItemsUrl();
         $('#plugin-popup #btn-cancel').click(function() {
@@ -1706,6 +1910,14 @@ if($isMerchant){
         //$('table.table').DataTable();
 
         $('#logTable').DataTable({
+
+
+            responsive: {
+            details: {
+                type: 'column',
+                target: 'tr'
+            }
+        },
            
             "lengthMenu": [
                 [10, 25, 50, -1],
@@ -1722,7 +1934,7 @@ if($isMerchant){
             // },
         
             columnDefs: [{
-                targets: [12],
+                targets: [13,14],
                 visible: false
             
             },
@@ -1807,15 +2019,74 @@ if($isMerchant){
         $('#logTable tbody').on('change', '.sync_product', function() {
 
 
-            if ($(this).is(":checked")) {
-                $(this).parents('tr').addClass('selected');
-            } else {
+            let dataId =  $(this).attr('data-id');
+            console.log({dataId})
+
+            let check_count = 0;
+            $('.sync_product[data-id="'+ dataId +'"]').each(function(){
+                console.log($(this).attr('id'));
+
+                if ($(this).parents('tr').hasClass("selected")) {
+
+                    console.log('hit')
+                    check_count++;
+                }
+            //do your stuff here
+            });
+
+
+
+            if (check_count >= 1) {
+                console.log('there is an exisiting check')
+                if ($(this).is(":checked")) {
+                    $('#chkSync').modal('show')
+                    $('#chkSync').addClass('in')
+                    $(this).parents('tr').removeClass('selected');
+                    $(this).prop("checked", false);
+                }else {
+                    $(this).parents('tr').removeClass('selected');
+                }
+                // if ($(this).is(":checked")) {
+                //   //$(this).parents('tr').addClass('selected');
+                 
+                // } else {
+                // //DT1.$('tr.selected').removeClass('selected');
+
+                // $(this).parents('tr').removeClass('selected');
+
+                // }
+
+            }
+
+            else {
+
+                if ($(this).is(":checked")) {
+                  $(this).parents('tr').addClass('selected');
+                } else {
                 //DT1.$('tr.selected').removeClass('selected');
 
                 $(this).parents('tr').removeClass('selected');
 
+                }
+
+                //$('#chkSync').modal('hide')
+                //$('#chkSync').removeClass('in')
+
+               
+
             }
 
+           
+                   
+
+
+
+                
+
+
+
+
+           
 
             // var data = table.row(this).data();
             //  $(this).parents('tr').addClass('selected');
@@ -1836,7 +2107,7 @@ if($isMerchant){
                 var DT1 = $("#logTable").DataTable();
 
                 var ids = $.map(DT1.rows('.selected').data(), function(item) {
-                    return item[12]
+                    return { 'itemguid' : item[13], 'locationId' : item[14] }
                 });
 
                 console.log(ids);
@@ -1860,8 +2131,6 @@ if($isMerchant){
         //     console.log(`selected ${indexes}`)
         // });
     });
-
-
 
 
     function configFilter($this, colArray) {
@@ -2051,11 +2320,16 @@ if($isMerchant){
         });
     }
 
-    function sync_shopify_product(id, shortId) {
+    function sync_shopify_product(id, shortId, indx) {
 
         console.log('syncing');
 
-        if ($('#sync_product-' + shortId).is(":checked")) {
+        var parentTr = $('#sync_product-' + shortId +'_' + indx).parents('tr');
+        var locationId =  parentTr.attr('location-id')
+        var indexId =  parentTr.attr('index')
+        console.log({locationId });
+
+        if ($('#sync_product-' + shortId +'_' + indx).is(":checked")) {
             var category_names = [];
             var category;
             var override_category_array = [];
@@ -2118,7 +2392,8 @@ if($isMerchant){
                 'category': category,
                 'images': $(`#cat-${shortId}`).attr('image-src'),
                 'price': $(`#cat-${shortId}`).attr('price'),
-                'qty': $(`#cat-${shortId}`).attr('qty')
+                'qty': $(`#cat-${shortId}`).attr('qty'),
+                'location-id' : locationId
             };
             // console.table(data);
             $('body').append(
@@ -2276,6 +2551,7 @@ if($isMerchant){
 
     $(document).ready(function() {
 
+    
         waitForElement("#select_all_Draft", function() {
             $("#select_all_Draft").on("click", function(e) {
                         if ($(this).is(":checked")) {
@@ -2313,6 +2589,14 @@ if($isMerchant){
         } else {
             window.location.replace('https://' + baseUrl);
         }
+
+
+
+
+
+        //radio button location events
+
+      
     });
 
     jQuery($ => {
@@ -2536,64 +2820,7 @@ if($isMerchant){
                         })
                     }
 
-                });
-                // var reader = new FileReader();
-                // reader.readAsText(result);
-                // // Handle errors load
-                // reader.onload = function(event) {
-                //     var csv = event.target.result;
-
-                //     var parse_csv = csvJSON(csv);
-
-                //     console.log(parse_csv)
-
-
-                // };
-                // reader.onerror = function(evt) {
-                //     if (evt.target.error.name == "NotReadableError") {
-                //         alert("Cannot read file !");
-                //     }
-                // };
-
-
-                // var url = results;
-                // $.getJSON(url, function(data) {
-                //     var lines = data.split("\n");
-                //     var result = [];
-                //     lines.map(function(line, indexLine) {
-
-                //         var obj = {};
-                //         var currentline = line;
-                //         console.log(line);
-                //         result.push(obj);
-
-                //     })
-
-
-
-
-
-
-                //     // $.each(data, function(key, model) {
-
-                //     //     console.log(model);
-                //     //     // if (model.key == "INFO") {
-                //     //     //     console.log(model.value)
-                //     //     // }
-                //     // })
-                // });
-
-                //location.reload()
-
-                // result =  JSON.parse(result);
-                //     console.log(`result  ${result}`);
-
-                //     if (result == 'success') {
-                //          toastr.success(`Synced order Number: ${orderId}`);
-                //     } else {
-                //         toastr.error(`This order has already been synced`);
-
-                //     }
+                })
 
             },
             error: function(jqXHR, status, err) {
@@ -2667,6 +2894,14 @@ if($isMerchant){
         // result.pop() // remove the last item because undefined values
 
         return result; // JavaScript object
+    }
+
+
+    
+    function checkAutoSyncList(arr,productId, locationId) {
+    return arr.some(function(el) {
+        return el.itemguid === productId && el.locationId == parseInt(locationId);
+    }); 
     }
     </script>
 </body>

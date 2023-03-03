@@ -141,14 +141,14 @@ foreach($result['Orders'] as $order) {
         
                 if ($customer['customer']['id']) {
 
-                   $shopify_id = ltrim($customer,"gid://shopify/Customer/");
+                   $shopify_id = ltrim($customer['customer']['id'],"gid://shopify/Customer/");
                     
                     //save the obtained customer id on customer's custom table
 
                         $customer_details = [
                             
                             "arc_user_guid" => $consumer_id,
-                            "shopify_user_id"=> $customer,
+                            "shopify_user_id"=> $customer['customer']['id'],
                             "store_name" =>  $shop
 
                             
@@ -191,10 +191,13 @@ foreach($result['Orders'] as $order) {
                 if ($cartItem['ItemDetail']['ParentID'] == null) {
                     
                     $itemId =  $cartItem['ItemDetail']['ID'];
+                    error_log('parent item ' .$itemId);
                 
                     $syncItems = array(array('Name' => 'arc_item_guid', "Operator" => "equal",'Value' => $itemId));
                     $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/synced_items';
                     $isItemSyncResult =  callAPI("POST", $admin_token, $url, $syncItems);
+
+                    error_log('sync result ' . json_encode($isItemSyncResult));
 
 
                     $product_details = shopify_product_details($access_token, $shop, ltrim($isItemSyncResult['Records'][0]['product_id'],"gid://shopify/Product/"));  
@@ -205,6 +208,18 @@ foreach($result['Orders'] as $order) {
                     
                     $variant_id = ltrim($isItemSyncResult['Records'][0]['variant_id'],"gid://shopify/ProductVariant/"); 
                     $global_variant_id = $isItemSyncResult['Records'][0]['variant_id'];
+
+                    $url = $baseUrl . '/api/v2/items/' .  $itemId;
+                    $item = callAPI("GET", $admin_token, $url, false);    
+                    foreach($item['CustomFields'] as $customfield){
+
+                        if ($customfield['Name'] == 'shopify_variant_id' && substr($customfield['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+                            $variant_ids = json_decode($customfield['Values'][0],true);
+                        }
+                        if ($customfield['Name'] == 'location_id' && substr($customfield['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+                            $location_id_set = (int)$customfield['Values'][0];
+                        }
+                    }
 
                     //echo 'variant id no variant ' . $variant_id;
                    
@@ -231,6 +246,9 @@ foreach($result['Orders'] as $order) {
 
                         if ($customfield['Name'] == 'shopify_variant_id' && substr($customfield['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
                             $variant_ids = json_decode($customfield['Values'][0],true);
+                        }
+                        if ($customfield['Name'] == 'location_id' && substr($customfield['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+                            $location_id_set = (int)$customfield['Values'][0];
                         }
                     }
 
@@ -388,34 +406,37 @@ foreach($result['Orders'] as $order) {
                 $locations = shopify_get_location($access_token, $shop);
                
                  //verify the store either post code 5000 or 5006
-                 $location_id;
+                 //$location_id = $location_id_set;
       
                   if (count($locations['locations']) == 1) {
       
-                      $location_id = $locations['locations'][0]['id'];
+                    $location_id_set = $locations['locations'][0]['id'];
                       
-                  }else {
-      
-                      foreach($locations['locations'] as $location) {
-      
-                          //  error_log('loc ' . json_encode($location));
-                
-                            //get the zip
-                          
-                            // if ( $location['zip'] == "0005") {  //test location
-                
-                            if ($location['zip'] == "5000"  || $location['zip'] == "5006" ) {  //adelaide location
-                
-                                    $location_id = $location['id'];
-                                
-                            }
-                            break;
-                
-                      }
-      
                   }
+                //   else {
       
-               error_log($location_id);
+
+                    
+                //       foreach($locations['locations'] as $location) {
+      
+                //           //  error_log('loc ' . json_encode($location));
+                
+                //             //get the zip
+                          
+                //             // if ( $location['zip'] == "0005") {  //test location
+                
+                //             if ($location['zip'] == "5000"  || $location['zip'] == "5006" ) {  //adelaide location
+                
+                //                     $location_id = $location['id'];
+                                
+                //             }
+                //             break;
+                
+                //       }
+      
+                //   }
+      
+               error_log($location_id_set);
       
                //get the inventory item id from variant id
       
@@ -426,7 +447,7 @@ foreach($result['Orders'] as $order) {
       
       
                $inventory_details = [
-                  "location_id" =>  $location_id,
+                  "location_id" =>  $location_id_set,
                   "inventory_item_id" =>  $inventory_item_id,
                   "available_adjustment" => -$quantity
                ];
@@ -456,7 +477,7 @@ foreach($result['Orders'] as $order) {
 
                 "order_id" => $orderId,
                 "merchant_guid" => $merchant_id,
-                'status' => $order_response['order'] ? 'Success' :  'Failed',
+                'status' => count($order_response['order']) ? 'Success' :  'Failed',
                 'status_description' => json_encode($order_response)
             
             ];

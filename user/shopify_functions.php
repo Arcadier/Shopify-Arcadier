@@ -451,6 +451,19 @@ function shopify_update_inventory($token, $shop, $data){
 
 }
 
+
+function shopify_get_inventory_level_by_location($token, $shop, $inventory_id, $location_id){
+	//$page = $i + 1;
+    $inventory = shopify_call($token, $shop, "/admin/api/2022-10/inventory_levels.json?inventory_item_ids=" . $inventory_id . "&location_ids=" . $location_id, array(), 'GET');
+	$inventory =  json_decode($inventory['response'], TRUE);
+   
+    return $inventory;
+
+}
+
+
+https://{{store_name}}.myshopify.com/admin/api/{{api_version}}/inventory_levels.json?inventory_item_ids=42737110122589&location_ids=60909027421,63362859101,37213372509,36237967453,37196726365
+
 function shopify_get_customer_by_email($token, $shop, $email){
 	//$page = $i + 1;
     $customer= shopify_call($token, $shop, "/admin/api/2022-04/customers/search.json?query=email:" . $email, array(), 'GET');

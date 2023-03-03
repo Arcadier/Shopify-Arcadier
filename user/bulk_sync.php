@@ -28,7 +28,6 @@ $userId = $result['ID'];
 
 //$result = callAPI("GET", $admin_token, $url, false);
 
-
 $userEmail = $result['Email'];
 $userDisplayName = $result['DisplayName'];
 
@@ -63,6 +62,10 @@ if ($result['CustomFields'] != null)  {
                    // echo (json_encode($sync_items_list));
                     break;
                    
+        }
+        //location id
+        if ($cf['Name'] == 'location_id' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+            $location_id_code = $cf['Code'];
         }
 
     
@@ -108,7 +111,6 @@ $category_map  =  callAPI("POST", $admin_token, $url, $data);
 //error_log(json_encode($category_map));
 
 
-
 $time_end = microtime(true);
 $execution_time = ($time_end - $time_start);
 //execution time of the script
@@ -118,7 +120,7 @@ $product_count = shopify_product_count($access_token, $shop);
 $total = $product_count['count'];
 //step 1. Get all shopify products
 
-$count_chosen =  count($sync_items_list);
+$count_chosen =  count($sync_items_list[0]);
 
 //$shopify_products = shopify_get_all_products($access_token, $shop);
 
@@ -193,7 +195,12 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
         
         //get the shopify id
         $allvariants = [];
-        $product_id =  $product; //;$buffer['id'];
+        $product_id =  $product['itemguid']; //;$buffer['id'];
+        error_log('prod id '. $product_id);
+
+        $location_id = $product['locationId'];
+
+        error_log('loc id '. $location_id);
 
           //check if the item has been sync
         $time_start = microtime(true);
@@ -226,13 +233,29 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
 
         $prices = [];
 
+        $total_inventory_no_variants = 0;
+
         foreach($variants as $variant){
             $prices[] = (float)$variant['price'];
+
+            $id = $variant['id'];
+            error_log('variant id '. $id);
+            //get the inventory id from variant details
+            $variants_details =  shopify_get_variant_details($access_token, $shop, $id);
+            $inventory_item_id =  $variants_details['variant']['inventory_item_id'];
+            error_log('inventory id ' .  $inventory_item_id);
+            //get the total qty from the given location
+            $inventory_level = shopify_get_inventory_level_by_location($access_token, $shop, $inventory_item_id, $location_id);
+            error_log('level ' .  json_encode($inventory_level));
+            $inventory_count = $inventory_level['inventory_levels'][0]['available'];
+            $total_inventory_no_variants  += $inventory_count;
+
+
         }
 
         $price = min($prices);
 
-
+        $total_inventory = 0;
         //$price = $variants[0]['price'];
         $variant_id = $variants[0]['id'];
        
@@ -263,6 +286,18 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
             foreach($variants as $variant){
 
                 $id = $variant['id'];
+
+                $variants_details =  shopify_get_variant_details($access_token, $shop, $id);
+                $inventory_item_id =  $variants_details['variant']['inventory_item_id'];
+                error_log('inventory id ' .  $inventory_item_id);
+                //get the total qty from the given location
+                $inventory_level = shopify_get_inventory_level_by_location($access_token, $shop, $inventory_item_id, $location_id);
+                //error_log('level ' .  json_encode($inventory_level));
+                $inventory_count = $inventory_level['inventory_levels'][0]['available'];
+                $total_inventory += $inventory_count;
+                error_log('count ' . $inventory_count);
+        
+
                 $variant_image =  findItem($images, $id);
 
 
@@ -274,10 +309,10 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                 // $variant_image['src'] = "https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg";
                 }
             
-                count($product_details['product']['options']) == 1 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name'])], 'SKU' => "gid://shopify/ProductVariant/" . $id, 'Price' => $variant['price'] - $price, 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => $media,  'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
-                count($product_details['product']['options']) == 2 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name'])],  'SKU' => "gid://shopify/ProductVariant/" . $id, 'Price' => $variant['price'] - $price, 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'],'Media' => $media,  'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '' ;
+                count($product_details['product']['options']) == 1 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name'])], 'SKU' => "gid://shopify/ProductVariant/" . $id, 'Price' => $variant['price'] - $price, 'StockLimited' => true, 'StockQuantity' => $inventory_count, 'Media' => $media,  'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
+                count($product_details['product']['options']) == 2 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name'])],  'SKU' => "gid://shopify/ProductVariant/" . $id, 'Price' => $variant['price'] - $price, 'StockLimited' => true, 'StockQuantity' => $inventory_count,'Media' => $media,  'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '' ;
                 
-                count($product_details['product']['options']) == 3 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name']),array('ID' => '', 'Name' => $variant['option3'], 'GroupName' => $product_details['product']['options'][2]['name'])],  'SKU' => "gid://shopify/ProductVariant/" . $id , 'Price' => $variant['price'] - $price, 'StockLimited' => true, 'StockQuantity' => $variant['inventory_quantity'], 'Media' => $media, 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
+                count($product_details['product']['options']) == 3 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name']),array('ID' => '', 'Name' => $variant['option3'], 'GroupName' => $product_details['product']['options'][2]['name'])],  'SKU' => "gid://shopify/ProductVariant/" . $id , 'Price' => $variant['price'] - $price, 'StockLimited' => true, 'StockQuantity' => $inventory_count, 'Media' => $media, 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
                 $total_variants++;
             }
 
@@ -295,7 +330,7 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
             'Price' => (float)$price,
             'PriceUnit' => null,
             'StockLimited' => true,
-            'StockQuantity' =>  $inventory,
+            'StockQuantity' =>   $total_inventory_no_variants,
             'IsVisibleToCustomer' => true,
             'Active' => true,
             'IsAvailable' => '',
@@ -458,157 +493,161 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                 }
             
             }
-                else{
-                    // echo 'not mapped';
-                        $category_map = '<b>Not Mapped</b>';
-                    }
-                
+            else{
+                // echo 'not mapped';
+                    $category_map = '<b>Not Mapped</b>';
+            }
+            
         }
         else {
                 $item_details_exist =  $arc->getItemInfo($isItemSyncResult['Records'][0]['arc_item_guid']);
 
-        if (array_key_exists('Code', $item_details_exist)) {
-            if ($item_details_exist['Code'] == 400){
-                 error_log("exist but cannot find item in arc " . $product_name);
-            
-                //do the post process
-                if ($product_details['product']['status'] == 'active'){
-                    error_log("active " . $product_name);
-
-                    if($category_map['TotalRecords'] == 1){
-
-                        $category_maps = $category_map['Records'][0]['map'];
-                        if($product_type == null){
-                            $shopify_product_category =  $product_type;
-                        }else{
-                            $shopify_product_category =  $product_type;
-                        }
-            
-                        $category_map_unserialized = json_decode($category_maps, 1);
-                    
-                                            
-                        $destination_arcadier_categories = [];
-                        foreach($category_map_unserialized as $category){
-                            if ($category['shopify_category'] == $shopify_product_category) {
-                                $destination_arcadier_categories = $category['mapped_arc_categories'];
-                            }
-                        }
-
-
+            if (array_key_exists('Code', $item_details_exist)) {
+                if ($item_details_exist['Code'] == 400){
+                    error_log("exist but cannot find item in arc " . $product_name);
                 
-                        //finally create the item with the mapped category
-                        $all_categories = [];
-                        foreach($destination_arcadier_categories as $category) {
-                                $all_categories[] = array("ID" => $category);
-                                
-                        }
-                    
-                        $time_start = microtime(true);
-                            $item_details = array(
-                                'SKU' =>  $sku,
-                                'Name' =>  $product_name,
-                                'BuyerDescription' => strip_tags($description),
-                                'SellerDescription' => strip_tags($description),
-                                'Price' => (float)$price,
-                                'PriceUnit' => null,
-                                'StockLimited' => true,
-                                'StockQuantity' =>  $inventory,
-                                'IsVisibleToCustomer' => true,
-                                'Active' => true,
-                                'IsAvailable' => '',
-                                'CurrencyCode' =>  'AUD',
-                                'Categories' =>   $all_categories,
-                                'ShippingMethods'  => $all_shipping_methods,
-                                'PickupAddresses' => null,
-                                'Media' => $allimages,
-                                'Tags' => null,
-                                'CustomFields' => null,
-                                'ChildItems' => $allvariants,
+                    //do the post process
+                    if ($product_details['product']['status'] == 'active'){
+                        error_log("active " . $product_name);
 
-                            );
+                        if($category_map['TotalRecords'] == 1){
 
+                            $category_maps = $category_map['Records'][0]['map'];
+                            if($product_type == null){
+                                $shopify_product_category =  $product_type;
+                            }else{
+                                $shopify_product_category =  $product_type;
+                            }
+                
+                            $category_map_unserialized = json_decode($category_maps, 1);
                         
-                            $url =  $baseUrl . '/api/v2/merchants/' . $userId . '/items';
-                            $result =  callAPI("POST", $admin_token, $url, $item_details);
-                            $time_end = microtime(true);
-                            $execution_time = ($time_end - $time_start);
-                            
-                            $result1 = json_encode(['err' => $result]);
-                            //update the tag of the item in shopify after a successful item upload
-                    
-                            if ($result['ID']){
-
-                                $variant_details = [];
-                                foreach($result['ChildItems'] as $variant) {
-        
-                                    $variant_details[] = [ 
-                                        "variant_id" => $variant['ID'],
-                                        'shopify_id' => $variant['SKU']
-                                    ];
+                                                
+                            $destination_arcadier_categories = [];
+                            foreach($category_map_unserialized as $category){
+                                if ($category['shopify_category'] == $shopify_product_category) {
+                                    $destination_arcadier_categories = $category['mapped_arc_categories'];
                                 }
+                            }
 
-                                $sync_details = [
 
-                                    "product_id" => $product_id,
-                                    "synced_date" => time(),
-                                    "merchant_guid" => $userId,
-                                    'arc_item_guid' => $result['ID'],
-                                    'variant_id' => "gid://shopify/ProductVariant/" . $variant_id
+                    
+                            //finally create the item with the mapped category
+                            $all_categories = [];
+                            foreach($destination_arcadier_categories as $category) {
+                                    $all_categories[] = array("ID" => $category);
                                     
-                                ];
-
-                            
-                                //update the item's custom field
-                                $time_start = microtime(true);
-                                $data = [
-                                    'CustomFields' => [
-                                        [
-                                            'Code' =>  $is_shopify_code,
-                                            'Values' => [ 1 ],
-                                        ],
-
-                                        [
-                                            'Code' =>  $shopify_variant_id,
-                                            'Values' => [ json_encode($variant_details) ],
-                                        ]
-                                    ],
-                                ];
-
-                                $url = $baseUrl . '/api/v2/merchants/' . $userId . '/items/' . $result['ID'];
-                                $result = callAPI("PUT", $admin_token, $url, $data);
-                                $time_end = microtime(true);
-                                $execution_time = ($time_end - $time_start);
-                            
-
-                                $time_start = microtime(true);
-                                $response = $arc->createRowEntry($packageId, 'synced_items', $sync_details);
-                            
-                                $time_end = microtime(true);
-                                $execution_time = ($time_end - $time_start);
-                                
-                                //add counter to the total created 
-                                $total_created++;
-
-                                            
                             }
                         
+                            $time_start = microtime(true);
+                                $item_details = array(
+                                    'SKU' =>  $sku,
+                                    'Name' =>  $product_name,
+                                    'BuyerDescription' => strip_tags($description),
+                                    'SellerDescription' => strip_tags($description),
+                                    'Price' => (float)$price,
+                                    'PriceUnit' => null,
+                                    'StockLimited' => true,
+                                    'StockQuantity' =>  $inventory,
+                                    'IsVisibleToCustomer' => true,
+                                    'Active' => true,
+                                    'IsAvailable' => '',
+                                    'CurrencyCode' =>  'AUD',
+                                    'Categories' =>   $all_categories,
+                                    'ShippingMethods'  => $all_shipping_methods,
+                                    'PickupAddresses' => null,
+                                    'Media' => $allimages,
+                                    'Tags' => null,
+                                    'CustomFields' => null,
+                                    'ChildItems' => $allvariants,
 
-                        }
-                        else{
-                        // echo 'not mapped';
-                            $category_map = '<b>Not Mapped</b>';
-                        }
+                                );
+
+                            
+                                $url =  $baseUrl . '/api/v2/merchants/' . $userId . '/items';
+                                $result =  callAPI("POST", $admin_token, $url, $item_details);
+                                $time_end = microtime(true);
+                                $execution_time = ($time_end - $time_start);
+                                
+                                $result1 = json_encode(['err' => $result]);
+                                //update the tag of the item in shopify after a successful item upload
+                        
+                                if ($result['ID']){
+
+                                    $variant_details = [];
+                                    foreach($result['ChildItems'] as $variant) {
+            
+                                        $variant_details[] = [ 
+                                            "variant_id" => $variant['ID'],
+                                            'shopify_id' => $variant['SKU']
+                                        ];
+                                    }
+
+                                    $sync_details = [
+
+                                        "product_id" => $product_id,
+                                        "synced_date" => time(),
+                                        "merchant_guid" => $userId,
+                                        'arc_item_guid' => $result['ID'],
+                                        'variant_id' => "gid://shopify/ProductVariant/" . $variant_id
+                                        
+                                    ];
+
+                                
+                                    //update the item's custom field
+                                    $time_start = microtime(true);
+                                    $data = [
+                                        'CustomFields' => [
+                                            [
+                                                'Code' =>  $is_shopify_code,
+                                                'Values' => [ 1 ],
+                                            ],
+
+                                            [
+                                                'Code' =>  $shopify_variant_id,
+                                                'Values' => [ json_encode($variant_details) ],
+                                            ],
+                                            [
+                                                'Code' =>  $location_id_code,
+                                                'Values' => [ $location_id ],
+                                            ],
+                                        ],
+                                    ];
+
+                                    $url = $baseUrl . '/api/v2/merchants/' . $userId . '/items/' . $result['ID'];
+                                    $result = callAPI("PUT", $admin_token, $url, $data);
+                                    $time_end = microtime(true);
+                                    $execution_time = ($time_end - $time_start);
+                                
+
+                                    $time_start = microtime(true);
+                                    $response = $arc->createRowEntry($packageId, 'synced_items', $sync_details);
+                                
+                                    $time_end = microtime(true);
+                                    $execution_time = ($time_end - $time_start);
+                                    
+                                    //add counter to the total created 
+                                    $total_created++;
+
+                                                
+                                }
+                            
+
+                            }
+                            else{
+                            // echo 'not mapped';
+                                $category_map = '<b>Not Mapped</b>';
+                            }
 
 
 
-                }
-               
+                    }
+                
 
-        
+            
                 }
 
             }
-        else {
+            else {
                 error_log('====================================================================');
 
                 
@@ -689,7 +728,12 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                                 [
                                     'Code' =>  $shopify_variant_id,
                                     'Values' => [ json_encode($variant_details) ]
-                                ]
+                                ],
+
+                                [
+                                    'Code' =>  $location_id_code,
+                                    'Values' => [ $location_id ],
+                                ],
                 
                             ],
                         ];
@@ -698,14 +742,11 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                         $result = callAPI("PUT", $admin_token, $url, $data);
                 
 
-
-
-
                        // error_log("update response " . json_encode($updateItem));
 
                         //if the shopify item is archived
 
-                        if ($product_details['product']['status'] == 'archived' $product_details['product']['status'] == 'draft') {
+                        if($product_details['product']['status'] == 'archived' || $product_details['product']['status'] == 'draft') {
 
                        
                                 $url =  $baseUrl . '/api/v2/merchants/'. $userId .'/items/'. $isItemSyncResult['Records'][0]['arc_item_guid'];
@@ -757,7 +798,7 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
 
                     ];	
 
-            
+        
                     //register any changes on the update
                     //1. retrieve the item details
 
@@ -782,10 +823,9 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
 
                 //     $response = $arc->editRowEntry($packageId, 'synced_items', $synced_item_id, $sync_details);
 
-                }
             }
         }
-
+    }
 
             $count_details = [
 

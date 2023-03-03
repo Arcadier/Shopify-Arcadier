@@ -22357,3 +22357,45 @@ check-category span {
     transition: all .4s ease;
     -webkit-transition: all .4s ease;
 }
+
+
+ .fancy-radio input[type="radio"]:checked+label  {
+	background: url(../images/r-check.svg) no-repeat left center !important
+  }
+  
+    .fancy-radio input[type="radio"]+label,.page-coupon .pgfncyopt .fancy-checkbox input[type="checkbox"]+label {
+	background: url(../images/r-uncheck.svg) no-repeat left center !important
+  }
+  
+  .fancy-radio label,.page-coupon .pgfncyopt .fancy-checkbox label {
+	height: 26px;
+	padding-left: 36px;
+	display: inline-block;
+	border: none;
+	padding-top: 3px;
+	width: 100%
+  }
+  
+  .fancy-radio label span,.page-coupon .pgfncyopt .fancy-checkbox label span {
+	display: inline-block;
+	width: auto;
+	min-height: inherit;
+	vertical-align: inherit
+  }
+  
+   .pgfncyopt {
+	display: inline-block;
+	width: 100%;
+	margin-top: 10px
+  }
+  
+  .pgfncyopt .fancy-radio {
+	border: none;
+	display: inherit;
+	margin-bottom: 0;
+	width: auto;
+	vertical-align: middle;
+	margin-right: unset;
+	height: auto;
+	border-radius: none
+  }
