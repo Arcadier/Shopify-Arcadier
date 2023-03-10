@@ -10,7 +10,7 @@ $content = json_decode($contentBodyJson, true);
 ///$userId = $content['userId'];
 $invoice_id = $content['invoice-id'];
 $order_id = $content['order-id'];
-$user_id = $content['user-id'];
+$user_id = $content['user-id']; //buyer id now
 
 $baseUrl = getMarketplaceBaseUrl();
 $admin_token = $arc->AdminToken();
@@ -23,15 +23,6 @@ $url = $baseUrl . '/api/v2/users/';
 $result = $arc->getUserInfo($user_id);
 $userId = $result['ID'];
 
-$auth = array(array('Name' => 'merchant_guid', "Operator" => "in",'Value' => $userId));
-$url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
-$authDetails =  callAPI("POST", $admin_token, $url, $auth);
-
-$shop_secret_key = $authDetails['Records'][0]['secret_key'];
-$shop_api_key = $authDetails['Records'][0]['api_key'];
-$shop = $authDetails['Records'][0]['shop'];
-$auth_id = $authDetails['Records'][0]['Id'];
-$access_token= $authDetails['Records'][0]['access_token'];
 
 
 $url = $baseUrl . '/api/v2/users/'; 
@@ -67,18 +58,31 @@ foreach ($packageCustomFields as $cf) {
 //loop through each orders, assuming there are multiple merchants / invoice , since this is bespoke
 
 
-foreach($result['Orders'] as $order) {
+foreach($result['Orders'] as $order) { 
 
     $orderId = $order['ID'];
 
-    if ($order_id == $orderId) {
+   // if ($order_id == $orderId) {
+
+        $merchant_id = $order['MerchantDetail']['ID'];
+
+        $auth = array(array('Name' => 'merchant_guid', "Operator" => "in",'Value' => $merchant_id));
+        $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
+        $authDetails =  callAPI("POST", $admin_token, $url, $auth);
+
+        $shop_secret_key = $authDetails['Records'][0]['secret_key'];
+        $shop_api_key = $authDetails['Records'][0]['api_key'];
+        $shop = $authDetails['Records'][0]['shop'];
+        $auth_id = $authDetails['Records'][0]['Id'];
+        $access_token= $authDetails['Records'][0]['access_token'];
+
 
         //check if the order has already been synced
-        $syncOrders = array(array('Name' => 'order_id', "Operator" => "equal",'Value' => $orderId), array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
+        $syncOrders = array(array('Name' => 'order_id', "Operator" => "equal",'Value' => $orderId), array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $merchant_id));
         $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/synced_orders';
         $isOrderSyncResult =  callAPI("POST", $admin_token, $url, $syncOrders);
 
-        //error_log(json_encode($isOrderSyncResult));
+        error_log('Check if order was in synced_orders table: '.json_encode($isOrderSyncResult));
         
         if ($isOrderSyncResult['TotalRecords'] == 0) {    
 
@@ -87,22 +91,31 @@ foreach($result['Orders'] as $order) {
             
             $consumer_id = $order['ConsumerDetail']['ID'];
 
-            $url = $baseUrl . '/api/v2/users/' . $consumer_id; 
-            $user = callAPI("GET", $admin_token, $url, false);  
-            $customer_id = '';
+            $shopify_id = '';
+
+            //revising to user custom tables instead to support buyers -> multi store registration
 
 
-            if ($user['CustomFields'] != null)  {
+            $customers = array(array('Name' => 'arc_user_guid', "Operator" => "equal",'Value' => $consumer_id), array('Name' =>
+            'store_name', "Operator" => "equal",'Value' => $shop) );
+            
+            $url = $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/customers';
+            $customerDetails = callAPI("POST", $admin_token, $url,  $customers);
 
-                foreach ($user['CustomFields'] as $cf) {
-                    if ($cf['Name'] == 'shopify_customer_id' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
-                        $customer_id = $cf['Values'][0];
-                    }
-                }
+            error_log("customer exist " . json_encode($customerDetails));
+
+
+
+             if ($customerDetails['TotalRecords']  ==  1) {
+
+                $shopify_id = ltrim($customerDetails['Records'][0]['shopify_user_id'],"gid://shopify/Customer/");
+                
             }
+        
+          
 
             //if no customer id exists, create a new one
-            if (!$customer_id) {
+            if (!$shopify_id) {
 
                 //get the customer details ;
 
@@ -112,33 +125,161 @@ foreach($result['Orders'] as $order) {
 
                 //create the customer
                 $customer =  createCustomer($access_token, $shop, $consumer_fname, $consumer_lname, $consumer_email);
+                error_log('New Customer created: '. json_encode($customer));
 
-                if ($customer) {
+                //if customer email exists on shopify store
 
-                    $customer_id = ltrim($customer,"gid://shopify/Customer/");
+                if ($customer['userErrors'][0]['message'] == 'Email has already been taken') {
+
+                    $search_email = shopify_get_customer_by_email($access_token, $shop, $order['ConsumerDetail']['Email']);
+
+                    $shopify_id = $search_email['customers'][0]['id'];
+                    error_log('existing ' . $shopify_id);
+                  
+                }
+                  
+        
+                if ($customer['customer']['id']) {
+
+                   $shopify_id = ltrim($customer['customer']['id'],"gid://shopify/Customer/");
                     
-                    //save the obtained customer id on user's custom field
-                    $data = [
-                        'CustomFields' => [
-                            [
-                                'Code' => $user_shopify_customerId_code,
-                                'Values' => [ $customer_id ]
-                            ],
-                        ],
-                    ];
+                    //save the obtained customer id on customer's custom table
+
+                        $customer_details = [
+                            
+                            "arc_user_guid" => $consumer_id,
+                            "shopify_user_id"=> $customer['customer']['id'],
+                            "store_name" =>  $shop
+
+                            
+                        ];
+
+                 //   error_log(json_encode($customer_details));
+                    
+
+                    $response = $arc->createRowEntry($packageId, 'customers',  $customer_details);
+                  //  error_log('customer create ' . json_encode($response));
+                    
+
+                    // $data = [
+                    //     'CustomFields' => [
+                    //         [
+                    //             'Code' => $user_shopify_customerId_code,
+                    //             'Values' => [ $customer_id ]
+                    //         ],
+                    //     ],
+                    // ];
             
-                    $url = $baseUrl . '/api/v2/users/' . $consumer_id ;
-                    $result = callAPI("PUT", $admin_token, $url, $data);
+                    // $url = $baseUrl . '/api/v2/users/' . $consumer_id ;
+                    // $result = callAPI("PUT", $admin_token, $url, $data);
+                    // error_log('Customer with new custom field:'.json_encode($result));
                 }
             }
 
             //loop through each cart item details, assuming there are multiple different items on the cart, or some items in the cart are not from shopify
             $all_items = [];
             foreach($order['CartItemDetails'] as $cartItem) {
+
+                 $quantity = $cartItem['Quantity'];
                 
                 $cartItemId =  $cartItem['ID'];
                 $itemId =  $cartItem['ItemDetail']['ID'];
-                $quantity = $cartItem['Quantity'];
+
+              
+
+                //checking if the item is a variant or not
+                if ($cartItem['ItemDetail']['ParentID'] == null) {
+                    
+                    $itemId =  $cartItem['ItemDetail']['ID'];
+                    error_log('parent item ' .$itemId);
+                
+                    $syncItems = array(array('Name' => 'arc_item_guid', "Operator" => "equal",'Value' => $itemId));
+                    $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/synced_items';
+                    $isItemSyncResult =  callAPI("POST", $admin_token, $url, $syncItems);
+
+                    error_log('sync result ' . json_encode($isItemSyncResult));
+
+
+                    $product_details = shopify_product_details($access_token, $shop, ltrim($isItemSyncResult['Records'][0]['product_id'],"gid://shopify/Product/"));  
+
+                    //echo json_encode($product_details);
+                    
+                    // echo json_encode($isItemSyncResult);
+                    
+                    $variant_id = ltrim($isItemSyncResult['Records'][0]['variant_id'],"gid://shopify/ProductVariant/"); 
+                    $global_variant_id = $isItemSyncResult['Records'][0]['variant_id'];
+
+                    $url = $baseUrl . '/api/v2/items/' .  $itemId;
+                    $item = callAPI("GET", $admin_token, $url, false);    
+                    foreach($item['CustomFields'] as $customfield){
+
+                        if ($customfield['Name'] == 'shopify_variant_id' && substr($customfield['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+                            $variant_ids = json_decode($customfield['Values'][0],true);
+                        }
+                        if ($customfield['Name'] == 'location_id' && substr($customfield['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+                            $location_id_set = (int)$customfield['Values'][0];
+                        }
+                    }
+
+                    //echo 'variant id no variant ' . $variant_id;
+                   
+                }else {
+
+                    $product_details = shopify_product_details($access_token, $shop, ltrim($isItemSyncResult['Records'][0]['product_id'],"gid://shopify/Product/"));  
+
+                        //echo json_encode($product_details);
+                    $variantId = $cartItem['ItemDetail']['ID'];
+                    $parentId = $cartItem['ItemDetail']['ParentID'];
+                    $url = $baseUrl . '/api/v2/items/' . $parentId;
+                    $item = callAPI("GET", $admin_token, $url, false);
+                    $childItems = $item['ChildItems'];
+                   // error_log('variant id ' . $variantId);
+                   // error_log('ChildItems: '.json_encode($childItems));
+
+                    // $filtered = array_filter($childItems, function($value) use ($variantId) {
+                    //     return $value['ID'] == $variantId;
+                    // });
+                    
+                    //search the variant id on item's customfields, 
+                    $variant_ids = '';
+                    foreach($item['CustomFields'] as $customfield){
+
+                        if ($customfield['Name'] == 'shopify_variant_id' && substr($customfield['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+                            $variant_ids = json_decode($customfield['Values'][0],true);
+                        }
+                        if ($customfield['Name'] == 'location_id' && substr($customfield['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+                            $location_id_set = (int)$customfield['Values'][0];
+                        }
+                    }
+
+                   // error_log('variant ids ' . json_encode($variant_ids));
+
+                    foreach ($variant_ids as $child) { 
+
+                        //$isthere =  strpos($child['AdditionalDetails'], "gid://shopify/ProductVariant/");
+                        //error_log($isthere);
+
+                        if ($child['variant_id'] ==  $variantId ) {
+                            
+                            error_log('yes');
+
+                         //   if (strpos($child['AdditionalDetails'], "gid://shopify/ProductVariant/") == true) {
+                               // echo 'true';
+                               $variant_id = ltrim($child['shopify_id'], "gid://shopify/ProductVariant/");
+                               $global_variant_id = $child['shopify_id'];
+                               break;
+                          //  }
+
+
+                        }
+                    }
+
+                 
+                }
+
+                $all_items[] = array('variant_id' => $variant_id,'quantity' => $quantity);
+                    
+                    
 
                 //check the details of the item using the item id to check if the item is from shopify
 
@@ -151,6 +292,7 @@ foreach($result['Orders'] as $order) {
                     foreach ($item['CustomFields'] as $cf) {
                         if ($cf['Name'] == 'is_shopify_item' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
                             $is_shopify_item = $cf['Values'][0];
+                            error_log('Is shopify item?'.json_encode($is_shopify_item));
                             //if 1, it is a shopify item else not
                         }
                     }
@@ -167,9 +309,9 @@ foreach($result['Orders'] as $order) {
                         
                         // echo json_encode($isItemSyncResult);
                         
-                        $variant_id = ltrim($isItemSyncResult['Records'][0]['variant_id'],"gid://shopify/ProductVariant/");     
+                       // $variant_id = ltrim($isItemSyncResult['Records'][0]['variant_id'],"gid://shopify/ProductVariant/");     
 
-                        $all_items[] = array('variant_id' => $variant_id,'quantity' => $quantity);
+                        
                                   
                     }   
                 }
@@ -198,10 +340,14 @@ foreach($result['Orders'] as $order) {
             }
 
             $latest_fulfilment_status = $order['Statuses'][$latest_key]['Name'];
+            error_log('Lastest FulfilmentStatus:'. json_encode($latest_fulfilment_status));
 
             $order_statuses = status_mapping($latest_fulfilment_status, $latest_payment_status);
             $payment_status = $order_statuses['payment_status'];
             $fulfilment_status = $order_statuses['fulfilment_status'];
+
+          //  error_log('Payment Status:'.json_encode($payment_status));
+         //   error_log('Payment Status:'.json_encode($fulfilment_status));
 
 
             $api_endpoint = "/admin/api/2022-04/orders.json";
@@ -212,7 +358,7 @@ foreach($result['Orders'] as $order) {
                                 "financial_status"=> $payment_status,
                                 "fulfillment_status"=> $fulfilment_status,
                                 "customer" => array(
-                                    "id" => (int)$customer_id
+                                    "id" => (int)$shopify_id
                                 ),
                                 "tags" => "Arcadier",
                                 "note" => $baseUrl,
@@ -242,12 +388,75 @@ foreach($result['Orders'] as $order) {
                                 ]
                             ),
             );
-            //error_log('query '.  json_encode($query));
+           // error_log('SHopify Order query: '.  json_encode($query));
+
+           //$location_id =  shopify_get_variant_location($access_token, $shop, $global_variant_id);
+
+          // error_log('location id ' . $location_id);
 
             $orders = shopify_call($access_token, $shop, "/admin/orders.json", json_encode($query), 'POST',array("Content-Type: application/json"));
 
-            //error_log('orders ' .  json_encode($orders));
+            //error_log('Shopify orders API response ' .  json_encode($orders['response']));
+            $order_response = json_encode($orders['response']);
+            error_log($order_response);
 
+            if ($order_response['order']){
+
+
+                $locations = shopify_get_location($access_token, $shop);
+               
+                 //verify the store either post code 5000 or 5006
+                 //$location_id = $location_id_set;
+      
+                  if (count($locations['locations']) == 1) {
+      
+                    $location_id_set = $locations['locations'][0]['id'];
+                      
+                  }
+                //   else {
+      
+
+                    
+                //       foreach($locations['locations'] as $location) {
+      
+                //           //  error_log('loc ' . json_encode($location));
+                
+                //             //get the zip
+                          
+                //             // if ( $location['zip'] == "0005") {  //test location
+                
+                //             if ($location['zip'] == "5000"  || $location['zip'] == "5006" ) {  //adelaide location
+                
+                //                     $location_id = $location['id'];
+                                
+                //             }
+                //             break;
+                
+                //       }
+      
+                //   }
+      
+               error_log($location_id_set);
+      
+               //get the inventory item id from variant id
+      
+              //test 42815844286623
+               $variants =  shopify_get_variant_details($access_token, $shop, $variant_id);
+      
+               $inventory_item_id =  $variants['variant']['inventory_item_id'];
+      
+      
+               $inventory_details = [
+                  "location_id" =>  $location_id_set,
+                  "inventory_item_id" =>  $inventory_item_id,
+                  "available_adjustment" => -$quantity
+               ];
+      
+               $adjust_inventory =  shopify_update_inventory($access_token, $shop,  $inventory_details);
+
+            }
+
+  
             $count_details = [
 
                 'sync_type' => 'Manual (Orders)',
@@ -255,7 +464,8 @@ foreach($result['Orders'] as $order) {
                 'total_changed' => '-',
                 'total_unchanged' => '-',
                 'total_created' => 1,
-                'status' => 'Sync successful'
+                'status' => 'Sync successful',
+                'merchant_guid' => $userId
             ];
 
 
@@ -266,18 +476,21 @@ foreach($result['Orders'] as $order) {
             $sync_details = [
 
                 "order_id" => $orderId,
-                "merchant_guid" => $userId,
+                "merchant_guid" => $merchant_id,
+                'status' => count($order_response['order']) ? 'Success' :  'Failed',
+                'status_description' => json_encode($order_response)
             
             ];
                 
             $response = $arc->createRowEntry($packageId, 'synced_orders', $sync_details);
+            error_log('Arcadier Custom Table response: '.json_encode($response));
 
-            echo json_encode('success');
+            //echo json_encode('success');
 
-        } else {
-            echo json_encode('This order has been sync');
-        }
-    }        
+        // } else {
+        //     echo json_encode('This order has been sync');
+        // }
+   }        
 }
 
 function status_mapping($fulfilment, $payment){

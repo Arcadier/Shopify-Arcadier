@@ -19,6 +19,7 @@ if(isset($content['cat_map'])){
     if (!empty($content['arcadier_guid'])) {
         $arcadier_guid = explode(',', $content['arcadier_guid']);
         $shopify_category_id = $content['shopify_category_id'];
+        error_log("From JS: ".$shopify_category_id);
 
         $data_auth = [
             [

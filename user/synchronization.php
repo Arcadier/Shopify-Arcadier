@@ -7,10 +7,17 @@ $arc = new ApiSdk();
 $admin_token = $arc->AdminToken();
 $packageId = getPackageID();
 
+$baseUrl = getMarketplaceBaseUrl();
+
 //retrieve the sync events from custom table
 
+//$all_events =  $arc->getCustomTable($packageId, "sync_events", $admin_token);
 
-$all_events =  $arc->getCustomTable($packageId, "sync_events", $admin_token);
+
+$events= array(array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $_GET['user']));
+$url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/sync_events';
+$all_events =  callAPI("POST", $admin_token, $url,  $events);
+
 
 $arc = new ApiSdk();
 $mag = new MagSdk();
@@ -1523,6 +1530,10 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
                         if ($('#m_orders').is(":checked") || $('#m_quantity').is(":checked") || $('#m_details').is(
                                 ":checked") || $('#m_prices').is(":checked")) {
 
+                            removeClass('loadingDiv', 500);
+                            ShowCustomDialog('Alert',
+                                "You will be notified via email once the products sync is completed.");
+
                             $.ajax({
                                 type: "POST",
                                 url: "bulk_sync.php",
@@ -1530,8 +1541,7 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
                                 // data: JSON.stringify(data),
                                 success: function(response) {
                                     console.log(JSON.parse(response));
-                                    removeClass('loadingDiv', 500);
-                                    ShowCustomDialog('Alert', JSON.parse(response));
+
                                 }
                             });
 

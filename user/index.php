@@ -24,7 +24,7 @@ $packageId = getPackageID();
 $auth = array(array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
 $url =  $baseUrl . '/api/v2/plugins/'. $packageId .'/custom-tables/auth';
 $authDetails =  callAPI("POST", $admin_token, $url, $auth);
-// error_log(json_encode($authDetails), 3, "tanoo_log.php");
+
 $shop = $authDetails['Records'][0]['shop'];
 $access_token = $authDetails['Records'][0]['access_token'];
 
@@ -433,6 +433,8 @@ if($isMerchant){
     <script>
     var $j = jQuery.noConflict();
     $(document).ready(function() {
+
+        console.log('new zip on staging')
 
         var min_sync_limit1 =
             '<?php if(!empty($configRowByMerchantGuid["min_sync_limit"])){echo $configRowByMerchantGuid["min_sync_limit"]; } ?>';
