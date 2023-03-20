@@ -150,8 +150,7 @@ foreach($result['Orders'] as $order) {
                             "arc_user_guid" => $consumer_id,
                             "shopify_user_id"=> $customer['customer']['id'],
                             "store_name" =>  $shop
-
-                            
+                
                         ];
 
                  //   error_log(json_encode($customer_details));
