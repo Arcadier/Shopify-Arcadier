@@ -62,7 +62,7 @@ $data = [
 $url = $baseUrl . '/api/v2/users/' . $userId;
 $result = callAPI("PUT", $admin_token, $url, $data);
 
-error_log($result);
+//error_log($result);
 echo json_encode($result);
 
 ?>

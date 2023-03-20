@@ -1592,39 +1592,42 @@ tr.shown td.details-control {
 
 
                 $(".selectAll").on("click", function(e) {
-                    if ($(this).is(":checked")) {
-                        // DT1.rows().select();
+                    if ( $('[type=search]').val() == "" ) {
+
+                        alert("Please filter items by location first");
+                        $(".selectAll").prop("checked", false);
+
+                    
+                    }
+                       
+                    else {
+
+                        if ($(this).is(":checked")) {
+
                         $('.sync_product').prop("checked", true);
 
-                        DT1.rows({
-                            search: 'applied'
-                        }).select();
+                            DT1.rows({
+                                search: 'applied'
+                            }).select();
 
 
-                        var rows = DT1.rows({
-                            'search': 'applied'
-                        }).nodes();
-                        // Check/uncheck checkboxes for all rows in the table
-                        $('.sync_product', rows).prop('checked', true);
+                            var rows = DT1.rows({
+                                'search': 'applied'
+                            }).nodes();
+                            // Check/uncheck checkboxes for all rows in the table
+                            $('.sync_product', rows).prop('checked', true);
 
-                        var ids = $.map(DT1.rows('.selected').data(), function(item) {
-                            return { 'itemguid' : item[13], 'locationId' : item[14] }
-                        });
-                        console.log(ids)
+                            var ids = $.map(DT1.rows('.selected').data(), function(item) {
+                                return { 'itemguid' : item[13], 'locationId' : item[14] }
+                            });
+                            console.log(ids)
 
-                        vm.saveAutoSyncProducts(ids);
+                            vm.saveAutoSyncProducts(ids);
 
-                        // selectedProducts.concat(ids);
 
-                        // console.log(selectedProducts);
+                        }
 
-                        // alert(DT1.rows('.selected').data().length + ' row(s) selected');
-
-                        // $.each(ids, function(index, id) {
-                        //     console.log(id);
-                        // })
-
-                    } else {
+                        else {
                         // DT1.rows().deselect();
                         $('.sync_product').prop("checked", false);
                         // $('.sync_product').parents('tr').removeClass('selected');
@@ -1643,12 +1646,12 @@ tr.shown td.details-control {
                         var ids = $.map(DT1.rows('.selected').data(), function(item) {
                             return { 'itemguid' : item[13], 'locationId' : item[14] }
                         });
-                       
+                        
                         //});
                         console.log(ids)
 
                         vm.saveAutoSyncProducts(ids);
-
+                    }
                     }
                 });
             },
@@ -2046,15 +2049,7 @@ tr.shown td.details-control {
                 }else {
                     $(this).parents('tr').removeClass('selected');
                 }
-                // if ($(this).is(":checked")) {
-                //   //$(this).parents('tr').addClass('selected');
-                 
-                // } else {
-                // //DT1.$('tr.selected').removeClass('selected');
-
-                // $(this).parents('tr').removeClass('selected');
-
-                // }
+                
 
             }
 
@@ -2899,9 +2894,15 @@ tr.shown td.details-control {
 
     
     function checkAutoSyncList(arr,productId, locationId) {
-    return arr.some(function(el) {
-        return el.itemguid === productId && el.locationId == parseInt(locationId);
-    }); 
+
+        if (arr.length != 0) {
+            return arr.some(function(el) {
+            return el.itemguid === productId && el.locationId == parseInt(locationId);
+             }); 
+        }else {
+            return null;
+        }
+  
     }
     </script>
 </body>

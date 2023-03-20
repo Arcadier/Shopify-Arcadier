@@ -63,10 +63,7 @@ if ($result['CustomFields'] != null)  {
                     break;
                    
         }
-        //location id
-        if ($cf['Name'] == 'location_id' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
-            $location_id_code = $cf['Code'];
-        }
+       
 
     
     }
@@ -89,6 +86,11 @@ foreach ($packageCustomFields as $cf) {
 
     if ($cf['Name'] == 'shopify_variant_id' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
         $shopify_variant_id = $cf['Code'];
+    }
+
+     //location id
+     if ($cf['Name'] == 'location_id' && substr($cf['Code'], 0, strlen($customFieldPrefix)) == $customFieldPrefix) {
+        $location_id_code = $cf['Code'];
     }
 }
 
@@ -138,7 +140,7 @@ $arc->sendEmail($userEmail, $html, $subject);
 //dividing with 60 will give the execution time in minutes other wise seconds
 
     $time_start = microtime(true);
-    bulk_sync_items($sync_items_list, $access_token, $shop,$baseUrl,$userId,$admin_token, $packageId,$arc, $is_shopify_code,$arcadier_categories, $category_map,$userEmail);
+    bulk_sync_items($sync_items_list, $access_token, $shop,$baseUrl,$userId,$admin_token, $packageId,$arc, $is_shopify_code,$arcadier_categories, $category_map,$userEmail, $shopify_variant_id, $location_id_code);
     $time_end = microtime(true);
     //dividing with 60 will give the execution time in minutes other wise seconds
     $execution_time = ($time_end - $time_start);
@@ -147,7 +149,7 @@ $arc->sendEmail($userEmail, $html, $subject);
    // error_log('<b>Total Execution Time of getting bulk sync products:</b> '.$execution_time.' seconds');
 //}
 
-function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $admin_token, $packageId, $arc, $is_shopify_code,$arcadier_categories,$category_map,$userEmail) {
+function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $admin_token, $packageId, $arc, $is_shopify_code,$arcadier_categories,$category_map,$userEmail, $shopify_variant_id, $location_id_code) {
 
     //step 2.  Loop and check if the item has been sync e.g if item exists on synced products custom table
     $time_start = microtime(true);
@@ -183,7 +185,11 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
         else {
 
             foreach($admin_shippingMethods as $shipping) { 
-                $all_shipping_methods[] = array("ID" => $shipping['ID']);
+
+                if ($shipping['Description'] != "Digital Download (FREE)") {
+                    $all_shipping_methods[] = array("ID" => $shipping['ID']);
+
+                }
             
             }
             
@@ -202,6 +208,7 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
 
         error_log('loc id '. $location_id);
 
+        
           //check if the item has been sync
         $time_start = microtime(true);
         $syncItems = array(array('Name' => 'product_id', "Operator" => "equal",'Value' => $product_id), array('Name' => 'merchant_guid', "Operator" => "equal",'Value' => $userId));
@@ -234,6 +241,8 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
         $prices = [];
 
         $total_inventory_no_variants = 0;
+
+        $locations = shopify_get_location($access_token, $shop);
 
         foreach($variants as $variant){
             $prices[] = (float)$variant['price'];
@@ -309,10 +318,10 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                 // $variant_image['src'] = "https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg";
                 }
             
-                count($product_details['product']['options']) == 1 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name'])], 'SKU' => "gid://shopify/ProductVariant/" . $id, 'Price' => $variant['price'] - $price, 'StockLimited' => true, 'StockQuantity' => $inventory_count, 'Media' => $media,  'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
-                count($product_details['product']['options']) == 2 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name'])],  'SKU' => "gid://shopify/ProductVariant/" . $id, 'Price' => $variant['price'] - $price, 'StockLimited' => true, 'StockQuantity' => $inventory_count,'Media' => $media,  'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '' ;
+                count($product_details['product']['options']) == 1 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name'])], 'SKU' => "gid://shopify/ProductVariant/" . $id, 'Price' => $variant['price'] - $price, 'StockLimited' => true, 'StockQuantity' => count($locations['locations']) == 1 ? $variant['inventory_quantity'] : $inventory_count, 'Media' => $media,  'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
+                count($product_details['product']['options']) == 2 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name'])],  'SKU' => "gid://shopify/ProductVariant/" . $id, 'Price' => $variant['price'] - $price, 'StockLimited' => true, 'StockQuantity' => count($locations['locations']) == 1 ? $variant['inventory_quantity'] : $inventory_count,'Media' => $media,  'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '' ;
                 
-                count($product_details['product']['options']) == 3 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name']),array('ID' => '', 'Name' => $variant['option3'], 'GroupName' => $product_details['product']['options'][2]['name'])],  'SKU' => "gid://shopify/ProductVariant/" . $id , 'Price' => $variant['price'] - $price, 'StockLimited' => true, 'StockQuantity' => $inventory_count, 'Media' => $media, 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
+                count($product_details['product']['options']) == 3 ?  $allvariants[] = array('Variants' => [array('ID' => '', 'Name' => $variant['option1'], 'GroupName' => $product_details['product']['options'][0]['name']), array('ID' => '', 'Name' => $variant['option2'], 'GroupName' => $product_details['product']['options'][1]['name']),array('ID' => '', 'Name' => $variant['option3'], 'GroupName' => $product_details['product']['options'][2]['name'])],  'SKU' => "gid://shopify/ProductVariant/" . $id , 'Price' => $variant['price'] - $price, 'StockLimited' => true, 'StockQuantity' => count($locations['locations']) == 1 ? $variant['inventory_quantity'] : $inventory_count, 'Media' => $media, 'AdditionalDetails' => "gid://shopify/ProductVariant/" . $id) : '';
                 $total_variants++;
             }
 
@@ -330,7 +339,7 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
             'Price' => (float)$price,
             'PriceUnit' => null,
             'StockLimited' => true,
-            'StockQuantity' =>   $total_inventory_no_variants,
+            'StockQuantity' =>   count($locations['locations']) == 1 ? $inventory : $total_inventory_no_variants,
             'IsVisibleToCustomer' => true,
             'Active' => true,
             'IsAvailable' => '',
@@ -385,7 +394,8 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                         
                 }
         
-                $time_start = microtime(true);
+                $item_details['Categories'] = $all_categories;
+               // $time_start = microtime(true);
                 // $item_details = array(
                 //     'SKU' =>  $sku,
                 //     'Name' =>  $product_name,
@@ -412,7 +422,7 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                 //  echo json_encode($item_details);
                 $url =  $baseUrl . '/api/v2/merchants/' . $userId . '/items';
                 $result =  callAPI("POST", $admin_token, $url, $item_details);
-                $time_end = microtime(true);
+                //$time_end = microtime(true);
                 $execution_time = ($time_end - $time_start);
                 //execution time of the script
                 // error_log('<b>Total Execution Time of saving the item:</b> '.$execution_time.' seconds');
@@ -468,7 +478,11 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
                             [
                                 'Code' =>  $shopify_variant_id,
                                 'Values' => [ json_encode($variant_details) ],
-                            ]
+                            ],
+                            [
+                                'Code' =>  $location_id_code,
+                                'Values' => [ $location_id ]
+                            ],
                         ],
                     ];
 
