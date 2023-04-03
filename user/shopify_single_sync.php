@@ -4,7 +4,7 @@ require 'api.php';
 require_once("shopify_functions.php");
 $arc = new ApiSdk();
 
-
+$ignore_variants = false;
 $contentBodyJson = file_get_contents('php://input');
 $content = json_decode($contentBodyJson, true);
 // date_default_timezone_set($timezone_name);
@@ -20,6 +20,11 @@ $userToken = $_COOKIE["webapitoken"];
 $url = $baseUrl . '/api/v2/users/'; 
 $result = callAPI("GET", $userToken, $url, false);
 $userId = $result['ID'];
+
+//east-end-cellars shop name
+// if ($userId == "967c7067-c589-417a-9f45-3b9902f7d1e3") {
+//     $ignore_variants = true;
+// }
 
 $result = callAPI("GET", $admin_token, $url, false);
 
@@ -96,6 +101,13 @@ $auth_id = $authDetails['Records'][0]['Id'];
 $access_token= $authDetails['Records'][0]['access_token'];
 
 
+
+//east-end-cellars shop name
+if ($shop  == "east-end-cellars") {
+    $ignore_variants = true;
+}
+
+
 $product_id =  $content['id'];
 $product_name = $content['name'];
 $categories =  $content['category'];
@@ -128,9 +140,10 @@ $description = strip_tags(html_entity_decode($description));
 
 $variants = $product_details['product']['variants'];
 
-//error_log('variant json ' . json_encode($variants));
+error_log('variant json ' . json_encode($variants));
 
 $has_variants =  (count($variants) == 1 && $variants[0]['title'] == 'Default Title') ? 0 : 1;
+
 
 $prices = [];
 
@@ -138,7 +151,6 @@ $locations = shopify_get_location($access_token, $shop);
                
 //verify the store either post code 5000 or 5006
 //$location_id = $location_id_set;
-
 
 
 $total_inventory_no_variants = 0;
@@ -172,6 +184,9 @@ $total_inventory_no_variants = 0;
 $price = min($prices);
 
 $variant_id = $variants[0]['id'];
+$variant_title = $variants[0]['title'];
+$variant_price = $variants[0]['price'];
+
 
 error_log('variant id main ' . $variant_id);
 
@@ -234,28 +249,58 @@ $all_variant_ids = !empty($all_variant_idss) ? $all_variant_ids : null;
 
 //error_log('all shipping ' . json_encode($all_shipping_methods));
 
-$item_details = array(
-      'SKU' =>  'sku',
-      'Name' =>  $product_name,
-      'BuyerDescription' => $description,
-      'SellerDescription' => $description,
-      'Price' => (float)$price,
-      'PriceUnit' => null,
-      'StockLimited' => true,
-      'StockQuantity' =>  count($locations['locations']) == 1 ? $inventory : $total_inventory_no_variants,
-      'IsVisibleToCustomer' => true,
-      'Active' => true, 
-      'IsAvailable' => '',
-      'CurrencyCode' =>  'AUD',
-      'Categories' =>   $all_categories,
-      'ShippingMethods'  => $all_shipping_methods,
-      'PickupAddresses' => null,
-      'Media' => $allimages,
-      'Tags' => null,
-      'CustomFields' => null,
-      'ChildItems' =>  $allvariants
+if ($ignore_variants) {
 
-);
+    $item_details = array(
+        'SKU' =>  'sku',
+        'Name' =>  $product_name,
+        'BuyerDescription' => $description . ' ' . $variant_title,
+        'SellerDescription' => $description . ' ' . $variant_title,
+        'Price' => (float)$variant_price,
+        'PriceUnit' => null,
+        'StockLimited' => true,
+        'StockQuantity' => $inventory, //count($locations['locations']) == 1 ? $inventory : $total_inventory_no_variants,
+        'IsVisibleToCustomer' => true,
+        'Active' => true, 
+        'IsAvailable' => '',
+        'CurrencyCode' =>  'AUD',
+        'Categories' =>   $all_categories,
+        'ShippingMethods'  => $all_shipping_methods,
+        'PickupAddresses' => null,
+        'Media' => $allimages,
+        'Tags' => null,
+        'CustomFields' => null,
+        'ChildItems' => null //$allvariants
+  
+  );
+
+}else {
+    $item_details = array(
+        'SKU' =>  'sku',
+        'Name' =>  $product_name,
+        'BuyerDescription' => $description ,
+        'SellerDescription' => $description,
+        'Price' => (float)$variant_price,
+        'PriceUnit' => null,
+        'StockLimited' => true,
+        'StockQuantity' =>  count($locations['locations']) == 1 ? $inventory : $total_inventory_no_variants,
+        'IsVisibleToCustomer' => true,
+        'Active' => true, 
+        'IsAvailable' => '',
+        'CurrencyCode' =>  'AUD',
+        'Categories' =>   $all_categories,
+        'ShippingMethods'  => $all_shipping_methods,
+        'PickupAddresses' => null,
+        'Media' => $allimages,
+        'Tags' => null,
+        'CustomFields' => null,
+        'ChildItems' =>  $allvariants
+  
+  );
+
+}
+
+
 
 if ($isItemSyncResult['TotalRecords'] == 0 && $product_details['product']['status'] == 'active' )  {
 
