@@ -152,11 +152,17 @@ $arc->sendEmail($userEmail, $html, $subject);
 function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $admin_token, $packageId, $arc, $is_shopify_code,$arcadier_categories,$category_map,$userEmail, $shopify_variant_id, $location_id_code) {
 
     //step 2.  Loop and check if the item has been sync e.g if item exists on synced products custom table
+    $ignore_variants = false;
     $time_start = microtime(true);
     $productsLink = shopify_get_bulk_item($access_token, $shop);
 
     $time_end = microtime(true);
     $execution_time = ($time_end - $time_start);
+
+    if ($shop  == "east-end-cellars") {
+        $ignore_variants = true;
+    }
+    
 
 //execution time of the script
    // error_log('<b>Total Execution Time of getting paginated products:</b> '.$execution_time.' seconds');
@@ -267,6 +273,10 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
         $total_inventory = 0;
         //$price = $variants[0]['price'];
         $variant_id = $variants[0]['id'];
+
+        $variant_title = $variants[0]['title'];
+        $variant_price = $variants[0]['price'];
+
        
         $inventory = $variants[0]['inventory_quantity'];
         $sku = $variants[0]['sku'];
@@ -331,28 +341,63 @@ function bulk_sync_items($products, $access_token, $shop, $baseUrl, $userId, $ad
 
         $allvariants = !empty($allvariants) ? $allvariants : null;
 
-        $item_details = array(
-            'SKU' =>  $sku,
-            'Name' =>  $product_name,
-            'BuyerDescription' => strip_tags($description),
-            'SellerDescription' => strip_tags($description),
-            'Price' => (float)$price,
-            'PriceUnit' => null,
-            'StockLimited' => true,
-            'StockQuantity' =>   count($locations['locations']) == 1 ? $inventory : $total_inventory_no_variants,
-            'IsVisibleToCustomer' => true,
-            'Active' => true,
-            'IsAvailable' => '',
-            'CurrencyCode' =>  'AUD',
-            'Categories' =>   $all_categories,
-            'ShippingMethods'  => $all_shipping_methods,
-            'PickupAddresses' => null,
-            'Media' => $allimages,
-            'Tags' => null,
-            'CustomFields' => null,
-            'ChildItems' => $allvariants,
+        if ($ignore_variants) {
 
-        );
+            $item_details = array(
+                'SKU' =>  $sku,
+                'Name' =>  $product_name,
+                'BuyerDescription' => $description . ' ' . $variant_title,
+                'SellerDescription' => $description . ' ' . $variant_title,
+                'Price' => (float)$variant_price,
+                'PriceUnit' => null,
+                'StockLimited' => true,
+                'StockQuantity' => $inventory, //count($locations['locations']) == 1 ? $inventory : $total_inventory_no_variants,
+                'IsVisibleToCustomer' => true,
+                'Active' => true, 
+                'IsAvailable' => '',
+                'CurrencyCode' =>  'AUD',
+                'Categories' =>   $all_categories,
+                'ShippingMethods'  => $all_shipping_methods,
+                'PickupAddresses' => null,
+                'Media' => $allimages,
+                'Tags' => null,
+                'CustomFields' => null,
+                'ChildItems' => null //$allvariants
+          
+          );
+        
+        }
+
+
+        else {
+
+            $item_details = array(
+                'SKU' =>  $sku,
+                'Name' =>  $product_name,
+                'BuyerDescription' => strip_tags($description),
+                'SellerDescription' => strip_tags($description),
+                'Price' => (float)$price,
+                'PriceUnit' => null,
+                'StockLimited' => true,
+                'StockQuantity' =>   count($locations['locations']) == 1 ? $inventory : $total_inventory_no_variants,
+                'IsVisibleToCustomer' => true,
+                'Active' => true,
+                'IsAvailable' => '',
+                'CurrencyCode' =>  'AUD',
+                'Categories' =>   $all_categories,
+                'ShippingMethods'  => $all_shipping_methods,
+                'PickupAddresses' => null,
+                'Media' => $allimages,
+                'Tags' => null,
+                'CustomFields' => null,
+                'ChildItems' => $allvariants,
+    
+            );
+
+
+        }
+
+     
 
 
     // echo $product_id;
