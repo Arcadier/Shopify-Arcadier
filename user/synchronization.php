@@ -1506,7 +1506,7 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
                                         $(tablerow).prependTo("#logTable > tbody");
                                         $(tablerow).insertBefore('#logTable > tbody > tr:first'); */
                                         $('#logTable > tbody > tr:first').before(tablerow);
-                                        var message = 'Sync successfully';
+                                        var message = 'Synced successfully';
                                         ShowCustomDialog('Alert', message);
                                     } else {
 
@@ -1626,7 +1626,7 @@ $mag_cat_arr=$mag->get_categories($_COOKIE['mag_domain'], $_COOKIE['mag_token'])
                                         // $(tablerow).prependTo("#logTable > tbody");
                                         // $(tablerow).insertBefore('#logTable > tbody > tr:first');
                                         $('#logTable > tbody > tr:first').before(tablerow);
-                                        var message = 'Sync successfully';
+                                        var message = 'Synced successfully';
                                         ShowCustomDialog('Alert', message);
                                     } else {
 

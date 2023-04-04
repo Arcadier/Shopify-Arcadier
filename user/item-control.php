@@ -2407,7 +2407,7 @@ tr.shown td.details-control {
                     var result = JSON.parse(response);
                    console.log(`result  ${result}`);
                     if (result == 'success') {
-                        var message = 'Sync successfully';
+                        var message = 'Synced successfully';
                         ShowCustomDialog('Alert', message);
                         // toastr.success(`Synced order Number: ${orderId}`);
                     } else {
@@ -2499,7 +2499,7 @@ tr.shown td.details-control {
                     if (response.message == 1) {
                         $("tr#mag-" + id1 + " td:nth-child(4)").html("<b>Yes</b> at " +
                             response.data.sync_date);
-                        var message = 'Sync successfully';
+                        var message = 'Synced successfully';
                         ShowCustomDialog('Alert', message);
                     } else {
                         response = JSON.parse(JSON.stringify(response));

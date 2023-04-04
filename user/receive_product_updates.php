@@ -76,27 +76,18 @@
 		//check if webhook event is for "updates"
 		if($webhook_event == "update"){
 			//resync item details from shopify
-			error_log(json_encode($webhook_event));
 			resync_item($arcadier_item_guid, $arcadier_merchant_guid, $baseUrl, $admin_token, $packageId, $location_id,$packageCustomFields,$customFieldPrefix);
 		}
 
 		if($webhook_event == "delete"){
 			//call Arcadier API to delete item
-			error_log(json_encode($webhook_event));
 			delete_item($arcadier_item_guid, $arcadier_merchant_guid, $baseUrl, $admin_token, $packageId);
-
-			
-            
             $synced_details = $arc->searchTable($packageId, 'synced_items', $data);
-
-//echo json_encode($synced_details);
 
 			foreach($synced_details['Records']  as $log) {
 				$arc->deleteRowEntry($packageId, "synced_items", $log['Id']);
 			}
-
 		}
-	
 	}
 	//if results are not found
 	else {
@@ -227,6 +218,11 @@
 
 			$allvariants = !empty($allvariants) ? $allvariants : null;
 
+			$active = true;
+			if($response['product']['status'] == 'archived' || $response['product']['status'] == 'draft'){
+				$active = false;
+			}
+
 			//edit parent item
 			$item_details = array(
 				'SKU' =>  $response['product']['variants'][0]['sku'],
@@ -237,9 +233,9 @@
 				'PriceUnit' => null,
 				'StockLimited' => true,
 				'StockQuantity' => count($locations['locations']) == 1 ? $total_quantity : $total_inventory_no_variants,
-				'IsVisibleToCustomer' => $response['product']['status'],
+				'IsVisibleToCustomer' => $active,
 				'Active' => true,
-				'IsAvailable' => '',
+				'IsAvailable' => $active,
 				'CurrencyCode' =>  'AUD',
 				'Media' => $image_array,
 				'ChildItems' => $allvariants
